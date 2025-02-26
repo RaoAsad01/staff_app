@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "staffapp",
+    "slug": "staffapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/login-icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/Hexallo favicon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#120b00"
+      
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.asadahmad.staffapp",
+      "newArchEnabled": true
+    },
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.asad_ahmad.staffapp",
+      "newArchEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f2a44f35-43a5-4a2e-b281-7eba229ea443"
+      }
+    }
+  }
+}
