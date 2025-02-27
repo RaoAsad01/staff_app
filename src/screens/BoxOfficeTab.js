@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { color } from '../color/color';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { Image as ExpoImage } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 
@@ -15,25 +14,6 @@ const BoxOfficeTab = () => {
   const [email, setEmail] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
   const { width } = Dimensions.get('window');
-
-  // const getPaddingHorizontalToPayment = () => {
-  //   if (Platform.OS === 'ios') {
-  //     if (width === 375) {
-  //       // iPhone 6/7/8
-  //       return 35;
-  //     } else if (width > 375 && width <= 414) {
-  //       // iPhone 7 Plus, 8 Plus
-  //       return 45;
-  //     } else {
-  //       return 45;
-  //     }
-  //   } else {
-  //     // Android default value
-  //     return 43;
-  //   }
-  // };
-
-  //const paymentPaddingHorizontal = getPaddingHorizontalToPayment();
 
   const [selectedTickets, setSelectedTickets] = useState([
     { type: 'Standard Ticket', price: 40, discountPrice: 30, quantity: 2 },

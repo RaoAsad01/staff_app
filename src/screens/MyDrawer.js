@@ -25,7 +25,7 @@ function CustomDrawerContent(props) {
         <View style={styles.drawerHeader}>
           <View style={styles.avatarContainer}>
             <Image
-              source={imageUrl} // Use dynamic image URL
+              source={imageUrl}
               style={styles.avatar}
             />
           </View>
@@ -62,6 +62,14 @@ function MyDrawer() {
         drawerActiveBackgroundColor: 'transparent',
         drawerActiveTintColor: color.black_544B45,
         drawerInactiveTintColor: color.black_544B45,
+        drawerType: "front",
+        drawerStyle:{
+          borderRadius: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius:0,
+          borderBottomLeftRadius: 0
+        }
       }}
     >
       <Drawer.Screen
