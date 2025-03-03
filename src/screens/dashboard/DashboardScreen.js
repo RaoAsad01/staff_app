@@ -8,6 +8,7 @@ import SvgIcons from '../../../components/SvgIcons';
 import { dashboardstatuslist } from '../../constants/dashboardstatuslist';
 import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './dashboardattendeestab';
+import AnalyticsChart from './AnalyticsChart';
 
 const DashboardScreen = () => {
   const navigation = useNavigation();
@@ -33,6 +34,26 @@ const DashboardScreen = () => {
     { label: "Member", checkedIn: 120, total: 150, percentage: 80 },
   ];
 
+  const checkedInChartData = [
+    { time: "12pm", value: 40, isHighlighted: false },
+    { time: "1pm", value: 80, isHighlighted: false },
+    { time: "2pm", value: 100, isHighlighted: false },
+    { time: "3pm", value: 85, isHighlighted: false },
+    { time: "4pm", value: 110, isHighlighted: false },
+    { time: "5pm", value: 110, isHighlighted: true },
+    { time: "6pm", value: 105, isHighlighted: false },
+  ];
+
+  const soldTicketsChartData = [
+    { time: "12pm", value: 50, isHighlighted: false },
+    { time: "1pm", value: 90, isHighlighted: false },
+    { time: "2pm", value: 110, isHighlighted: false },
+    { time: "3pm", value: 95, isHighlighted: false },
+    { time: "4pm", value: 120, isHighlighted: false },
+    { time: "5pm", value: 120, isHighlighted: true },
+    { time: "6pm", value: 115, isHighlighted: false },
+  ];
+
   const attendeesData = [
     { label: 'Total Attendees', value: '500' },
     { label: 'VIP Attendees', value: '150' },
@@ -43,67 +64,78 @@ const DashboardScreen = () => {
   const renderContent = () => {
     if (selectedTab === 'Attendees') {
       return <AttendeesComponent attendeesData={attendeesData} />;
-    } else {
+    } else if (selectedTab === 'Checked In' || selectedTab === 'Sold Tickets') {
+      const chartData = selectedTab === 'Checked In' ? checkedInChartData : soldTicketsChartData;
       return (
-        <CheckInSoldTicketsCard
-          title={selectedTab}
-          data={selectedTab === 'Checked In' ? checkInData : soldTicketsData}
-        />
+        <>
+          <CheckInSoldTicketsCard
+            title={selectedTab}
+            data={selectedTab === 'Checked In' ? checkInData : soldTicketsData}
+          />
+          <AnalyticsChart
+            title={selectedTab}
+            data={chartData}
+            dataType={selectedTab === 'Checked In' ? 'checked in' : 'sold'}
+          />
+
+        </>
       );
+    } else {
+      return null; // Or render a default component
     }
   };
 
-const renderTab = ({ item }) => (
-  <TouchableOpacity
-    style={[
-      styles.tabButton,
-      selectedTab === item && styles.selectedTabButton,
-    ]}
-    onPress={() => handleTabPress(item)}
-  >
-    <Text
+  const renderTab = ({ item }) => (
+    <TouchableOpacity
       style={[
-        styles.tabButtonText,
-        selectedTab === item && styles.selectedTabButtonText,
+        styles.tabButton,
+        selectedTab === item && styles.selectedTabButton,
       ]}
+      onPress={() => handleTabPress(item)}
     >
-      {item}
-    </Text>
-  </TouchableOpacity>
-);
+      <Text
+        style={[
+          styles.tabButtonText,
+          selectedTab === item && styles.selectedTabButtonText,
+        ]}
+      >
+        {item}
+      </Text>
+    </TouchableOpacity>
+  );
 
 
-return (
-  <SafeAreaView style={styles.container}>
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.wrapper}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
-          </TouchableOpacity>
-          <Text style={styles.countryName}>OUTMOSPHERE</Text>
-          <Text style={styles.cityName}>Accra</Text>
-          <Text style={styles.date}>28-12-2024</Text>
-          <Text style={styles.date}>at</Text>
-          <Text style={styles.time}>7:00 PM</Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.wrapper}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
+            </TouchableOpacity>
+            <Text style={styles.countryName}>OUTMOSPHERE</Text>
+            <Text style={styles.cityName}>Accra</Text>
+            <Text style={styles.date}>28-12-2024</Text>
+            <Text style={styles.date}>at</Text>
+            <Text style={styles.time}>7:00 PM</Text>
+          </View>
+          <Text style={styles.labelDashboard}>Dashboard</Text>
+          <OverallStatistics />
+          <BoxOfficeSales />
+          <View style={styles.tabContainer}>
+            <FlatList
+              horizontal
+              data={dashboardstatuslist}
+              renderItem={renderTab}
+              keyExtractor={(item) => item}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+          {renderContent()}
         </View>
-        <Text style={styles.labelDashboard}>Dashboard</Text>
-        <OverallStatistics />
-        <BoxOfficeSales />
-        <View style={styles.tabContainer}>
-          <FlatList
-            horizontal
-            data={dashboardstatuslist}
-            renderItem={renderTab}
-            keyExtractor={(item) => item}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-        {renderContent()}
-      </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
