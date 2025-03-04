@@ -76,8 +76,9 @@ function MyDrawer() {
         name="Home"
         component={Navigation}
         options={{
-          drawerIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-          drawerLabel: "Home",
+          drawerIcon: ({ color, size }) => (
+            <SvgIcons.homeDrawerIcon width={20} height={20} color={color} />
+          ),
         }}
         listeners={({ navigation }) => ({
           drawerItemPress: (event) => {

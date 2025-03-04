@@ -21,6 +21,7 @@ import QRIcon from '../assets/svgs/qr_icon.svg';
 import DashboardMenuIcon from '../assets//svgs/dashboard.svg';
 import ProfileMenuIcon from '../assets//svgs/profile-icon.svg';
 import LogoutMenuIcon from '../assets//svgs/logout-icon.svg';
+import HomeDrawerIcon from '../assets/svgs/home-drawer-icon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -45,6 +46,7 @@ export default {
     qRIcon: QRIcon,
     dashboardMenuIcon: DashboardMenuIcon,
     profileMenuIcon: ProfileMenuIcon,
+    homeDrawerIcon: HomeDrawerIcon,
     logoutMenuIcon: LogoutMenuIcon,
 
 };

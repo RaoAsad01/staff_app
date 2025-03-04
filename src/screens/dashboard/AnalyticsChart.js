@@ -43,8 +43,12 @@ const AnalyticsChart = ({ title, data, dataType }) => {
 
     return (
         <View style={styles.wrapper}>
-            <View style={styles.container}>
+            {/* Separate Title View */}
+            <View style={styles.titleContainer}>
                 <Text style={styles.title}>{title} Analytics</Text>
+            </View>
+
+            <View style={styles.container}>
                 <View style={styles.chartContainer}>{renderBars()}</View>
                 <View style={styles.yAxisLabels}>
                     <Text>150</Text>
@@ -74,11 +78,14 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingBottom: 25
     },
+    titleContainer: {
+        paddingBottom: 10,
+        alignItems: "flex-start",
+    },
     title: {
         fontSize: 18,
         fontWeight: "bold",
         color: color.brown_3C200A,
-        marginBottom: 20,
     },
     chartContainer: {
         flexDirection: "row",
@@ -109,8 +116,7 @@ const styles = StyleSheet.create({
     yAxisLabels: {
         position: "absolute",
         justifyContent: "space-between",
-        height: "80%",
-        top: 40,
+        height: "100%",
         left: 0,
     },
     tooltip: {
