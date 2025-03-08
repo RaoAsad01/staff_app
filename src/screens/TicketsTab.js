@@ -291,10 +291,6 @@ const styles = StyleSheet.create({
         marginRight: 5,
         marginTop: 70
     },
-    ticketImage: {
-        width: '100%',
-        height: '100%',
-    },
 
 });
 

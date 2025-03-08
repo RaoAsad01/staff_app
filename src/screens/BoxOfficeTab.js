@@ -293,15 +293,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7E4B680',
   },
   tabButtonText: {
-    color: '#544B45',
+    color: color.black_544B45,
   },
   selectedTabButton: {
-    backgroundColor: '#AE6F28',
-    borderColor: '#AE6F28',
+    backgroundColor: color.btnBrown_AE6F28,
+    borderColor: color.btnBrown_AE6F28,
   },
   selectedTabButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: color.white_FFFFFF,
+    fontWeight: '500',
+    fontSize: 14
   },
   ticketCard: {
     borderWidth: 1,

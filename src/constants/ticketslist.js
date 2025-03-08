@@ -1,3 +1,4 @@
+import SvgIcons from "../../components/SvgIcons";
 export const ticketslist = [
     {
         id: '#12389651342',
@@ -6,7 +7,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
-
+        name: 'John Doe',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon
     },
     {
         id: '#12389651343',
@@ -14,7 +17,10 @@ export const ticketslist = [
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
-        statusScanned: 'Scanned', 
+        statusScanned: 'Scanned',
+        name: 'Asad Ahmad',
+        dashboardstatus: 'No Show',
+        imageUrl: SvgIcons.qRIcon 
     },
     {
         id: '#12389651344',
@@ -23,6 +29,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Noman Ahmad',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
 
     },
     {
@@ -32,6 +41,9 @@ export const ticketslist = [
         date: 'Sun, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Junaid',
+        dashboardstatus: 'No Show',
+        imageUrl: SvgIcons.qRIcon 
 
     }, {
         id: '#12389651346',
@@ -39,7 +51,10 @@ export const ticketslist = [
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
-        statusScanned: 'Scanned', 
+        statusScanned: 'Scanned',
+        name: 'Hassan',
+        dashboardstatus: 'No Show',
+        imageUrl: SvgIcons.qRIcon  
 
     },
     {
@@ -49,6 +64,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Adnan',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
 
     }, {
         id: '#12389651348',
@@ -56,7 +74,10 @@ export const ticketslist = [
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
-        statusScanned: 'Scanned', 
+        statusScanned: 'Scanned',
+        name: 'Fahad',
+        dashboardstatus: 'No Show',
+        imageUrl: SvgIcons.qRIcon  
     },
     {
         id: '#12389651349',
@@ -65,6 +86,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Hussain',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
 
     }, {
         id: '#12389651350',
@@ -73,6 +97,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Taha',
+        dashboardstatus: 'No Show',
+        imageUrl: SvgIcons.qRIcon 
 
     },
     {
@@ -82,6 +109,9 @@ export const ticketslist = [
         date: 'Sat, 02 2025',
         status: 'Check-In',
         statusScanned: 'Scanned', 
+        name: 'Rohan',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
 
     },
 ];
