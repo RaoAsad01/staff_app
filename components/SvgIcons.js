@@ -22,6 +22,8 @@ import DashboardMenuIcon from '../assets//svgs/dashboard.svg';
 import ProfileMenuIcon from '../assets//svgs/profile-icon.svg';
 import LogoutMenuIcon from '../assets//svgs/logout-icon.svg';
 import HomeDrawerIcon from '../assets/svgs/home-drawer-icon.svg';
+import FilterIcon from '../assets/svgs/filter-icon.svg';
+import TickIcon from '../assets/svgs/tick-icon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -48,5 +50,7 @@ export default {
     profileMenuIcon: ProfileMenuIcon,
     homeDrawerIcon: HomeDrawerIcon,
     logoutMenuIcon: LogoutMenuIcon,
+    filterIcon: FilterIcon,
+    tickIcon: TickIcon
 
 };

@@ -24,7 +24,7 @@ export const ticketslist = [
     },
     {
         id: '#12389651344',
-        type: 'Standard Ticket',
+        type: 'VIP Ticket',
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
@@ -59,7 +59,7 @@ export const ticketslist = [
     },
     {
         id: '#12389651347',
-        type: 'Standard Ticket',
+        type: 'VIP Ticket',
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
@@ -81,7 +81,7 @@ export const ticketslist = [
     },
     {
         id: '#12389651349',
-        type: 'Standard Ticket',
+        type: 'VIP Ticket',
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
@@ -105,6 +105,42 @@ export const ticketslist = [
     {
         id: '#12389651351',
         type: 'Standard Ticket',
+        price: 30,
+        date: 'Sat, 02 2025',
+        status: 'Check-In',
+        statusScanned: 'Scanned', 
+        name: 'Rohan',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
+
+    },
+    {
+        id: '#12389651361',
+        type: 'Members',
+        price: 30,
+        date: 'Sat, 02 2025',
+        status: 'Check-In',
+        statusScanned: 'Scanned', 
+        name: 'Rohan',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
+
+    },
+    {
+        id: '#12389651362',
+        type: 'Members',
+        price: 30,
+        date: 'Sat, 02 2025',
+        status: 'Check-In',
+        statusScanned: 'Scanned', 
+        name: 'Rohan',
+        dashboardstatus: 'Checked In',
+        imageUrl: SvgIcons.qRIcon 
+
+    },
+    {
+        id: '#12389651363',
+        type: 'Members',
         price: 30,
         date: 'Sat, 02 2025',
         status: 'Check-In',
