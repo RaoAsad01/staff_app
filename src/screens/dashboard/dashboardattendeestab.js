@@ -112,7 +112,7 @@ const AttendeesComponent = () => {
 
                 <View style={styles.filterOptionsContainer}>
                   <View style={styles.lineView} />
-                  <View> <Text style={styles.tickettype}>Ticket Type</Text></View>
+                  <Text style={styles.tickettype}>Ticket Type</Text>
                   <TouchableOpacity
                     style={styles.filterOption}
                     onPress={() =>
