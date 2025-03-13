@@ -45,12 +45,12 @@ const ManualCheckInAllTickets = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: color.white_FFFFFF,
+        //backgroundColor: color.white_FFFFFF,
     },
     wrapper: {
         flex: 1,
         paddingHorizontal: 20,
-        backgroundColor: color.white_FFFFFF,
+        //backgroundColor: color.white_FFFFFF,
     },
     popUp: {
         alignItems: 'center',
@@ -59,11 +59,11 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         width: '100%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.3,
+        // shadowRadius: 5,
+        // elevation: 5,
         marginTop: 20,
     },
     button: {

@@ -1,5 +1,9 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Platform } from 'react-native';
-import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet, Text, View, TextInput, TouchableOpacity, Platform, Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
+import { ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -9,6 +13,22 @@ import SvgIcons from '../../components/SvgIcons';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const validationSchema = Yup.object().shape({
     email: Yup.string()
@@ -24,68 +44,76 @@ const LoginScreen = () => {
   };
 
   return (
-    <>
-      <StatusBar
-        style="dark"
-        backgroundColor="transparent"
-        translucent
-      />
-      <ExpoImageBackground
-        source={require('../../assets/images/bg-img-signup.png')}
-        contentFit="cover"
-        style={styles.background}
-      >
+    <View style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1 }}>
-          <View style={styles.topSection}>
-          <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
-            <Text style={styles.topText}>Hexallo</Text>
-          </View>
+          <StatusBar
+            style="dark"
+            backgroundColor="transparent"
+            translucent
+          />
+          <ExpoImageBackground
+            source={require('../../assets/images/bg-img-signup.png')}
+            contentFit="cover"
+            style={styles.background}
+          >
+            <View style={styles.topSection}>
+              <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
+              <Text style={styles.topText}>HEXALLO</Text>
+            </View>
 
-          <Text style={styles.additionalText} numberOfLines={2}>
-            Get Started{'\n'}to do more!
-          </Text>
+            <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
 
-          <View style={styles.container}>
-            <Formik
-              initialValues={{ email: '' }}
-              validationSchema={validationSchema}
-              onSubmit={handleSignIn}
-            >
-              {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-                <View style={{ width: '100%' }}>
-                  <Text style={styles.inputHeading}>Email or Phone Number</Text>
-                  <TextInput
-                    style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
-                    placeholder="johndoe@gmail.com"
-                    placeholderTextColor={color.placeholderTxt_24282C}
-                    onChangeText={handleChange('email')}
-                    onBlur={handleBlur('email')}
-                    value={values.email}
-                    keyboardType="email-address"
-                    selectionColor={color.selectField_CEBCA0}
-                  />
-                  {touched.email && errors.email && (
-                    <Text style={styles.errorText}>{errors.email}</Text>
+            <View style={styles.containerWrapper}>
+              <View style={styles.container}>
+                <Formik
+                  initialValues={{ email: '' }}
+                  validationSchema={validationSchema}
+                  onSubmit={handleSignIn}
+                >
+                  {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                    <View style={{ width: '100%' }}>
+                      <TextInput
+                        style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
+                        placeholder="Email or Phone Number"
+                        placeholderTextColor={color.black_544B45}
+                        onChangeText={handleChange('email')}
+                        onBlur={handleBlur('email')}
+                        value={values.email}
+                        keyboardType="email-address"
+                        selectionColor={color.placeholderTxt_24282C}
+                      />
+                      {touched.email && errors.email && (
+                        <Text style={styles.errorText}>{errors.email}</Text>
+                      )}
+
+                      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                        <Text style={styles.buttonText}>Sign In</Text>
+                      </TouchableOpacity>
+                    </View>
                   )}
-
-                  <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                    <Text style={styles.buttonText}>Sign In</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Formik>
-          </View>
+                </Formik>
+              </View>
+            </View>
+          </ExpoImageBackground>
         </View>
-      </ExpoImageBackground>
-    </>
+      </TouchableWithoutFeedback>
+      {!isKeyboardVisible && (
+        <View style={styles.bottomtextbg}>
+          <Text style={styles.bottomText}>Powered by Hexagram Technologies</Text>
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  safeContainer: {
+    flex: 1,
+  },
   background: {
     flex: 1,
-    padding: 50,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0, // Add padding for Android
   },
   image: {
@@ -96,23 +124,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    fontSize: 15,
-    top: Platform.OS === 'ios' ? 30 : 0,
+    marginTop: 40
   },
   additionalText: {
-    marginTop: 40,
     color: color.white_FFFFFF,
-    width: '90%',
-    lineHeight: 50,
     fontSize: 40,
-    fontWeight: 'bold',
-    top: Platform.OS === 'ios' ? 20 : 0,
+    fontWeight: '700',
+    textAlign: 'left',
+    paddingTop: 40
   },
   topText: {
-    color: color.lightBrown_FFF6DF,
+    color: color.white_FFFFFF,
     marginStart: 10,
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  containerWrapper: {
+    flex: 1,
+    marginTop: 100
   },
   container: {
     alignItems: 'center',
@@ -120,13 +149,14 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 15,
+    height: 166,
     width: '100%',
+    maxWidth: 400,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
-    marginTop: Platform.OS === 'ios' ? 40 : 20,
   },
   input: {
     width: '100%',
@@ -144,15 +174,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 5,
   },
   buttonText: {
     color: color.btnTxt_FFF6DF,
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  inputHeading: {
-    color: color.black_2F251D,
-    marginBottom: 10,
+    fontWeight: '700',
   },
   inputError: {
     borderColor: color.red_FF0000,
@@ -160,6 +187,25 @@ const styles = StyleSheet.create({
   errorText: {
     color: color.red_FF0000,
     marginBottom: 10,
+  },
+  bottomtextbg: {
+    backgroundColor: color.btnBrown_AE6F28,
+    width: '70%',
+    height: 32,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginHorizontal: 50,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  bottomText: {
+    color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '400',
   },
 });
 

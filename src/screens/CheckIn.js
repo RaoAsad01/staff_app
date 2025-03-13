@@ -163,7 +163,7 @@ const HomeScreen = () => {
               ]}
             />
           )}
-          <Text style={styles.animatedText}>{scanResult.text}</Text>
+          {showAnimation && (<Text style={styles.animatedText}>{scanResult.text}</Text>)}
         </View>
       )}
       <View style={styles.cameraContainer}>
@@ -173,7 +173,7 @@ const HomeScreen = () => {
             facing={facing}
             onBarcodeScanned={scanning ? undefined : handleBarCodeScanned}
           />
-          <CameraOverlay linePosition={linePosition} />
+       <CameraOverlay linePosition={linePosition} scannedData={scanResult ? scanResult.color : '#AE6F28'} />
         </View>
       </View>
 
@@ -215,7 +215,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: color.white_FFFFFF,
+    backgroundColor: color.drak_black_000000,
   },
   cameraContainer: {
     flex: 1,

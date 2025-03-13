@@ -47,16 +47,16 @@ const ManualScan = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <Header />
-      <Text style={styles.inputLabel}>
+      {/* <Text style={styles.inputLabel}>
         Enter the name, email, or phone number to{'\n'}search the ticket
-      </Text>
+      </Text> */}
 
 
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchBar}
-          placeholder="Search attendees"
-          placeholderTextColor={color.placeholderTxt_24282C}
+          placeholder="Name, Number, Tix ID or Transaction No"
+          placeholderTextColor={color.brown_766F6A}
           onChangeText={(text) => setSearchText(text)}
           value={searchText}
           selectionColor={color.selectField_CEBCA0}
@@ -83,7 +83,7 @@ const ManualScan = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: color.white_FFFFFF
+    //backgroundColor: color.white_FFFFFF
   },
   inputLabel: {
     paddingHorizontal: 46,
@@ -117,12 +117,12 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
     marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,  
-    margin: 2
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.3,
+    // shadowRadius: 6,
+    // elevation: 5,  
+    // margin: 2
   },
   ticketRow: {
     flexDirection: 'row',

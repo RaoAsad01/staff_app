@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Dimensions, Image } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -65,13 +65,24 @@ function marker(color, size, borderLength, thickness = 2, borderRadius = 0) {
 }
 
 const CameraOverlay = ({ linePosition, scannedData }) => {
-    const marginTop = 35;
+    const [lineColor, setLineColor] = useState('#AE6F28'); // Default color
+
+    useEffect(() => {
+        if (scannedData) {
+            setLineColor(scannedData); // Now it directly updates the color
+        }
+    }, [scannedData]); // Runs when `scannedData` changes
+
     return (
         <View style={styles.overlayContainer}>
             <View style={styles.frame}>
                 {marker('#AE6F28', '80%', '20%', 4, 10)}
-                {/* if(!scannedData){<Text style={styles.instructionText}>Align QR Code in the frame</Text>}  */}
-                <View style={[styles.scannerLine, { top: linePosition + marginTop }]} />
+                <View
+                    style={[
+                        styles.scannerLine,
+                        { top: linePosition + 35, backgroundColor: lineColor, shadowColor: lineColor },
+                    ]}
+                />
             </View>
         </View>
     );
@@ -110,13 +121,12 @@ const styles = StyleSheet.create({
     scannerLine: {
         position: 'absolute',
         width: '70%',
-        height: 4,
-        backgroundColor: '#AE6F28',
-        shadowColor: '#AE6F28', // Shadow color
-        shadowOffset: { width: 0, height: 5 }, // Offset: horizontal 0, vertical 4
-        shadowOpacity: 1, // Opacity of the shadow
-        shadowRadius: 6, // Blur radius for the shadow
-        elevation: 40, // Shadow for Android
+        height: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 60,
     },
 });
 

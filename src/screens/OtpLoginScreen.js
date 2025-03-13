@@ -19,8 +19,24 @@ const OtpLoginScreen = () => {
   const [otpResendTime, setOtpResendTime] = useState(60);
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const inputRefs = useRef([]);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
-  const gotologinscreen =() => {
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  const gotologinscreen = () => {
     navigation.navigate('Login');
   }
 
@@ -36,7 +52,7 @@ const OtpLoginScreen = () => {
 
   const handleResendOtp = () => {
     console.log('Resending OTP');
-   // setOtpResendTime(60);
+    // setOtpResendTime(60);
   };
 
   useEffect(() => {
@@ -64,79 +80,71 @@ const OtpLoginScreen = () => {
       inputRefs.current[index - 1]?.focus();
     }
   };
-
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={{ flex: 1 }}>
-        <StatusBar
-          style="dark"
-          backgroundColor="transparent"
-          translucent
-        />
-        <ExpoImageBackground
-          source={require('../../assets/images/bg-img-signup.png')}
-          contentFit="cover"
-          style={styles.background}
-        >
-          <View style={styles.topSection}>
-          <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
-            <Text style={styles.topText}>Hexallo</Text>
-          </View>
-
-          <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
-
-          <View style={styles.container}>
-            <Text style={styles.appName}>Enter OTP</Text>
-            <Text style={styles.labelText}>
-              OTP sent to your email{' '}
-              {/* {otpResendTime > 0 ? (
-                <Text style={{ color: color.gray }}>(Resend in {otpResendTime}s)</Text>
-              ) : (
-                <TouchableOpacity onPress={handleResendOtp}>
-                  <Text style={styles.resendText}></Text>
-                </TouchableOpacity>
-              )} */}
-            </Text>
-
-            {/* OTP Inputs */}
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.otpInput}
-                  value={digit}
-                  placeholder="-"
-                  placeholderTextColor={color.placeholderTxt_24282C}
-                  maxLength={1}
-                  keyboardType="numeric"
-                  onChangeText={(value) => handleOtpChange(value, index)}
-                  onKeyPress={(event) => handleKeyPress(event, index)}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
-                  selectionColor={color.selectField_CEBCA0}
-                />
-              ))}
+    <View style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <StatusBar style="dark" backgroundColor="transparent" translucent />
+          <ExpoImageBackground
+            source={require('../../assets/images/bg-img-signup.png')}
+            contentFit="cover"
+            style={styles.background}
+          >
+            <View style={styles.topSection}>
+              <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
+              <Text style={styles.topText}>HEXALLO</Text>
             </View>
-
-            <Text style={styles.labelText}>Didn’t receive the OTP code?</Text>
-
-            <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-              <Text style={styles.buttonText}>Sign In</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.changeDetailsButton}
-            //  onPress={handleResendOtp}
-             >
-              <Text style={styles.changeDetailsText}>Resend OTP</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
-              <Text style={styles.changeDetailsText}>Change OTP Details</Text>
-            </TouchableOpacity>
-          </View>
-        </ExpoImageBackground>
-      </View>
-    </TouchableWithoutFeedback>
+  
+            <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
+  
+            <View style={styles.container}>
+              <Text style={styles.appName}>Enter OTP</Text>
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.otpInput}
+                    value={digit}
+                    placeholder="-"
+                    placeholderTextColor={color.placeholderTxt_24282C}
+                    maxLength={1}
+                    keyboardType="numeric"
+                    onChangeText={(value) => handleOtpChange(value, index)}
+                    onKeyPress={(event) => handleKeyPress(event, index)}
+                    ref={(ref) => (inputRefs.current[index] = ref)}
+                    selectionColor={color.selectField_CEBCA0}
+                  />
+                ))}
+              </View>
+  
+              <Text style={styles.labelText}>Didn’t receive OTP?</Text>
+  
+              <View style={styles.rowContainer}>
+                <TouchableOpacity style={styles.changeDetailsButton}>
+                  <Text style={styles.changeDetailsText}>Resend</Text>
+                </TouchableOpacity>
+  
+                <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
+                  <Text style={styles.changeDetailsText}>Change Details</Text>
+                </TouchableOpacity>
+              </View>
+  
+              <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+                <Text style={styles.buttonText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </ExpoImageBackground>
+        </View>
+      </TouchableWithoutFeedback>
+  
+      {!isKeyboardVisible && (
+        <View style={styles.bottomtextbg}>
+          <Text style={styles.bottomText}>Powered by Hexagram Technologies</Text>
+        </View>
+      )}
+    </View>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -155,11 +163,12 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
     marginBottom: 30,
+    paddingTop: 20
   },
   topText: {
-    color: color.lightBrown_FFF6DF,
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: color.white_FFFFFF,
+    fontSize: 24,
+    fontWeight: '800',
     marginLeft: 10,
   },
   container: {
@@ -167,6 +176,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -208,6 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    marginTop: 10
   },
   buttonText: {
     color: color.btnTxt_FFF6DF,
@@ -216,13 +227,13 @@ const styles = StyleSheet.create({
   },
   changeDetailsButton: {
     marginTop: 10,
-    padding: 13,
+    padding: 10,
     borderWidth: 1,
     borderColor: color.btnBrown_AE6F28,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
+    width: '47%',
 
   },
   changeDetailsText: {
@@ -233,6 +244,31 @@ const styles = StyleSheet.create({
   resendText: {
     color: color.blue,
     fontWeight: 'bold',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 10,
+  },
+  bottomtextbg: {
+    backgroundColor: color.btnBrown_AE6F28,
+    width: '80%',
+    height: 32,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginHorizontal: 45,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  bottomText: {
+    color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '400',
   },
 });
 
