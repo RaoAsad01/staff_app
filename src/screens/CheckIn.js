@@ -151,7 +151,10 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+      <StatusBar
+        barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'}
+        backgroundColor={Platform.OS === 'ios' ? 'black' : 'white'}
+      />
       <Header />
       {scanResult && (
         <View style={styles.scanResultContainer}>
@@ -173,7 +176,7 @@ const HomeScreen = () => {
             facing={facing}
             onBarcodeScanned={scanning ? undefined : handleBarCodeScanned}
           />
-       <CameraOverlay linePosition={linePosition} scannedData={scanResult ? scanResult.color : '#AE6F28'} />
+          <CameraOverlay linePosition={linePosition} scannedData={scanResult ? scanResult.color : '#AE6F28'} />
         </View>
       </View>
 
@@ -191,7 +194,7 @@ const HomeScreen = () => {
               <TouchableOpacity style={styles.detailButton} onPress={handleDetailButtonPress}>
                 <Text style={styles.detailColor}>Details</Text>
               </TouchableOpacity>
-              {(scanResult.text === 'Scan Unsuccessful'  || scanResult.text === 'Scanned Already') && (
+              {(scanResult.text === 'Scan Unsuccessful' || scanResult.text === 'Scanned Already') && (
                 <TouchableOpacity style={styles.noteButton} onPress={handleNoteButtonPress}>
                   <Text style={styles.noteColor}>Note</Text>
                   {noteCount > 0 && (

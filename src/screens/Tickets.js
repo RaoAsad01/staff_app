@@ -155,15 +155,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   button: {
-    width: 84,
+    width: '50%',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    marginRight: 10,
   },
   activeButton: {
-    width: 84,
+    width: '50%',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -171,7 +170,7 @@ const styles = StyleSheet.create({
     borderColor: color.white_FFFFFF,
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
-    marginRight: 10,
+   
     // margin: 2,
     // shadowColor: '#000',
     // shadowOffset: { width: 0, height: 4 },

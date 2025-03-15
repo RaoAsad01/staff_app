@@ -110,9 +110,9 @@ const DashboardScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+            {/* <TouchableOpacity onPress={() => navigation.openDrawer()}>
               <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <Text style={styles.countryName}>OUTMOSPHERE</Text>
             <Text style={styles.cityName}>Accra</Text>
             <Text style={styles.date}>28-12-2024</Text>

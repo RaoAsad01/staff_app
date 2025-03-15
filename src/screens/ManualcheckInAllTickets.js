@@ -19,7 +19,7 @@ const ManualCheckInAllTickets = ({ route }) => {
 
                 <View style={styles.popUp}>
                     {/* {total > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>} */}
-                    <SvgIcons.successSvg width={81} height={80} fill="transparent" style={styles.successImageIcon} />
+                    <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
 
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
                     <Text style={styles.userEmail}>johndoe@gmail.com</Text>

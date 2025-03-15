@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, Platform, Dimensions, StatusBar,TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Platform, Dimensions, StatusBar, TouchableOpacity } from 'react-native';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
@@ -8,13 +8,18 @@ const { width } = Dimensions.get('window');
 
 const Header = () => {
   const navigation = useNavigation();
+
+  const handleCountPress = () => {
+    navigation.navigate('Tickets');
+  };
+  
   return (
     <View style={styles.container}>
       <View style={styles.headerColumn}>
         <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+          {/* <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
           <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <Text style={styles.eventName}>OUTMOSPHERE</Text>
           <Text style={styles.cityName}>Accra</Text>
           <Text style={styles.date}>28-12-2024</Text>
@@ -25,9 +30,11 @@ const Header = () => {
           <SvgIcons.userSvg width={28} height={28} fill="transparent" />
           <Text style={styles.userId}>ID: 87621237467</Text>
           <Text style={[styles.scan, { marginLeft: width * 0.25 }]}>Scans</Text>
-          <View style={styles.count}>
-            <Text style={styles.countColor}>48</Text>
-          </View>
+          <TouchableOpacity
+            style={[styles.count]}
+            onPress={handleCountPress}>
+            <Text style={styles.countColor}>5</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

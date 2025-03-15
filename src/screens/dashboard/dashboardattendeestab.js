@@ -375,15 +375,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: color.black_544B45,
+    fontSize: 14,
+    fontWeight: '500',
+    color: color.black_2F251D,
     marginBottom: 10,
   },
   value: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#2F251D',
+    fontSize: 12,
+    fontWeight: '400',
+    color: color.black_544B45,
     marginBottom: 5,
   },
   qrCode: {

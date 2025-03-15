@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Keyboard,
   TouchableWithoutFeedback,
+  Platform
 } from 'react-native';
 import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -25,16 +26,17 @@ const OtpLoginScreen = () => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       setKeyboardVisible(true);
     });
-
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-    });
-
+  
+    const keyboardDidHideListener = Platform.OS === 'ios'
+      ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false)) // iOS: Faster response
+      : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false)); // Android: Keep same
+  
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
+  
 
   const gotologinscreen = () => {
     navigation.navigate('Login');
@@ -253,17 +255,16 @@ const styles = StyleSheet.create({
   },
   bottomtextbg: {
     backgroundColor: color.btnBrown_AE6F28,
-    width: '80%',
+    width: 'auto',
+    paddingHorizontal: 20,
     height: 32,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    marginHorizontal: 45,
+    alignSelf: 'center',
     position: 'absolute',
     bottom: 0,
-    left: 0,
-    right: 0
   },
   bottomText: {
     color: color.white_FFFFFF,

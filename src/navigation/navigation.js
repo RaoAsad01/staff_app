@@ -22,14 +22,13 @@ function Navigation({ route }) {
   return (
     <Stack.Navigator initialRouteName={screenName}>
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false,unmountOnBlur: true }}  />
-      <Stack.Screen name="LoggedIn" component={MyTabs} options={{ headerShown: false,unmountOnBlur: true }} /> 
+      <Stack.Screen name="LoggedIn" component={LoggedInScreen} options={{ headerShown: false,unmountOnBlur: true }} /> 
       <Stack.Screen name="OtpLogin" component={OtpLoginScreen} options={{ headerShown: false,unmountOnBlur: true }} /> 
       <Stack.Screen name="TicketsTab" component={TicketsTab} options={{ headerShown: false,unmountOnBlur: true }} /> 
       <Stack.Screen name="BoxOfficeTab" component={BoxOfficeTab} options={{ headerShown: false,unmountOnBlur: false }} /> 
       <Stack.Screen name="CheckInAllTickets" component={CheckInAllTickets} options={{ headerShown: false,unmountOnBlur: true }} /> 
       <Stack.Screen name="ManualCheckInAllTickets" component={ManualCheckInAllTickets} options={{ headerShown: false,unmountOnBlur: true }} /> 
       <Stack.Screen name="TicketScanned" component={TicketScanned} options={{ headerShown: false,unmountOnBlur: true }} /> 
-      <Stack.Screen name="DashboardScreen" component={DashboardScreen} options={{ headerShown: false,unmountOnBlur: true }} />
     </Stack.Navigator>
   );
 }

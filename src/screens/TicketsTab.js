@@ -50,13 +50,13 @@ const TicketsTab = ({ tickets }) => {
                 <Text style={styles.ticketId}>{item.id}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
-                    <Text style={styles.priceCurrency}>USD </Text>
+                    <Text style={styles.priceCurrency}>USD</Text>
                     <Text style={styles.ticketPrice}>{item.price}</Text>
                 </View>
-                <Text style={styles.ticketDateheading}>Date:</Text>
+                <Text style={styles.ticketDateheading}>Date</Text>
                 <Text style={styles.ticketDate}>{item.date}</Text>
             </View>
-            <View style={ styles.statusBtn} >
+            <View style={styles.statusBtn} >
                 <TouchableOpacity
                     style={[
                         styles.statusButton,
@@ -96,7 +96,7 @@ const TicketsTab = ({ tickets }) => {
                     <TextInput
                         style={styles.searchBar}
                         placeholder="John Doe"
-                        placeholderTextColor={color.placeholderTxt_24282C}
+                        placeholderTextColor={color.black_544B45}
                         onChangeText={handleSearchChange}
                         value={searchText}
                         selectionColor={color.selectField_CEBCA0}
@@ -111,21 +111,35 @@ const TicketsTab = ({ tickets }) => {
             <View style={styles.tabContainer}>
                 <TouchableOpacity
                     style={[styles.tabButton, selectedTab === 'All' && styles.activeTab]}
-                    onPress={() => handleTabPress('All')}
-                >
-                    <Text style={[styles.tabButtonText, selectedTab === 'All' && styles.activeTabText]}>All ({totalTickets})</Text>
+                    onPress={() => setSelectedTab('All')}>
+                    <Text style={[styles.tabButtonText, selectedTab === 'All' && styles.activeTabText]}>All</Text>
+                    <View style={[styles.countBadge, selectedTab === 'All' ? styles.activeBadge : styles.inactiveBadge]}>
+                        <Text style={[styles.countText, selectedTab === 'All' ? styles.activeCountText : styles.inactiveCountText]}>
+                            {totalTickets}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                     style={[styles.tabButton, selectedTab === 'Scanned' && styles.activeTab]}
-                    onPress={() => handleTabPress('Scanned')}
-                >
-                    <Text style={[styles.tabButtonText, selectedTab === 'Scanned' && styles.activeTabText]}>Scanned ({scannedTicketsCount})</Text>
+                    onPress={() => setSelectedTab('Scanned')}>
+                    <Text style={[styles.tabButtonText, selectedTab === 'Scanned' && styles.activeTabText]}>Scanned</Text>
+                    <View style={[styles.countBadge, selectedTab === 'Scanned' ? styles.activeBadge : styles.inactiveBadge]}>
+                        <Text style={[styles.countText, selectedTab === 'Scanned' ? styles.activeCountText : styles.inactiveCountText]}>
+                            {scannedTicketsCount}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                     style={[styles.tabButton, selectedTab === 'Unscanned' && styles.activeTab]}
-                    onPress={() => handleTabPress('Unscanned')}
-                >
-                    <Text style={[styles.tabButtonText, selectedTab === 'Unscanned' && styles.activeTabText]}>Unscanned ({unscannedTicketsCount})</Text>
+                    onPress={() => setSelectedTab('Unscanned')}>
+                    <Text style={[styles.tabButtonText, selectedTab === 'Unscanned' && styles.activeTabText]}>Unscanned</Text>
+                    <View style={[styles.countBadge, selectedTab === 'Unscanned' ? styles.activeBadge : styles.inactiveBadge]}>
+                        <Text style={[styles.countText, selectedTab === 'Unscanned' ? styles.activeCountText : styles.inactiveCountText]}>
+                            {unscannedTicketsCount}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
             </View>
 
@@ -164,12 +178,15 @@ const styles = StyleSheet.create({
 
     },
     ticketId: {
-        fontWeight: 'bold',
+        fontWeight: '400',
         marginTop: 10,
-        fontSize: 14
+        fontSize: 14,
+        color: color.black_544B45
     },
     ticketType: {
         fontSize: 14,
+        fontWeight: 500,
+        color: color.black_2F251D,
         marginTop: 10
     },
     priceContainer: {
@@ -178,24 +195,30 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     priceCurrency: {
+        fontSize: 14,
+        fontWeight: '500',
         color: color.black_544B45,
     },
     ticketPrice: {
-        color: color.black_2F251D,
-        fontWeight: 'bold',
+        color: color.brown_5A2F0E,
+        fontSize: 14,
+        fontWeight: '700',
     },
     ticketDate: {
-        fontSize: 16,
+        fontSize: 14,
         color: color.black_544B45,
-        fontWeight: 'bold',
+        fontWeight: '400',
         marginTop: 10
     },
     ticketheading: {
-        fontSize: 20,
-        color: color.black_544B45,
+        fontSize: 14,
+        fontWeight: 500,
+        color: color.black_2F251D,
     },
     ticketDateheading: {
-        fontSize: 16,
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D,
         marginTop: 10
     },
     statusButton: {
@@ -246,44 +269,8 @@ const styles = StyleSheet.create({
     searchBar: {
         flex: 1,
         paddingVertical: 10,
-        fontWeight: '500',
+        fontWeight: '400',
         fontSize: 13,
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        paddingVertical: 10,
-    },
-    tabButton: {
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-        marginRight: 10,
-        padding: 5
-    },
-    activeTab: {
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: color.white_FFFFFF,
-        borderRadius: 7,
-        backgroundColor: color.white_FFFFFF,
-        marginRight: 10,
-        // margin: 2,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 4 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 6,
-        // elevation: 5,
-    },
-    tabButtonText: {
-        color: color.brown_766F6A
-    },
-    activeTabText: {
-        color: color.brown_3C200A,
-        fontWeight: 'bold',
     },
     imageContainer: {
         width: 100,
@@ -291,6 +278,66 @@ const styles = StyleSheet.create({
         marginRight: 5,
         marginTop: 70
     },
+    tabContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingVertical: 10,
+    },
+
+    tabButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 7,
+    },
+
+    activeTab: {
+        backgroundColor: '#FFFFFF',
+    },
+
+    tabButtonText: {
+        fontSize: 16,
+        fontWeight: '400',
+        color: color.brown_766F6A,
+    },
+
+    activeTabText: {
+        fontSize: 16,
+        color: color.brown_3C200A,
+        fontWeight: '500',
+    },
+
+    countBadge: {
+        borderRadius: 2,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 5,
+        minWidth: 30, // Ensure a minimum width
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    activeBadge: {
+        backgroundColor: color.brown_F7E4B6, // Light yellow for active tab
+    },
+
+    inactiveBadge: {
+        backgroundColor: '#87807CB2',
+    },
+
+    countText: {
+        fontSize: 7,
+        fontWeight: '500',
+        color: color.white_FFFFFF
+    },
+
+    activeCountText: {
+        fontSize: 7,
+        fontWeight: '500',
+        color: color.black_544B45,
+    }
 
 });
 
