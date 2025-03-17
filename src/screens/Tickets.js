@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text,StatusBar ,SafeAreaView} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text,StatusBar ,SafeAreaView,Platform} from 'react-native';
 import Header from '../../components/header';
 import TicketsTab from './TicketsTab';
 import BoxOfficeTab from './BoxOfficeTab';

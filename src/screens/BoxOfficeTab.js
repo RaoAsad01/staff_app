@@ -15,10 +15,13 @@ const BoxOfficeTab = () => {
   const [paymentOption, setPaymentOption] = useState('');
   const { width } = Dimensions.get('window');
 
+
+
   const [selectedTickets, setSelectedTickets] = useState([
     { type: 'Standard Ticket', price: 40, discountPrice: 30, quantity: 2 },
     { type: 'VIP Ticket', price: 40, discountPrice: 30, quantity: 2 }
   ]);
+  const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 
   const navigateToCheckInAllTicketsScreen = () => {
     if (!email) {
@@ -180,10 +183,17 @@ const BoxOfficeTab = () => {
 
       <View style={styles.footer}>
         <View style={styles.lineView}></View>
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Total</Text>
-          <Text style={styles.totalValue}>${calculateTotal()}</Text>
-        </View>
+        <View style={styles.totalamount}>
+  <View style={styles.totalContainer}>
+    <Text style={styles.totalText}>Total Tickets</Text>
+    <Text style={[styles.totalValue, { textAlign: 'left' }]}>{totalQuantity}</Text>
+  </View>
+  <View style={styles.totalContainer}>
+    <Text style={styles.totalText}>Total Amount</Text>
+    <Text style={[styles.totalValue, { textAlign: 'left' }]}>${calculateTotal()}</Text>
+  </View>
+</View>
+
         <View style={styles.lineView2}></View>
         <Formik
           initialValues={{ email: '' }}
@@ -211,6 +221,7 @@ const BoxOfficeTab = () => {
             </View>
           )}
         </Formik>
+        <View style={styles.lineView3}></View>
         <View style={styles.Paylabel}>
           <Text>Pay With</Text>
         </View>
@@ -223,11 +234,11 @@ const BoxOfficeTab = () => {
             ]}
             onPress={() => setPaymentOption('Cash')}
           >
-           {paymentOption === 'Cash' ? (
-          <SvgIcons.cameraIconActive width={24} height={24} />
-        ) : (
-          <SvgIcons.cameraIconInActive width={24} height={24} />
-        )}
+            {paymentOption === 'Cash' ? (
+              <SvgIcons.cameraIconActive width={24} height={24} />
+            ) : (
+              <SvgIcons.cameraIconInActive width={24} height={24} />
+            )}
             <Text style={[styles.paymentOptionText, paymentOption === 'Cash' && { color: '#5A2F0E' }]}>
               Cash
             </Text>
@@ -242,23 +253,58 @@ const BoxOfficeTab = () => {
             onPress={() => setPaymentOption('Debit/Credit Card')}
           >
             {paymentOption === 'Debit/Credit Card' ? (
-          <SvgIcons.cardIconActive width={24} height={24} />
-        ) : (
-          <SvgIcons.cardIconInActive width={24} height={24} />
-        )}
+              <SvgIcons.cardIconActive width={24} height={24} />
+            ) : (
+              <SvgIcons.cardIconInActive width={24} height={24} />
+            )}
             <Text style={[styles.paymentOptionText, paymentOption === 'Debit/Credit Card' && { color: '#5A2F0E' }]}>
               Debit/Credit Card
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[styles.paymentOptioncard, paymentOption === 'Card/Mobile Money' && { borderColor: '#AE6F28' }]} onPress={() => setPaymentOption('Card/Mobile Money')}>
-        {paymentOption === 'Card/Mobile Money' ? (
-        <SvgIcons.mobMoneyIconActive width={24} height={24} />
-      ) : (
-        <SvgIcons.mobMoneyIconInActive width={24} height={24} />
-      )}
+        <View style={styles.paymentOptions}>
+          <TouchableOpacity
+            style={[styles.paymentOption,
+            paymentOption === 'P.O.S' && { borderColor: '#AE6F28' },
+            { flex: 1 }
+            ]}
+            onPress={() => setPaymentOption('P.O.S')}
+          >
+            {paymentOption === 'P.O.S' ? (
+              <SvgIcons.mobMoneyIconActive width={24} height={24} />
+            ) : (
+              <SvgIcons.mobMoneyIconActive width={24} height={24} />
+            )}
+            <Text style={[styles.paymentOptionText, paymentOption === 'P.O.S' && { color: '#5A2F0E' }]}>P.O.S
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.paymentOption,
+            paymentOption === 'Mobile Money' && { borderColor: '#AE6F28' },
+            { alignSelf: 'flex-start' }
+            ]}
+            onPress={() => setPaymentOption('Mobile Money')}
+          >
+            {paymentOption === 'Mobile Money' ? (
+              <SvgIcons.mobMoneyIconActive width={24} height={24} />
+            ) : (
+              <SvgIcons.mobMoneyIconInActive width={24} height={24} />
+            )}
+            <Text style={[styles.paymentOptionText, paymentOption === 'Mobile Money' && { color: '#5A2F0E' }]}>
+              Mobile Money
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* <TouchableOpacity style={[styles.paymentOptioncard, paymentOption === 'Card/Mobile Money' && { borderColor: '#AE6F28' }]} onPress={() => setPaymentOption('Card/Mobile Money')}>
+          {paymentOption === 'Card/Mobile Money' ? (
+            <SvgIcons.mobMoneyIconActive width={24} height={24} />
+          ) : (
+            <SvgIcons.mobMoneyIconInActive width={24} height={24} />
+          )}
           <Text style={[styles.paymentOptionText, paymentOption === 'Card/Mobile Money' && { color: '#5A2F0E' }]}>Card/Mobile Money</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={[
             styles.getTicketsButton,
@@ -346,25 +392,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-
+  totalamount: {
+    backgroundColor: color.brown_F7E4B6,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 30,
+    gap: 10
+  },
   totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
-    top: 3
   },
-
+  
   totalText: {
-    fontSize: 16,
-    color: '#544B45',
+    fontSize: 14,
+    fontWeight: '400',
+    color: color.black_544B45,
+    flex: 1,
   },
-
+  
   totalValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#544B45',
+    fontSize: 16,
+    fontWeight: '500',
+    color: color.brown_5A2F0E,
+    minWidth: 40,
+    textAlign: 'left',
   },
+  
   inputContainer: {
     marginBottom: 20,
   },
@@ -399,12 +455,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#CEBCA0',
     borderRadius: 10,
-    paddingHorizontal: 39,
+    paddingHorizontal: 45,
     gap: 5
   },
   paymentOptionText: {
     margin: Platform.OS === 'ios' ? 2 : 0,
-    color: color.black_544B45
+    color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 14,
   },
   getTicketsButton: {
     backgroundColor: '#AE6F28',
@@ -492,7 +550,7 @@ const styles = StyleSheet.create({
     borderColor: '#CEBCA0',
     width: '100%',
     borderWidth: 0.5,
-    top: 10
+    top: 15
   },
 
   lineView2: {
@@ -500,7 +558,14 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 0.5,
     marginBottom: 10,
-
+    top: 15
+  },
+  lineView3: {
+    borderColor: '#CEBCA0',
+    width: '100%',
+    borderWidth: 0.5,
+    marginBottom: 10,
+    top: 25
   },
   input: {
     top: 20,
@@ -513,7 +578,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputHeading: {
-    top: 20,
+    top: 25,
     color: color.black_2F251D,
     marginBottom: 10,
   },
@@ -526,7 +591,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   Paylabel: {
-    top: 25,
+    top: 30,
     color: color.brown_3C200A
   },
   cameraImage: {

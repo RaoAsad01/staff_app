@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, Platform, Dimensions, StatusBar, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Platform, Dimensions, StatusBar, TouchableOpacity,SafeAreaView } from 'react-native';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   },
   headerColumn: {
     flexDirection: 'column',
-    backgroundColor: color.white_FFFFFF,
+    paddingTop: Platform.OS === 'android' ? 15: 0,
   },
   header: {
     flexDirection: 'row',
@@ -55,7 +55,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     width: '100%',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 20, // Dynamic padding for Android
+    backgroundColor: color.btnBrown_AE6F28,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 15, // Dynamic padding for Android
   },
   profileId: {
     flexDirection: 'row',
@@ -66,29 +67,33 @@ const styles = StyleSheet.create({
     backgroundColor: color.brown_F7E4B6,
   },
   eventName: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '500',
+    paddingBottom: 5
   },
   cityName: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '400',
+    paddingBottom: 6
   },
   date: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '400',
+    paddingBottom: 6
   },
   time: {
-    color: color.brown_3C200A,
+    color: color.white_FFFFFF,
     fontSize: 14,
-    fontSize: 12,
     fontWeight: '400',
+    paddingBottom: 6
   },
   userId: {
     color: color.brown_3C200A,
     fontSize: 14,
+    fontWeight: '400',
     height: 22,
     marginLeft: 10,
     lineHeight: 22,

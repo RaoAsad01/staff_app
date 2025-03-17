@@ -109,6 +109,7 @@ const DashboardScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
+        <View style={styles.headerColumn}>
           <View style={styles.header}>
             {/* <TouchableOpacity onPress={() => navigation.openDrawer()}>
               <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
@@ -118,6 +119,7 @@ const DashboardScreen = () => {
             <Text style={styles.date}>28-12-2024</Text>
             <Text style={styles.date}>at</Text>
             <Text style={styles.time}>7:00 PM</Text>
+          </View>
           </View>
           <Text style={styles.labelDashboard}>Dashboard</Text>
           <OverallStatistics />
@@ -151,35 +153,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: color.white_FFFFFF
   },
+  headerColumn: {
+    paddingTop: Platform.OS === 'android' ? 15: 0,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
     width: '100%',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 20,
+    backgroundColor: color.btnBrown_AE6F28,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 15,
   },
   countryName: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '500',
-
   },
   cityName: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '400',
+    paddingBottom:2
   },
   date: {
-    color: color.brown_3C200A,
-    fontSize: 12,
+    color: color.white_FFFFFF,
+    fontSize: 14,
     fontWeight: '400',
+    paddingBottom:2
   },
   time: {
-    color: color.brown_3C200A,
+    color: color.white_FFFFFF,
     fontSize: 14,
-    fontSize: 12,
     fontWeight: '400',
+    paddingBottom:2
   },
   labelDashboard: {
     fontSize: 20,
