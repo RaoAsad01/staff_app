@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal } from 'react-native';
 import { boxofficetablist } from '../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
 import { color } from '../color/color';
@@ -13,6 +13,8 @@ const BoxOfficeTab = () => {
   const [selectedTab, setSelectedTab] = useState(boxofficetablist[0]);
   const [email, setEmail] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
+  const [isPOSModalVisible, setPOSModalVisible] = useState(false);
+  const [transactionNumber, setTransactionNumber] = useState('');
   const { width } = Dimensions.get('window');
 
 
@@ -36,6 +38,20 @@ const BoxOfficeTab = () => {
 
     const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
     navigation.navigate('CheckInAllTickets', { totalTickets: totalQuantity, email, paymentOption });
+  };
+
+  const handlePOSPayment = () => {
+    if (!transactionNumber.trim()) {
+      alert('Please enter a valid transaction number.');
+      return;
+    }
+    if (!email) {
+      alert('Please enter a valid email or phone number.');
+      return;
+    }
+
+    setPOSModalVisible(false);
+    navigation.navigate('CheckInAllTickets', { totalTickets: totalQuantity, email, paymentOption, transactionNumber });
   };
 
 
@@ -184,15 +200,15 @@ const BoxOfficeTab = () => {
       <View style={styles.footer}>
         <View style={styles.lineView}></View>
         <View style={styles.totalamount}>
-  <View style={styles.totalContainer}>
-    <Text style={styles.totalText}>Total Tickets</Text>
-    <Text style={[styles.totalValue, { textAlign: 'left' }]}>{totalQuantity}</Text>
-  </View>
-  <View style={styles.totalContainer}>
-    <Text style={styles.totalText}>Total Amount</Text>
-    <Text style={[styles.totalValue, { textAlign: 'left' }]}>${calculateTotal()}</Text>
-  </View>
-</View>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>Total Tickets</Text>
+            <Text style={[styles.totalValue, { textAlign: 'left' }]}>{totalQuantity}</Text>
+          </View>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>Total Amount</Text>
+            <Text style={[styles.totalValue, { textAlign: 'left' }]}>${calculateTotal()}</Text>
+          </View>
+        </View>
 
         <View style={styles.lineView2}></View>
         <Formik
@@ -262,13 +278,16 @@ const BoxOfficeTab = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.paymentOptions}>
+        <View style={styles.paymentOptionsPOS}>
           <TouchableOpacity
             style={[styles.paymentOption,
             paymentOption === 'P.O.S' && { borderColor: '#AE6F28' },
             { flex: 1 }
             ]}
-            onPress={() => setPaymentOption('P.O.S')}
+            onPress={() => {
+              setPaymentOption('P.O.S');
+              setPOSModalVisible(true);
+            }}
           >
             {paymentOption === 'P.O.S' ? (
               <SvgIcons.mobMoneyIconActive width={24} height={24} />
@@ -305,17 +324,47 @@ const BoxOfficeTab = () => {
           )}
           <Text style={[styles.paymentOptionText, paymentOption === 'Card/Mobile Money' && { color: '#5A2F0E' }]}>Card/Mobile Money</Text>
         </TouchableOpacity> */}
-        <TouchableOpacity
-          style={[
-            styles.getTicketsButton,
-            !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
-          ]}
-          onPress={navigateToCheckInAllTicketsScreen}
-          disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
-        >
-          <Text style={styles.getTicketsButtonText}>Get Ticket(s)</Text>
-        </TouchableOpacity>
+        {paymentOption && paymentOption !== 'P.O.S' && (
+          <TouchableOpacity
+            style={[
+              styles.getTicketsButton,
+              !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
+            ]}
+            onPress={navigateToCheckInAllTicketsScreen}
+            disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
+          >
+            <Text style={styles.getTicketsButtonText}>Get Ticket(s)</Text>
+          </TouchableOpacity>
+        )}
       </View>
+      <Modal visible={isPOSModalVisible} transparent animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>Pay with P.O.S</Text></View>
+              <TextInput
+                style={styles.inputTransaction}
+                placeholder="Transaction / Receipt ID"
+                placeholderTextColor={color.brown_766F6A}
+                value={transactionNumber}
+                onChangeText={setTransactionNumber}
+                keyboardType="default"
+              />
+              <TouchableOpacity style={[
+                styles.getTicketsButtonPOS,
+                !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
+              ]}
+                onPress={handlePOSPayment}
+                disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
+              >
+                <Text style={styles.getTicketsButtonTextPOS}>Get Ticket(s)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setPOSModalVisible(false)} style={styles.cancelButtonContainer}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
     </ScrollView>
   );
 };
@@ -405,14 +454,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  
+
   totalText: {
     fontSize: 14,
     fontWeight: '400',
     color: color.black_544B45,
     flex: 1,
   },
-  
+
   totalValue: {
     fontSize: 16,
     fontWeight: '500',
@@ -420,7 +469,7 @@ const styles = StyleSheet.create({
     minWidth: 40,
     textAlign: 'left',
   },
-  
+
   inputContainer: {
     marginBottom: 20,
   },
@@ -435,6 +484,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    gap: 10
+  },
+  paymentOptionsPOS:{
+    top: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: 35,
     gap: 10
   },
   paymentOptioncard: {
@@ -469,7 +525,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    top: 40,
+    top: 30,
     marginBottom: 45
   },
   getTicketsButtonText: {
@@ -598,6 +654,56 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: color.brown_3C200A,
+    marginBottom: 10,
+  },
+  inputTransaction: {
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: color.borderBrown_CEBCA0,
+    borderRadius: 10,
+    marginBottom: 15,
+    height: 46
+  },
+  getTicketsButtonPOS: {
+    backgroundColor: color.btnBrown_AE6F28,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    top: 10,
+    marginBottom: 20
+  },
+  getTicketsButtonTextPOS: {
+    color: color.white_FFFFFF,
+    fontWeight: 'bold',
+  },
+  cancelText: {
+    color: color.btnBrown_AE6F28,
+  },
+  cancelButtonContainer: {
+    alignItems: 'center',
+  },  
+  modalTitleContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+
 });
 
 export default BoxOfficeTab;

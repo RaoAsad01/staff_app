@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Text, Platform, Dimensions, StatusBar, TouchableOpacity,SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Platform, Dimensions, StatusBar, TouchableOpacity } from 'react-native';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
@@ -8,9 +8,11 @@ const { width } = Dimensions.get('window');
 
 const Header = () => {
   const navigation = useNavigation();
+  const [tabKey, setTabKey] = useState(0);
 
   const handleCountPress = () => {
-    navigation.navigate('Tickets');
+    setTabKey(prevKey => prevKey + 1); // Update the key
+    navigation.navigate('Tickets', { initialTab: 'Scanned', fromHeader: true });
   };
   
   return (
@@ -100,6 +102,8 @@ const styles = StyleSheet.create({
   },
   scan: {
     left: 5,
+    fontSize: 14,
+    fontWeight: '400',
   },
   count: {
     marginLeft: Platform.OS === 'ios' ? 30 : 15,

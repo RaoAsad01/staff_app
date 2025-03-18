@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect,useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import { Image as ExpoImage } from 'expo-image';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 
-const TicketsTab = ({ tickets }) => {
+const TicketsTab = ({route, tickets }) => {
     const navigation = useNavigation()
     const [searchText, setSearchText] = useState('');
     const [selectedTab, setSelectedTab] = useState('All');
+    const isFocused = useIsFocused();
+    useEffect(() => {
+        if (isFocused) {
+            console.log("route.params", route.params);
+            if (route.params?.fromTab) {
+                setSelectedTab('All');
+                navigation.setParams({ fromTab: undefined });
+                return;
+            }
+            if (route.params?.initialTab === 'Scanned' && route.params?.fromHeader) {
+                setSelectedTab('Scanned');
+                return;
+            }
+        }
+    }, [isFocused, route.params]);
 
     const filterTickets = () => {
+        if (!tickets) {
+            return [];
+          }
+      
         let filteredTickets = tickets;
         if (searchText) {
             filteredTickets = tickets.filter(

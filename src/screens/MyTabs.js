@@ -18,7 +18,7 @@ function MyTabs() {
       <TouchableOpacity
         style={[
           styles.tabBarButton,
-          focused && styles.activeTabBarButton, // Apply active style if focused
+          focused && styles.activeTabBarButton,
         ]}
         onPress={onPress}
         activeOpacity={1}
@@ -58,12 +58,28 @@ function MyTabs() {
         },
         tabBarActiveTintColor: color.btnBrown_AE6F28,
         tabBarInactiveTintColor: color.brown_766F6A,
-        tabBarButton: (props) => <CustomTabBarButton {...props} />, // Use custom tab bar button
+        tabBarButton: (props) => <CustomTabBarButton {...props} />,
       })}
       initialRouteName="Check In"
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen name="Tickets" component={Tickets} options={{ headerShown: false, unmountOnBlur: true }} />
+      <Tab.Screen 
+        name="Tickets" 
+        component={Tickets} 
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Tickets', params: { fromTab: true } }],
+            });
+          },
+        })}
+      />
       <Tab.Screen name="Check In" component={CheckIn} options={{ headerShown: false, unmountOnBlur: true }} />
       <Tab.Screen name="Manual Scan" component={ManualScan} options={{ headerShown: false, unmountOnBlur: true }} />
       <Tab.Screen name="Profile" component={DashboardScreen} options={{ headerShown: false, unmountOnBlur: true }} />
