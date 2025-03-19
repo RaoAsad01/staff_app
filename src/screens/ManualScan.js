@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, StatusBar, TouchableOpacity, FlatList,SafeAreaView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, StatusBar, TouchableOpacity, FlatList, SafeAreaView } from 'react-native';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import { attendeeslist } from '../constants/attendeeslist';
-import { useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 
 const ManualScan = () => {
@@ -44,53 +44,46 @@ const ManualScan = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+    <View style={styles.mainContainer}>
       <Header />
-      {/* <Text style={styles.inputLabel}>
-        Enter the name, email, or phone number to{'\n'}search the ticket
-      </Text> */}
+      <View style={styles.contentContainer}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Name, Number, Tix ID or Transaction No"
+            placeholderTextColor={color.brown_766F6A}
+            onChangeText={(text) => setSearchText(text)}
+            value={searchText}
+            selectionColor={color.selectField_CEBCA0}
+          />
+          <TouchableOpacity>
+            <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
+          </TouchableOpacity>
+        </View>
 
-
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Name, Number, Tix ID or Transaction No"
-          placeholderTextColor={color.brown_766F6A}
-          onChangeText={(text) => setSearchText(text)}
-          value={searchText}
-          selectionColor={color.selectField_CEBCA0}
+        {/* FlatList */}
+        <FlatList
+          data={filteredTickets}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.flatListContent}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No tickets found</Text>
+          }
         />
-        <TouchableOpacity>
-         <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
-        </TouchableOpacity>
       </View>
-
-      {/* FlatList */}
-      <FlatList
-        data={filteredTickets}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.flatListContent}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No tickets found</Text>
-        }
-      />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    //backgroundColor: color.white_FFFFFF
+    //backgroundColor: color.btnBrown_AE6F28,
   },
-  inputLabel: {
-    paddingHorizontal: 46,
-    fontSize: 14,
-    color: color.black_544B45,
-    marginTop: 20,
-    textAlign: 'center',
+  contentContainer: {
+    flex: 1,
+    //backgroundColor: color.white_FFFFFF,
   },
   searchContainer: {
     backgroundColor: color.white_FFFFFF,
@@ -117,12 +110,6 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
     marginHorizontal: 16,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 6,
-    // elevation: 5,  
-    // margin: 2
   },
   ticketRow: {
     flexDirection: 'row',
@@ -151,7 +138,7 @@ const styles = StyleSheet.create({
   type: {
     fontSize: 14,
     color: '#000000',
-    marginBottom: 5, // Add spacing between type and total
+    marginBottom: 5,
   },
   total: {
     fontSize: 14,

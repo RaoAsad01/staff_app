@@ -1,13 +1,14 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../color/color";
+import { useNavigation } from "@react-navigation/native";
 
-const CircularProgress = ({ checkedIn, total }) => {
+const CircularProgress = ({ value, total }) => {
   const radius = 20;
   const strokeWidth = 2;
   const circumference = 2 * Math.PI * radius;
-  const percentage = total > 0 ? (checkedIn / total) * 100 : 0;
+  const percentage = total > 0 ? (value / total) * 100 : 0;
   const progress = (percentage / 100) * circumference;
 
   return (
@@ -27,8 +28,8 @@ const CircularProgress = ({ checkedIn, total }) => {
         stroke={color.btnBrown_AE6F28}
         strokeWidth={strokeWidth}
         fill="none"
-        strokeDasharray={circumference}
-        strokeDashoffset={circumference - progress}
+        strokeDasharray={`${circumference}`}
+        strokeDashoffset={`${circumference - progress}`}
         strokeLinecap="round"
       />
       <SvgText
@@ -39,43 +40,70 @@ const CircularProgress = ({ checkedIn, total }) => {
         fill={color.brown_3C200A}
         fontWeight="500"
       >
-        {`${Math.round(percentage)}%`}
+        {Math.round(percentage)}%
       </SvgText>
     </Svg>
   );
 };
 
-const CheckInSoldTicketsCard = ({ title, data }) => {
+const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsData }) => {
+  const navigation = useNavigation();
+
+  const handleRemainingPress = () => {
+    navigation.navigate('Tickets', { screen: 'BoxOfficeTab' });
+  };
+
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      {data.map((item, index) => (
-        <View key={index} style={styles.row}>
-          <CircularProgress checkedIn={item.checkedIn} total={item.total} />
-          <View style={styles.textContainer}>
-            <Text style={styles.label}>{item.label}</Text>
-            <Text style={styles.value}>
-              {item.checkedIn} / {item.total}
-            </Text>
+    <View>
+      <View style={styles.card}>
+        <Text style={styles.title}>{title}</Text>
+        {data.map((item, index) => (
+          <View key={index} style={styles.row}>
+            <CircularProgress value={item.checkedIn} total={item.total} />
+            <View style={styles.textContainer}>
+              <Text style={styles.label}>{item.label}</Text>
+              <Text style={styles.value}>
+                <Text>{item.checkedIn}</Text>
+                <Text> / </Text>
+                <Text>{item.total}</Text>
+              </Text>
+            </View>
           </View>
-        </View>
-      ))}
+        ))}
+      </View>
+
+      {showRemaining && remainingTicketsData && remainingTicketsData.length > 0 && (
+        <TouchableOpacity 
+          style={styles.remainingContainer}
+          onPress={handleRemainingPress}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.title}>Available Tickets</Text>
+          {remainingTicketsData.map((item, index) => {
+            const remaining = item.total - item.checkedIn;
+            return (
+              <View key={index} style={styles.row}>
+                <CircularProgress value={remaining} total={item.total} />
+                <View style={styles.textContainer}>
+                  <Text style={styles.label}>{item.label}</Text>
+                  <Text style={styles.value}>{remaining}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "white",
+    backgroundColor: color.white_FFFFFF,
     padding: 15,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
     marginVertical: 10,
-    marginHorizontal: 10
+    marginHorizontal: 10,
   },
   title: {
     fontSize: 16,
@@ -95,12 +123,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: color.black_544B45,
-    fontWeight: '400'
+    fontWeight: "400",
   },
   value: {
     fontSize: 16,
     fontWeight: "500",
     color: color.brown_3C200A,
+  },
+  remainingContainer: {
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 12,
+    marginVertical: 10,
+    marginHorizontal: 10,
   },
 });
 

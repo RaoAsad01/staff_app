@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text,StatusBar ,SafeAreaView,Platform} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 import Header from '../../components/header';
 import TicketsTab from './TicketsTab';
 import BoxOfficeTab from './BoxOfficeTab';
@@ -9,6 +9,13 @@ import SvgIcons from '../../components/SvgIcons';
 const SettingsScreen = ({ route, navigation }) => {
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
+
+  useEffect(() => {
+    // Handle navigation from dashboard
+    if (route.params?.screen === 'BoxOfficeTab') {
+      setActiveView('BoxOfficeTab');
+    }
+  }, [route.params]);
 
   const tickets = [
     {
@@ -100,54 +107,56 @@ const SettingsScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-       <StatusBar barStyle="dark-content" backgroundColor="white" />
+    <View style={styles.mainContainer}>
       <Header />
-
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          onPress={handleTicketsPress}
-          style={[styles.button, activeView === 'TicketsTab' && styles.activeButton]}
-        >
-          <Text
-            style={
-              activeView === 'TicketsTab'
-                ? [styles.buttonText, styles.activeButtonText]
-                : styles.buttonText
-            }
+      <View style={styles.contentContainer}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            onPress={handleTicketsPress}
+            style={[styles.button, activeView === 'TicketsTab' && styles.activeButton]}
           >
-            Tickets
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={
+                activeView === 'TicketsTab'
+                  ? [styles.buttonText, styles.activeButtonText]
+                  : styles.buttonText
+              }
+            >
+              Tickets
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleBoxOfficePress}
-          style={[styles.button, activeView === 'BoxOfficeTab' && styles.activeButton]}
-        >
-          <Text
-            style={
-              activeView === 'BoxOfficeTab'
-                ? [styles.buttonText, styles.activeButtonText]
-                : styles.buttonText
-            }
+          <TouchableOpacity
+            onPress={handleBoxOfficePress}
+            style={[styles.button, activeView === 'BoxOfficeTab' && styles.activeButton]}
           >
-            Box Office
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={
+                activeView === 'BoxOfficeTab'
+                  ? [styles.buttonText, styles.activeButtonText]
+                  : styles.buttonText
+              }
+            >
+              Box Office
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} route={route} key={tabKey} />}
+        {activeView === 'BoxOfficeTab' && <BoxOfficeTab />}
       </View>
-
-      {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} route= {route} key={tabKey}/>}
-      {activeView === 'BoxOfficeTab' && <BoxOfficeTab />}
-
-
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    //backgroundColor: color.white_FFFFFF
+    //backgroundColor: color.btnBrown_AE6F28,
+  },
+  contentContainer: {
+    flex: 1,
+    //backgroundColor: color.white_FFFFFF,
   },
   tabContainer: {
     flexDirection: 'row',

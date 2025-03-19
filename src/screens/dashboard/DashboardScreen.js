@@ -33,7 +33,7 @@ const DashboardScreen = () => {
     { label: "VIP", checkedIn: 180, total: 250, percentage: 72 },
     { label: "Member", checkedIn: 120, total: 150, percentage: 80 },
   ];
-
+ 
   const checkedInChartData = [
     { time: "12pm", value: 40, isHighlighted: false },
     { time: "1pm", value: 80, isHighlighted: false },
@@ -61,29 +61,44 @@ const DashboardScreen = () => {
     { label: 'Members Attendees', value: '50' },
   ];
 
+  const filteredSoldTicketsData = soldTicketsData; // Keep Total Sold in Sold Tickets
+  const remainingTicketsData = soldTicketsData.filter(
+    (item) => item.label !== "Total Sold" // ✅ Remove "Total Sold" from Remaining Tickets
+  );
+  
   const renderContent = () => {
-    if (selectedTab === 'Attendees') {
+    if (selectedTab === "Attendees") {
       return <AttendeesComponent attendeesData={attendeesData} />;
-    } else if (selectedTab === 'Checked In' || selectedTab === 'Sold Tickets') {
-      const chartData = selectedTab === 'Checked In' ? checkedInChartData : soldTicketsChartData;
+    } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets") {
+      const chartData =
+        selectedTab === "Checked In" ? checkedInChartData : soldTicketsChartData;
+      
+      // Filter out "Total Sold" for remaining tickets
+      const remainingTicketsData = selectedTab === "Sold Tickets" 
+        ? soldTicketsData.filter(item => item.label !== "Total Sold")
+        : [];
+
       return (
         <>
           <CheckInSoldTicketsCard
             title={selectedTab}
-            data={selectedTab === 'Checked In' ? checkInData : soldTicketsData}
+            data={selectedTab === "Checked In" ? checkInData : soldTicketsData}
+            remainingTicketsData={remainingTicketsData}
+            showRemaining={selectedTab === "Sold Tickets"}
           />
           <AnalyticsChart
             title={selectedTab}
             data={chartData}
-            dataType={selectedTab === 'Checked In' ? 'checked in' : 'sold'}
+            dataType={selectedTab === "Checked In" ? "checked in" : "sold"}
           />
-
         </>
       );
     } else {
       return null; // Or render a default component
     }
   };
+  
+  
 
   const renderTab = ({ item }) => (
     <TouchableOpacity
@@ -106,44 +121,42 @@ const DashboardScreen = () => {
 
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.wrapper}>
-        <View style={styles.headerColumn}>
-          <View style={styles.header}>
-            {/* <TouchableOpacity onPress={() => navigation.openDrawer()}>
-              <SvgIcons.drawerSvg width={20} height={20} fill="transparent" />
-            </TouchableOpacity> */}
-            <Text style={styles.countryName}>OUTMOSPHERE</Text>
+    <View style={styles.mainContainer}>
+        <View style={styles.statusBarPlaceholder} />
+        <SafeAreaView style={styles.safeAreaContainer}>
+       <View style={styles.header}>
+            <Text style={styles.eventName}>OUTMOSPHERE</Text>
             <Text style={styles.cityName}>Accra</Text>
             <Text style={styles.date}>28-12-2024</Text>
             <Text style={styles.date}>at</Text>
             <Text style={styles.time}>7:00 PM</Text>
           </View>
+          </SafeAreaView>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.wrapper}>
+            <Text style={styles.labelDashboard}>Dashboard</Text>
+            <OverallStatistics />
+            <BoxOfficeSales />
+            <View style={styles.tabContainer}>
+              <FlatList
+                horizontal
+                data={dashboardstatuslist}
+                renderItem={renderTab}
+                keyExtractor={(item) => item}
+                showsHorizontalScrollIndicator={false}
+              />
+            </View>
+            {renderContent()}
           </View>
-          <Text style={styles.labelDashboard}>Dashboard</Text>
-          <OverallStatistics />
-          <BoxOfficeSales />
-          <View style={styles.tabContainer}>
-            <FlatList
-              horizontal
-              data={dashboardstatuslist}
-              renderItem={renderTab}
-              keyExtractor={(item) => item}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-          {renderContent()}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: color.white_FFFFFF,
+    //backgroundColor: color.white_FFFFFF,
   },
   scrollContainer: {
     paddingBottom: 20,
@@ -151,7 +164,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-    backgroundColor: color.white_FFFFFF
+    //backgroundColor: color.white_FFFFFF
+  },
+  statusBarPlaceholder: {
+    height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    backgroundColor: color.white_FFFFFF,
   },
   headerColumn: {
     paddingTop: Platform.OS === 'android' ? 15: 0,
@@ -160,12 +177,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 15,
+    height: 48,
   },
-  countryName: {
+  eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
     fontWeight: '500',
@@ -174,25 +191,23 @@ const styles = StyleSheet.create({
     color: color.white_FFFFFF,
     fontSize: 14,
     fontWeight: '400',
-    paddingBottom:2
   },
   date: {
     color: color.white_FFFFFF,
     fontSize: 14,
     fontWeight: '400',
-    paddingBottom:2
   },
   time: {
     color: color.white_FFFFFF,
     fontSize: 14,
     fontWeight: '400',
-    paddingBottom:2
   },
   labelDashboard: {
     fontSize: 20,
     fontWeight: '500',
     color: color.brown_3C200A,
-    paddingLeft: 10
+    paddingLeft: 10,
+    marginTop: 10,
   },
   tabContainer: {
     margin: 10,
@@ -216,12 +231,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
     marginRight: 10,
-    margin: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
   },
   selectedTabButtonText: {
     color: color.brown_3C200A,

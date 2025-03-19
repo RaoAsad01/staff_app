@@ -28,23 +28,37 @@ const HomeScreen = () => {
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const [showAnimation, setShowAnimation] = useState(false);
 
-  useEffect(() => {
-    requestPermission();
-  }, []);
-
+  // useEffect(() => {
+  //   // Set status bar configuration when component mounts
+  //   if (Platform.OS === 'ios') {
+  //     StatusBar.setBarStyle('light-content');
+  //     StatusBar.setHidden(false);
+  //   }
+  //   return () => {
+  //     if (Platform.OS === 'ios') {
+  //       StatusBar.setBarStyle('dark-content');
+  //     }
+  //   };
+  // }, []);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('HomeScreen focused! Refreshing data...');
-      // Reset your states or trigger any API fetch
+      // Set status bar configuration when screen is focused
+      // if (Platform.OS === 'ios') {
+      //   StatusBar.setBarStyle('light-content');
+      //   StatusBar.setHidden(false);
+      // }
       setScannedData(null);
       setScanResult(null);
       setScanning(false);
       setScanTime(null);
-
-      return () => console.log('HomeScreen unfocused! Cleanup here.');
     }, [])
   );
+
+  useEffect(() => {
+    requestPermission();
+  }, []);
+
 
   useEffect(() => {
     setNoteCount(Object.keys(notes).length);
@@ -150,73 +164,75 @@ const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'}
-        backgroundColor={Platform.OS === 'ios' ? 'black' : 'white'}
-      />
+    <View style={styles.mainContainer}>
       <Header />
-      {scanResult && (
-        <View style={styles.scanResultContainer}>
-          {showAnimation && (
-            <Animated.View
-              style={[
-                styles.animatedBar,
-                { backgroundColor: scanResult.color, width: animatedWidth },
-              ]}
+      <View style={styles.darkBackground}>
+        {scanResult && (
+          <View style={styles.scanResultContainer}>
+            {showAnimation && (
+              <Animated.View
+                style={[
+                  styles.animatedBar,
+                  { backgroundColor: scanResult.color, width: animatedWidth },
+                ]}
+              />
+            )}
+            {showAnimation && (<Text style={styles.animatedText}>{scanResult.text}</Text>)}
+          </View>
+        )}
+        <View style={styles.cameraContainer}>
+          <View style={[styles.cameraWrapper]}>
+            <CameraView
+              style={styles.camera}
+              facing={facing}
+              onBarcodeScanned={scanning ? undefined : handleBarCodeScanned}
             />
-          )}
-          {showAnimation && (<Text style={styles.animatedText}>{scanResult.text}</Text>)}
-        </View>
-      )}
-      <View style={styles.cameraContainer}>
-        <View style={[styles.cameraWrapper]}>
-          <CameraView
-            style={styles.camera}
-            facing={facing}
-            onBarcodeScanned={scanning ? undefined : handleBarCodeScanned}
-          />
-          <CameraOverlay linePosition={linePosition} scannedData={scanResult ? scanResult.color : '#AE6F28'} />
-        </View>
-      </View>
-
-      {scanResult && (
-        <View style={styles.containerstatus}>
-          <View style={styles.scanResultsContainer}>
-            <View style={[styles.scaniconresult, { backgroundColor: scanResult.color }]}>
-              <MaterialIcons name={scanResult.icon} size={24} color="white" style={{ margin: 13 }} />
-            </View>
-            <View style={styles.scanResults}>
-              <Text style={{ color: scanResult.color }}>{scanResult.text}</Text>
-              <Text style={styles.timeColor}>{scanTime}</Text>
-            </View>
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity style={styles.detailButton} onPress={handleDetailButtonPress}>
-                <Text style={styles.detailColor}>Details</Text>
-              </TouchableOpacity>
-              {(scanResult.text === 'Scan Unsuccessful' || scanResult.text === 'Scanned Already') && (
-                <TouchableOpacity style={styles.noteButton} onPress={handleNoteButtonPress}>
-                  <Text style={styles.noteColor}>Note</Text>
-                  {noteCount > 0 && (
-                    <View style={styles.greyCircle}>
-                      <View style={styles.redCircle}>
-                        <Text style={styles.redCircleText}>{noteCount}</Text>
-                      </View>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
+            <CameraOverlay linePosition={linePosition} scannedData={scanResult ? scanResult.color : '#AE6F28'} />
           </View>
         </View>
-      )}
+
+        {scanResult && (
+          <View style={styles.containerstatus}>
+            <View style={styles.scanResultsContainer}>
+              <View style={[styles.scaniconresult, { backgroundColor: scanResult.color }]}>
+                <MaterialIcons name={scanResult.icon} size={24} color="white" style={{ margin: 13 }} />
+              </View>
+              <View style={styles.scanResults}>
+                <Text style={{ color: scanResult.color }}>{scanResult.text}</Text>
+                <Text style={styles.timeColor}>{scanTime}</Text>
+              </View>
+              <View style={styles.buttonsContainer}>
+                <TouchableOpacity style={styles.detailButton} onPress={handleDetailButtonPress}>
+                  <Text style={styles.detailColor}>Details</Text>
+                </TouchableOpacity>
+                {(scanResult.text === 'Scan Unsuccessful' || scanResult.text === 'Scanned Already') && (
+                  <TouchableOpacity style={styles.noteButton} onPress={handleNoteButtonPress}>
+                    <Text style={styles.noteColor}>Note</Text>
+                    {noteCount > 0 && (
+                      <View style={styles.greyCircle}>
+                        <View style={styles.redCircle}>
+                          <Text style={styles.redCircleText}>{noteCount}</Text>
+                        </View>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
       {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit} />}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
+    flex: 1,
+    //backgroundColor: color.btnBrown_AE6F28,
+  },
+  darkBackground: {
     flex: 1,
     backgroundColor: color.drak_black_000000,
   },
