@@ -38,7 +38,7 @@ const NoteModal = ({ visible, onAddNote, onCancel, initialNote }) => {
                         onChangeText={setNoteText}
                         value={noteText}
                         selectionColor={color.selectField_CEBCA0}
-                        placeholder='Lorem ipsum dolor sit amet, consec tetur adipiscing elit, sed do eiusmod tempor'
+                        placeholder='Add your note here...'
                         placeholderTextColor={color.black_544B45}
                     />
                     <TouchableOpacity style={styles.button} onPress={handleAddNote}>
@@ -53,7 +53,8 @@ const NoteModal = ({ visible, onAddNote, onCancel, initialNote }) => {
 const styles = StyleSheet.create({
     centeredView: {
         flex: 1,
-        marginTop: 130
+        justifyContent: 'center',
+       
     },
     modalView: {
         margin: 15,

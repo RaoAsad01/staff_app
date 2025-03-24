@@ -330,16 +330,17 @@ const styles = StyleSheet.create({
 
     countBadge: {
         borderRadius: 2,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
         marginLeft: 5,
-        minWidth: 30, // Ensure a minimum width
+        minWidth:20,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical: 1,
+        paddingHorizontal: 3
+       
     },
 
     activeBadge: {
-        backgroundColor: color.brown_F7E4B6, // Light yellow for active tab
+        backgroundColor: color.brown_F7E4B6,
     },
 
     inactiveBadge: {
@@ -347,15 +348,17 @@ const styles = StyleSheet.create({
     },
 
     countText: {
-        fontSize: 7,
+        fontSize: 10,
         fontWeight: '500',
-        color: color.white_FFFFFF
+        color: color.white_FFFFFF,
+        textAlign: 'center',
     },
 
     activeCountText: {
-        fontSize: 7,
+        fontSize: 10,
         fontWeight: '500',
         color: color.black_544B45,
+        textAlign: 'center',
     }
 
 });

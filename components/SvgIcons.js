@@ -27,6 +27,8 @@ import TickIcon from '../assets/svgs/tick-icon.svg';
 import DashboardInactiveIcon from '../assets/svgs/dashboard_inactive_icon.svg';
 import DashboardActiveIcon from '../assets/svgs/dashboard_active_icon.svg'; 
 import ProfileActiveTab from '../assets/svgs/profile_active_tab.svg';
+import BackArrow from '../assets/svgs/back_arrow.svg';
+
 
 export default {
     totalTickets: TicketSVG,
@@ -57,6 +59,7 @@ export default {
     tickIcon: TickIcon,
     dashboardInactiveIcon: DashboardInactiveIcon,
     dashboardActiveIcon: DashboardActiveIcon,
-    profileActiveTab: ProfileActiveTab
+    profileActiveTab: ProfileActiveTab,
+    backArrow: BackArrow,
 
 };

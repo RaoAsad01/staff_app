@@ -1,16 +1,23 @@
-import { StyleSheet, Text, View, StatusBar, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, SafeAreaView, TouchableOpacity } from 'react-native';
 import { color } from '../color/color';
 import Header from '../../components/header';
 import SvgIcons from '../../components/SvgIcons';
-
+import { useNavigation } from '@react-navigation/native';
 
 const TicketScanned = ({ route }) => {
     const { status, note } = route.params;
+    const navigation = useNavigation();
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header />
+            <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => navigation.goBack()}
+            >
+                <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+            </TouchableOpacity>
             <View style={styles.wrapper}>
 
                 <View style={styles.popUp}>
@@ -57,7 +64,7 @@ const styles = StyleSheet.create({
     },
     wrapper: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         //backgroundColor: color.white_FFFFFF,
     },
     popUp: {
@@ -67,12 +74,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         width: '100%',
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 5,
-        // elevation: 5,
-        marginTop: 40,
+        marginTop: 10,
     },
 
     labeltickets: {
@@ -107,11 +109,6 @@ const styles = StyleSheet.create({
         marginTop: 15,
         marginBottom: 10,
         width: '100%',
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 5,
-        // elevation: 5,
     },
     tickeScanTime: {
         fontSize: 14,
@@ -196,11 +193,6 @@ const styles = StyleSheet.create({
         marginTop: 15,
         marginBottom: 10,
         width: '100%',
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 5,
-        // elevation: 5,
     },
     LabelNote: {
         fontSize: 14,
@@ -212,8 +204,10 @@ const styles = StyleSheet.create({
         fontWeight: '400',
         color: color.black_544B45,
         marginTop: 5
-    }
-
+    },
+    backButton: {
+      padding: 10
+    },
 });
 
 export default TicketScanned;

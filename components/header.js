@@ -35,14 +35,18 @@ const Header = () => {
             <Text style={styles.time}>7:00 PM</Text>
           </View>
           <View style={styles.profileId}>
-            <SvgIcons.userSvg width={28} height={28} fill="transparent" />
-            <Text style={styles.userId}>ID: 87621237467</Text>
-            <Text style={[styles.scan, { marginLeft: width * 0.25 }]}>Scans</Text>
-            <TouchableOpacity
-              style={styles.count}
-              onPress={handleCountPress}>
-              <Text style={styles.countColor}>5</Text>
-            </TouchableOpacity>
+            <View style={styles.userSection}>
+              <SvgIcons.userSvg width={28} height={28} fill="transparent" />
+              <Text style={styles.userId}>ID: 87621237467</Text>
+            </View>
+            <View style={styles.scanSection}>
+              <Text style={styles.scan}>Scans</Text>
+              <TouchableOpacity
+                style={styles.count}
+                onPress={handleCountPress}>
+                <Text style={styles.countColor}>5</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -75,12 +79,20 @@ const styles = StyleSheet.create({
   },
   profileId: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
     width: '100%',
     backgroundColor: color.brown_F7E4B6,
     height: 48,
+  },
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scanSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   eventName: {
     color: color.white_FFFFFF,
@@ -111,7 +123,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   scan: {
-    left: 5,
     fontSize: 14,
     fontWeight: '400',
   },

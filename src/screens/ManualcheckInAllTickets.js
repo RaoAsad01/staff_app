@@ -5,16 +5,24 @@ import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
 import { ticketslist } from '../constants/ticketslist';
 import SvgIcons from '../../components/SvgIcons';
+import { useNavigation } from '@react-navigation/native';
 
 const ManualCheckInAllTickets = ({ route }) => {
     const { total } = route.params;
     console.log('Tickets List:', ticketslist);
     console.log('Total Tickets:', total);
     const displayedTickets = ticketslist.slice(0, total);
+    const navigation = useNavigation();
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header />
+            <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => navigation.goBack()}
+            >
+                <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+            </TouchableOpacity>
             <View style={styles.wrapper}>
 
                 <View style={styles.popUp}>
@@ -49,7 +57,7 @@ const styles = StyleSheet.create({
     },
     wrapper: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         //backgroundColor: color.white_FFFFFF,
     },
     popUp: {
@@ -59,12 +67,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         width: '100%',
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 5,
-        // elevation: 5,
-        marginTop: 20,
+        marginTop: 10,
     },
     button: {
         backgroundColor: color.btnBrown_AE6F28,
@@ -106,6 +109,9 @@ const styles = StyleSheet.create({
     successImageIcon: {
         marginTop: 20,
     },
+    backButton: {
+        padding: 10
+      },
 });
 
 export default ManualCheckInAllTickets;
