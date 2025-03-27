@@ -7,20 +7,32 @@ import {
   TouchableOpacity,
   Keyboard,
   TouchableWithoutFeedback,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
+import { authService } from '../api/apiService';
 
-const OtpLoginScreen = () => {
+const OtpLoginScreen = ({ route }) => {
   const navigation = useNavigation();
   const [otpResendTime, setOtpResendTime] = useState(60);
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const inputRefs = useRef([]);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const uuid = route?.params?.uuid;
+  const userIdentifier = route?.params?.user_identifier;
+
+  useEffect(() => {
+    if (!uuid || !userIdentifier) {
+      console.log('Missing required parameters:', { uuid, userIdentifier });
+      Alert.alert('Error', 'Missing verification information');
+      navigation.goBack();
+    }
+  }, [uuid, userIdentifier]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -28,33 +40,56 @@ const OtpLoginScreen = () => {
     });
   
     const keyboardDidHideListener = Platform.OS === 'ios'
-      ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false)) // iOS: Faster response
-      : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false)); // Android: Keep same
+      ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false))
+      : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
   
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
-  
 
   const gotologinscreen = () => {
     navigation.navigate('Login');
   }
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     const enteredOtp = otp.join('');
     if (enteredOtp.length === 5) {
-      console.log('Signing in with OTP:', enteredOtp);
-      navigation.navigate('LoggedIn');
+      try {
+        const payload = {
+          uuid: uuid,
+          otp: enteredOtp
+        };
+        const response = await authService.verifyOtp(payload);
+        if (response.success) {
+          navigation.navigate('LoggedIn');
+        } else {
+          Alert.alert('Error', 'Verification failed');
+        }
+      } catch (error) {
+        Alert.alert('Error', error.response?.data?.message || 'Failed to verify OTP');
+      }
     } else {
-      console.log('Invalid OTP');
+      Alert.alert('Error', 'Please enter a valid 5-digit OTP');
     }
   };
 
-  const handleResendOtp = () => {
-    console.log('Resending OTP');
-    // setOtpResendTime(60);
+  const handleResendOtp = async () => {
+    try {
+      const response = await authService.requestOtp({
+        user_identifier: userIdentifier
+      });
+      if (response && response.success) {
+        // Update the UUID with the new one from response
+        setOtp(['', '', '', '', '']); // Clear the OTP fields
+        Alert.alert('Success', 'OTP resent successfully');
+      } else {
+        Alert.alert('Error', response?.message || 'Failed to get new verification code');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to resend OTP');
+    }
   };
 
   useEffect(() => {
@@ -119,10 +154,10 @@ const OtpLoginScreen = () => {
                 ))}
               </View>
   
-              <Text style={styles.labelText}>Didn’t receive OTP?</Text>
+              <Text style={styles.labelText}>Didn't receive OTP?</Text>
   
               <View style={styles.rowContainer}>
-                <TouchableOpacity style={styles.changeDetailsButton}>
+                <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
                   <Text style={styles.changeDetailsText}>Resend</Text>
                 </TouchableOpacity>
   

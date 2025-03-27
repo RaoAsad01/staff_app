@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity, Platform, Keyboard,
-  TouchableWithoutFeedback,
+  TouchableWithoutFeedback, Alert,
 } from 'react-native';
 import { ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import * as Yup from 'yup';
 import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
+import { authService } from '../api/apiService';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -21,27 +22,53 @@ const LoginScreen = () => {
     });
   
     const keyboardDidHideListener = Platform.OS === 'ios'
-      ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false)) // iOS: Faster response
-      : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false)); // Android: Keep same
+      ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false))
+      : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
   
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
-  
 
   const validationSchema = Yup.object().shape({
-    email: Yup.string()
-      .test('emailOrPhone', 'Invalid email or phone number', (value) =>
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || /^[0-9]{10,15}$/.test(value)
-      )
-      .required('Required'),
+    user_identifier: Yup.string()
+      .min(1, 'Required')
+      .required('Required')
+      .test('emailOrPhone', 'Invalid email or phone number', (value) => {
+        if (!value) return false;
+        // Email regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Phone regex (allows numbers only, 10-15 digits)
+        const phoneRegex = /^[0-9]{10,15}$/;
+        return emailRegex.test(value) || phoneRegex.test(value);
+      }),
   });
 
-  const handleSignIn = (values) => {
-    console.log('Signing in with:', values);
-    navigation.navigate('OtpLogin');
+  const handleSignIn = async (values) => {
+    try {
+      const response = await authService.requestOtp({
+        user_identifier: values.user_identifier.trim(),
+      });
+      
+      console.log('OTP Request Response:', response);
+      
+      // The response contains the UUID directly in the data object
+      if (response && response.success) {
+        navigation.navigate('OtpLogin', { 
+          uuid: response.data.uuid,
+          user_identifier: values.user_identifier.trim()
+        });
+      } else {
+        Alert.alert('Error', response?.message || 'Failed to get verification code');
+      }
+    } catch (error) {
+      if (error.response?.data?.message) {
+        Alert.alert('Error', error.response.data.message);
+      } else {
+        Alert.alert('Error', 'Failed to request OTP. Please try again.');
+      }
+    }
   };
 
   return (
@@ -68,27 +95,34 @@ const LoginScreen = () => {
             <View style={styles.containerWrapper}>
               <View style={styles.container}>
                 <Formik
-                  initialValues={{ email: '' }}
+                  initialValues={{ user_identifier: '' }}
                   validationSchema={validationSchema}
                   onSubmit={handleSignIn}
                 >
                   {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
                     <View style={{ width: '100%' }}>
                       <TextInput
-                        style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
+                        style={[
+                          styles.input,
+                          touched.user_identifier && errors.user_identifier ? styles.inputError : null
+                        ]}
                         placeholder="Email or Phone Number"
                         placeholderTextColor={color.black_544B45}
-                        onChangeText={handleChange('email')}
-                        onBlur={handleBlur('email')}
-                        value={values.email}
+                        onChangeText={handleChange('user_identifier')}
+                        onBlur={handleBlur('user_identifier')}
+                        value={values.user_identifier}
                         keyboardType="email-address"
                         selectionColor={color.placeholderTxt_24282C}
+                        autoCapitalize="none"
                       />
-                      {touched.email && errors.email && (
-                        <Text style={styles.errorText}>{errors.email}</Text>
+                      {touched.user_identifier && errors.user_identifier && (
+                        <Text style={styles.errorText}>{errors.user_identifier}</Text>
                       )}
 
-                      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+                      <TouchableOpacity 
+                        style={styles.button} 
+                        onPress={handleSubmit}
+                      >
                         <Text style={styles.buttonText}>Sign In</Text>
                       </TouchableOpacity>
                     </View>
