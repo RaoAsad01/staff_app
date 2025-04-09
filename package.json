@@ -42,7 +42,8 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "yup": "^1.6.1",
-    "expo-secure-store": "~14.0.1"
+    "expo-secure-store": "~14.0.1",
+    "expo-dev-client": "~5.0.19"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
