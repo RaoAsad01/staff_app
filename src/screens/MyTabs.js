@@ -7,6 +7,7 @@ import ManualScan from "./ManualScan";
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import DashboardScreen from './dashboard/DashboardScreen';
+import ProfileScreen from './ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -82,7 +83,7 @@ function MyTabs() {
       />
       <Tab.Screen name="Check In" component={CheckIn} options={{ headerShown: false, unmountOnBlur: true }} />
       <Tab.Screen name="Manual Scan" component={ManualScan} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen name="Profile" component={DashboardScreen} options={{ headerShown: false, unmountOnBlur: true }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, unmountOnBlur: true }} />
     </Tab.Navigator>
   );
 }

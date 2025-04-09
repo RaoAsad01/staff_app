@@ -16,6 +16,7 @@ import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
 import { authService } from '../api/apiService';
+import * as SecureStore from 'expo-secure-store'; 
 
 const OtpLoginScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -25,6 +26,17 @@ const OtpLoginScreen = ({ route }) => {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const uuid = route?.params?.uuid;
   const userIdentifier = route?.params?.user_identifier;
+
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (token) {
+        navigation.navigate('LoggedIn'); // Navigate to your home screen
+      }
+    };
+
+    checkLoggedIn();
+  }, [navigation]);
 
   useEffect(() => {
     if (!uuid || !userIdentifier) {
@@ -62,10 +74,13 @@ const OtpLoginScreen = ({ route }) => {
           otp: enteredOtp
         };
         const response = await authService.verifyOtp(payload);
-        if (response.success) {
-          navigation.navigate('LoggedIn');
+        if (response.success && response.data && response.data.access_token) {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'LoggedIn' }],
+          });
         } else {
-          Alert.alert('Error', 'Verification failed');
+          Alert.alert('Error', response.message || 'Verification failed');
         }
       } catch (error) {
         Alert.alert('Error', error.response?.data?.message || 'Failed to verify OTP');

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 
 // Base URL configuration
 const BASE_URL = 'http://167.71.195.57:8000';
@@ -12,39 +13,43 @@ const apiClient = axios.create({
 });
 
 // Request interceptor for adding auth token
-// apiClient.interceptors.request.use(
-//     async (config) => {
-//         try {
-//             const token = await AsyncStorage.getItem('token');
-//             if (token) {
-//                 config.headers.Authorization = `Bearer ${token}`;
-//             }
-//         } catch (error) {
-//             console.error('Error getting token:', error);
-//         }
-//         return config;
-//     },
-//     (error) => {
-//         return Promise.reject(error);
-//     }
-// );
+apiClient.interceptors.request.use(
+    async (config) => {
+        try {
+            const token = await SecureStore.getItemAsync('accessToken');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch (error) {
+            console.error('Error getting token from SecureStore:', error);
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // API endpoints
 const endpoints = {
     otpRequest: '/api/otp-request/',  // Added trailing slash to match your API
     verifyOtp: '/api/login/',
-    // Add more endpoints as needed
+    scanTicket: '/ticket/scan-ticket',
 };
 
 // API services
 export const authService = {
-
     // Request OTP service
     requestOtp: async (data) => {
         try {
             const response = await apiClient.post(endpoints.otpRequest, data);
-            return response.data;
+            console.log('API Response:', response.data);
             
+            if (!response.data) {
+                throw new Error('No data received from server');
+            }
+            
+            return response.data;
         } catch (error) {
             console.error('OTP Request Error:', {
                 status: error.response?.status,
@@ -61,7 +66,6 @@ export const authService = {
                 };
             }
             
-            // Network or other errors
             throw {
                 message: 'Network error. Please check your connection.',
                 error: error
@@ -69,12 +73,43 @@ export const authService = {
         }
     },
     
-
     // Verify OTP service
     verifyOtp: async (data) => {
         try {
-            // Ensure data matches the API requirement
             const response = await apiClient.post(endpoints.verifyOtp, data);
+            console.log('API Response (Verify OTP):', response.data);
+            if (response.data?.access_token) {
+                await SecureStore.setItemAsync('accessToken', response.data.access_token);
+            }
+            return response.data;
+        } catch (error) {
+            console.error('OTP Error:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message,
+                request: error.config?.data
+            });
+            if (error.response?.data) {
+                throw {
+                    message: error.response.data.message || 'Server error',
+                    response: error.response
+                };
+            }
+            throw {
+                message: 'Network error. Please check your connection.',
+                error: error
+            };
+        }
+    },
+};
+
+// Add ticket service
+export const ticketService = {
+    // Scan ticket service
+    scanTicket: async (code) => {
+        try {
+            const response = await apiClient.post(`${endpoints.scanTicket}/${code}`);
+            console.log('API Response:', response.data);
             return response.data;
         } catch (error) {
             if (error.response?.data) {

@@ -8,6 +8,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getFormattedDate } from '../constants/dateAndTime';
 import NoteModal from '../constants/noteModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { ticketService } from '../api/apiService';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
@@ -28,26 +29,8 @@ const HomeScreen = () => {
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const [showAnimation, setShowAnimation] = useState(false);
 
-  // useEffect(() => {
-  //   // Set status bar configuration when component mounts
-  //   if (Platform.OS === 'ios') {
-  //     StatusBar.setBarStyle('light-content');
-  //     StatusBar.setHidden(false);
-  //   }
-  //   return () => {
-  //     if (Platform.OS === 'ios') {
-  //       StatusBar.setBarStyle('dark-content');
-  //     }
-  //   };
-  // }, []);
-
   useFocusEffect(
     useCallback(() => {
-      // Set status bar configuration when screen is focused
-      // if (Platform.OS === 'ios') {
-      //   StatusBar.setBarStyle('light-content');
-      //   StatusBar.setHidden(false);
-      // }
       setScannedData(null);
       setScanResult(null);
       setScanning(false);
@@ -95,26 +78,56 @@ const HomeScreen = () => {
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
   }
 
-  const handleBarCodeScanned = ({ data }) => {
+  const handleBarCodeScanned = async ({ data }) => {
     if (scanning) return;
 
     setScanning(true);
     setScannedData(data);
     setScanTime(getFormattedDate());
 
-    let scanData = { text: 'Scan Unsuccessful', color: '#ED4337', icon: 'close' };
-    if (data === '123') scanData = { text: 'Scan Successful', color: '#4BB543', icon: 'check' };
-    else if (data === '456') scanData = { text: 'Scanned Already', color: '#D8A236', icon: 'close' };
-    else if (data === '789') scanData = { text: 'Scan Unsuccessful', color: '#ED4337', icon: 'close' };
+    try {
+        const response = await ticketService.scanTicket(data);
+        let scanData = {
+            text: 'Scan Successful',
+            color: '#4BB543',
+            icon: 'check'
+        };
 
-    setScanResult(scanData);
-    animateProgressBar();
-    setShowAnimation(true);
+        // Handle different response statuses
+        if (response.status === 'already_scanned') {
+            scanData = { 
+                text: 'Scanned Already', 
+                color: '#D8A236', 
+                icon: 'close' 
+            };
+        } else if (response.status === 'error' || response.status === 'invalid') {
+            scanData = { 
+                text: 'Scan Unsuccessful', 
+                color: '#ED4337', 
+                icon: 'close' 
+            };
+        } else {
+            console.log('Ticket scanned successfully');
+        }
+
+        setScanResult(scanData);
+        animateProgressBar();
+        setShowAnimation(true);
+
+    } catch (error) {
+        setScanResult({ 
+            text: 'Scan Unsuccessful', 
+            color: '#ED4337', 
+            icon: 'close' 
+        });
+        animateProgressBar();
+        setShowAnimation(true);
+    }
 
     setTimeout(() => {
-      setScannedData(null);
-      setScanning(false);
-      setShowAnimation(false);
+        setScannedData(null);
+        setScanning(false);
+        setShowAnimation(false);
     }, 2000);
   };
 
@@ -122,7 +135,7 @@ const HomeScreen = () => {
   const animateProgressBar = () => {
     animatedWidth.setValue(0);
     Animated.timing(animatedWidth, {
-      toValue: width, // Expand fully to screen width
+      toValue: width,
       duration: 1000,
       useNativeDriver: false,
     }).start();
