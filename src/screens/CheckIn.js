@@ -86,7 +86,11 @@ const HomeScreen = () => {
     setScanTime(getFormattedDate());
 
     try {
-        const response = await ticketService.scanTicket(data);
+        // Get the note for this ticket
+        const note = notes[data] || '';
+        console.log('Sending note with scan:', note);
+        
+        const response = await ticketService.scanTicket(data, note);
         let scanData = {
             text: 'Scan Successful',
             color: '#4BB543',
@@ -115,9 +119,18 @@ const HomeScreen = () => {
         setShowAnimation(true);
 
     } catch (error) {
+        let errorMessage = 'Scan Unsuccessful';
+        let errorColor = '#ED4337';
+        
+        // Check for specific error messages
+        if (error.response?.data?.non_field_errors?.includes('Scan limit reached.')) {
+            errorMessage = 'Scan Limit Reached';
+            errorColor = '#D8A236'; // Use warning color for limit reached
+        }
+        
         setScanResult({ 
-            text: 'Scan Unsuccessful', 
-            color: '#ED4337', 
+            text: errorMessage, 
+            color: errorColor, 
             icon: 'close' 
         });
         animateProgressBar();

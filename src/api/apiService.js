@@ -80,6 +80,7 @@ export const authService = {
             console.log('API Response (Verify OTP):', response.data);
             if (response.data?.access_token) {
                 await SecureStore.setItemAsync('accessToken', response.data.access_token);
+                console.log('Token stored successfully');
             }
             return response.data;
         } catch (error) {
@@ -106,15 +107,84 @@ export const authService = {
 // Add ticket service
 export const ticketService = {
     // Scan ticket service
-    scanTicket: async (code) => {
+    scanTicket: async (code, note = null) => {
         try {
-            const response = await apiClient.post(`${endpoints.scanTicket}/${code}`);
-            console.log('API Response:', response.data);
-            return response.data;
+            // Clean the code if it contains any URL
+            let cleanCode = code;
+            
+            // Remove any URL parts if present
+            if (code.includes('scan-ticket/')) {
+                cleanCode = code.split('scan-ticket/')[1];
+            }
+            
+            // Remove any trailing slashes
+            cleanCode = cleanCode.replace(/\/$/, '');
+            
+            console.log('Original code:', code);
+            console.log('Cleaned code:', cleanCode);
+            
+            // Get current token for debugging
+            const token = await SecureStore.getItemAsync('accessToken');
+            console.log('Current token:', token);
+            
+            // Prepare request data
+            const requestData = {
+                note: note || null
+            };
+            
+            // Log complete request details
+            const requestUrl = `${endpoints.scanTicket}/${cleanCode}/`;
+            console.log('Request Details:', {
+                method: 'POST',
+                url: requestUrl,
+                baseURL: BASE_URL,
+                fullUrl: `${BASE_URL}${requestUrl}`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : 'No token'
+                },
+                data: requestData
+            });
+            
+            const response = await apiClient.post(requestUrl, requestData);
+            
+            // Check if response is valid JSON
+            if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+                throw new Error('Server returned HTML instead of JSON response');
+            }
+            
+            console.log('Ticket Scan Response:', {
+                success: response.data?.success || false,
+                status: response.status,
+                message: response.data?.message || 'No message received',
+                data: response.data
+            });
+
+            if (response.data?.success || response.status === 200) {
+                console.log('Ticket scan successful!');
+                return response.data;
+            } else {
+                console.log('Ticket scan response indicates failure');
+                throw {
+                    message: response.data?.message || 'Scan failed',
+                    response: response
+                };
+            }
         } catch (error) {
+            console.error('Ticket Scan Error:', {
+                status: error.response?.status,
+                message: error.message,
+                responseType: error.response?.headers?.['content-type'],
+                isHtml: error.response?.data?.includes?.('<!DOCTYPE html>'),
+                responseData: error.response?.data,
+                requestUrl: error.config?.url,
+                requestData: error.config?.data
+            });
+            
             if (error.response?.data) {
                 throw {
-                    message: error.response.data.message || 'Server error',
+                    message: error.response.data.message || 'Server error occurred. Please try again.',
                     response: error.response
                 };
             }

@@ -75,6 +75,10 @@ const OtpLoginScreen = ({ route }) => {
         };
         const response = await authService.verifyOtp(payload);
         if (response.success && response.data && response.data.access_token) {
+          // Store the access token
+          await SecureStore.setItemAsync('accessToken', response.data.access_token);
+          console.log('Token stored successfully');
+          
           navigation.reset({
             index: 0,
             routes: [{ name: 'LoggedIn' }],
@@ -83,6 +87,7 @@ const OtpLoginScreen = ({ route }) => {
           Alert.alert('Error', response.message || 'Verification failed');
         }
       } catch (error) {
+        console.error('OTP Verification Error:', error);
         Alert.alert('Error', error.response?.data?.message || 'Failed to verify OTP');
       }
     } else {
