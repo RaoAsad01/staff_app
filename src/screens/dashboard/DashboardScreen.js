@@ -10,7 +10,7 @@ import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './dashboardattendeestab';
 import AnalyticsChart from './AnalyticsChart';
 
-const DashboardScreen = () => {
+const DashboardScreen = ({eventInfo}) => {
   const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
   const handleTabPress = (tab) => {
@@ -125,11 +125,11 @@ const DashboardScreen = () => {
         <View style={styles.statusBarPlaceholder} />
         <SafeAreaView style={styles.safeAreaContainer}>
        <View style={styles.header}>
-            <Text style={styles.eventName}>OUTMOSPHERE</Text>
-            <Text style={styles.cityName}>Accra</Text>
-            <Text style={styles.date}>28-12-2024</Text>
+            <Text style={styles.eventName}>{eventInfo?.event_title}</Text>
+            <Text style={styles.cityName}>{eventInfo?.cityName}</Text>
+            <Text style={styles.date}>{eventInfo?.date}</Text>
             <Text style={styles.date}>at</Text>
-            <Text style={styles.time}>7:00 PM</Text>
+            <Text style={styles.time}>{eventInfo?.time}</Text>
           </View>
           </SafeAreaView>
         <ScrollView contentContainerStyle={styles.scrollContainer}>

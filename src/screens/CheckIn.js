@@ -11,7 +11,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
 const { width, height } = Dimensions.get('window');
 
-const HomeScreen = () => {
+const HomeScreen = ({ eventInfo }) => {
+  console.log('Event info received in HomeScreen:', eventInfo); 
   const navigation = useNavigation();
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions()
@@ -191,7 +192,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <Header />
+      <Header eventInfo={eventInfo} />
       <View style={styles.darkBackground}>
         {scanResult && (
           <View style={styles.scanResultContainer}>

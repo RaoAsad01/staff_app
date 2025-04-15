@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-const Header = () => {
+const Header = ({ eventInfo }) => {
   const navigation = useNavigation();
   const [tabKey, setTabKey] = useState(0);
 
@@ -28,23 +28,23 @@ const Header = () => {
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.headerColumn}>
           <View style={styles.header}>
-            <Text style={styles.eventName}>OUTMOSPHERE</Text>
-            <Text style={styles.cityName}>Accra</Text>
-            <Text style={styles.date}>28-12-2024</Text>
+            <Text style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+            <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
+            <Text style={styles.date}>{eventInfo?.date || '28-12-2024'}</Text>
             <Text style={styles.date}>at</Text>
-            <Text style={styles.time}>7:00 PM</Text>
+            <Text style={styles.time}>{eventInfo?.time || '7:00 PM'}</Text>
           </View>
           <View style={styles.profileId}>
             <View style={styles.userSection}>
               <SvgIcons.userSvg width={28} height={28} fill="transparent" />
-              <Text style={styles.userId}>ID: 87621237467</Text>
+              <Text style={styles.userId}>ID: {eventInfo?.userId || '87621237467'}</Text>
             </View>
             <View style={styles.scanSection}>
               <Text style={styles.scan}>Scans</Text>
               <TouchableOpacity
                 style={styles.count}
                 onPress={handleCountPress}>
-                <Text style={styles.countColor}>5</Text>
+                <Text style={styles.countColor}>{eventInfo?.scanCount || '5'}</Text>
               </TouchableOpacity>
             </View>
           </View>

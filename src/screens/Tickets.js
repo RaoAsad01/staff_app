@@ -6,7 +6,7 @@ import BoxOfficeTab from './BoxOfficeTab';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 
-const SettingsScreen = ({ route, navigation }) => {
+const SettingsScreen = ({ route, eventInfo,navigation }) => {
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
 
@@ -108,7 +108,7 @@ const SettingsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.mainContainer}>
-      <Header />
+      <Header eventInfo={eventInfo}/>
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>
           <TouchableOpacity

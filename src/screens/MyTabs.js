@@ -1,17 +1,20 @@
 import React from 'react';
 import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, StyleSheet } from 'react-native'; // Import necessary components
-import CheckIn from "./CheckIn";
+import HomeScreen from "./CheckIn";
 import Tickets from './Tickets';
 import ManualScan from "./ManualScan";
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import DashboardScreen from './dashboard/DashboardScreen';
 import ProfileScreen from './ProfileScreen';
+import { useRoute } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
 function MyTabs() {
+  const route = useRoute();
+  const eventInformation = route?.params?.eventInfo;
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     const focused = accessibilityState.selected;
 
@@ -63,10 +66,10 @@ function MyTabs() {
       })}
       initialRouteName="Check In"
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false, unmountOnBlur: true }} />
+      <Tab.Screen name="Dashboard" component={() => <DashboardScreen eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
       <Tab.Screen 
         name="Tickets" 
-        component={Tickets} 
+        component={(props) => <Tickets {...props} eventInfo={eventInformation} />}
         options={{ 
           headerShown: false, 
           unmountOnBlur: true
@@ -76,13 +79,13 @@ function MyTabs() {
             e.preventDefault();
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Tickets', params: { fromTab: true } }],
+              routes: [{ name: 'Tickets', params: { fromTab: true, eventInfo: eventInformation } }],
             });
           },
         })}
       />
-      <Tab.Screen name="Check In" component={CheckIn} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen name="Manual Scan" component={ManualScan} options={{ headerShown: false, unmountOnBlur: true }} />
+      <Tab.Screen name="Check In" component={() => <HomeScreen eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
+      <Tab.Screen name="Manual Scan"   component={() => <ManualScan eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, unmountOnBlur: true }} />
     </Tab.Navigator>
   );

@@ -6,7 +6,7 @@ import { attendeeslist } from '../constants/attendeeslist';
 import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 
-const ManualScan = () => {
+const ManualScan = ({ eventInfo }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
 
@@ -45,7 +45,7 @@ const ManualScan = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <Header />
+      <Header eventInfo={eventInfo} />
       <View style={styles.contentContainer}>
         <View style={styles.searchContainer}>
           <TextInput

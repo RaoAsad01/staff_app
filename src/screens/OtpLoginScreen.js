@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
-import { authService } from '../api/apiService';
+import { authService, eventService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store'; 
 
 const OtpLoginScreen = ({ route }) => {
@@ -27,16 +27,16 @@ const OtpLoginScreen = ({ route }) => {
   const uuid = route?.params?.uuid;
   const userIdentifier = route?.params?.user_identifier;
 
-  useEffect(() => {
-    const checkLoggedIn = async () => {
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (token) {
-        navigation.navigate('LoggedIn'); // Navigate to your home screen
-      }
-    };
+  // useEffect(() => {
+  //   const checkLoggedIn = async () => {
+  //     const token = await SecureStore.getItemAsync('accessToken');
+  //     if (token) {
+  //       navigation.navigate('LoggedIn'); // Navigate to your home screen
+  //     }
+  //   };
 
-    checkLoggedIn();
-  }, [navigation]);
+  //   checkLoggedIn();
+  // }, [navigation]);
 
   useEffect(() => {
     if (!uuid || !userIdentifier) {
@@ -78,11 +78,46 @@ const OtpLoginScreen = ({ route }) => {
           // Store the access token
           await SecureStore.setItemAsync('accessToken', response.data.access_token);
           console.log('Token stored successfully');
+
+          // Fetch staff events
+          const staffEventsData = await eventService.fetchStaffEvents();
+
+          if (staffEventsData && staffEventsData.event && staffEventsData.event.length > 0) {
+            const firstEvent = staffEventsData.event[0]; // Or your logic to select an event
+            const eventUuid = firstEvent.uuid;
+            console.log('UUID of staff: ',eventUuid)
+            // Fetch event info
+            const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+             
           
           navigation.reset({
             index: 0,
-            routes: [{ name: 'LoggedIn' }],
+            routes: [{ name: 'LoggedIn',
+              params: {  eventInfo: {
+                event_title: eventInfoData?.event_title,
+                cityName: eventInfoData?.location?.city,
+                date: eventInfoData?.start_date,
+                time: eventInfoData?.start_time,
+                userId: eventInfoData?.staff_id,
+                scanCount: eventInfoData?.scan_count,
+              }, }, 
+             }],
           });
+          console.log('Event Info sent to CheckinScreen:', {
+            event_title: eventInfoData?.event_title,
+            cityName: 'Accra',
+            date: eventInfoData?.date,
+            time: eventInfoData?.time,
+            userId: '87621237467',
+            scanCount: eventInfoData?.scanCount,
+          });
+        } else {
+            Alert.alert('Error', 'Could not fetch accessible events.');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'LoggedIn' }], // Navigate even if no events fetched
+            });
+          }
         } else {
           Alert.alert('Error', response.message || 'Verification failed');
         }

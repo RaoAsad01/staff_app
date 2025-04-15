@@ -34,7 +34,9 @@ apiClient.interceptors.request.use(
 const endpoints = {
     otpRequest: '/api/otp-request/',  // Added trailing slash to match your API
     verifyOtp: '/api/login/',
-    scanTicket: '/ticket/scan-ticket',
+    scanTicket: '/ticket/scan',
+    staffEvents: '/organization/staff/events/', // Endpoint for fetching accessible events
+    eventInfo: '/ticket/event/', // Base endpoint for event info by UUID
 };
 
 // API services
@@ -195,7 +197,31 @@ export const ticketService = {
         }
     },
 };
+export const eventService = {
 
+  fetchStaffEvents: async () => {
+        try {
+            const response = await apiClient.get(endpoints.staffEvents);
+            console.log('Fetch Staff Events Response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Fetch Staff Events Error:', error);
+            throw error;
+        }
+    },
+
+    fetchEventInfo: async (eventUuid) => {
+        try {
+            const response = await apiClient.get(`${endpoints.eventInfo}${eventUuid}/info/`);
+            console.log('Fetch Event Info Response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Fetch Event Info Error:', error);
+            throw error;
+        }
+    },
+
+}
 // Example of another service group
 // export const userService = {
 //     // Get user profile

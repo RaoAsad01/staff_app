@@ -35,7 +35,7 @@ function Navigation({ route }) {
       try {
         const token = await SecureStore.getItemAsync('accessToken');
         if (token) {
-          setInitialRoute('LoggedIn');
+          setInitialRoute('Login');
         } else {
           setInitialRoute('Login');
         }
