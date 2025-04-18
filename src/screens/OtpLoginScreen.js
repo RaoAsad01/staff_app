@@ -82,8 +82,8 @@ const OtpLoginScreen = ({ route }) => {
           // Fetch staff events
           const staffEventsData = await eventService.fetchStaffEvents();
 
-          if (staffEventsData && staffEventsData.event && staffEventsData.event.length > 0) {
-            const firstEvent = staffEventsData.event[0]; // Or your logic to select an event
+          if (staffEventsData && staffEventsData.data.event && staffEventsData.data.event.length > 0) {
+            const firstEvent = staffEventsData.data.event[0]; // Or your logic to select an event
             const eventUuid = firstEvent.uuid;
             console.log('UUID of staff: ',eventUuid)
             // Fetch event info
@@ -94,12 +94,12 @@ const OtpLoginScreen = ({ route }) => {
             index: 0,
             routes: [{ name: 'LoggedIn',
               params: {  eventInfo: {
-                event_title: eventInfoData?.event_title,
-                cityName: eventInfoData?.location?.city,
-                date: eventInfoData?.start_date,
-                time: eventInfoData?.start_time,
-                userId: eventInfoData?.staff_id,
-                scanCount: eventInfoData?.scan_count,
+                event_title: eventInfoData?.data?.event_title,
+                cityName: eventInfoData?.data?.location?.city,
+                date: eventInfoData?.data?.start_date,
+                time: eventInfoData?.data?.start_time,
+                userId: eventInfoData?.data?.staff_id,
+                scanCount: eventInfoData?.data?.scan_count,
               }, }, 
              }],
           });

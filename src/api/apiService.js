@@ -32,11 +32,12 @@ apiClient.interceptors.request.use(
 
 // API endpoints
 const endpoints = {
-    otpRequest: '/api/otp-request/',  // Added trailing slash to match your API
+    otpRequest: '/api/otp-request/',
     verifyOtp: '/api/login/',
     scanTicket: '/ticket/scan',
-    staffEvents: '/organization/staff/events/', // Endpoint for fetching accessible events
-    eventInfo: '/ticket/event/', // Base endpoint for event info by UUID
+    staffEvents: '/organization/staff/events/',
+    eventInfo: '/ticket/event/',
+    updateNote: '/ticket/note/',
 };
 
 // API services
@@ -196,6 +197,44 @@ export const ticketService = {
             };
         }
     },
+ // Update ticket note service
+ updateTicketNote: async (code, note) => {
+    try {
+        const requestUrl = `${endpoints.updateNote}${code}/`;
+        const requestData = { note };
+
+        console.log('Update Note Request Details:', {
+            method: 'PATCH',
+            url: requestUrl,
+            baseURL: BASE_URL,
+            fullUrl: `${BASE_URL}${requestUrl}`,
+            headers: apiClient.defaults.headers.common,
+            data: requestData
+        });
+
+        const response = await apiClient.patch(requestUrl, requestData);
+        console.log('Update Ticket Note Response:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Update Ticket Note Error:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+            requestUrl: error.config?.url,
+            requestData: error.config?.data
+        });
+        if (error.response?.data) {
+            throw {
+                message: error.response.data.message || 'Failed to update note.',
+                response: error.response
+            };
+        }
+        throw {
+            message: 'Network error. Please check your connection.',
+            error: error
+        };
+    }
+},
 };
 export const eventService = {
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import { color } from '../color/color';
 
-const NoteModal = ({ visible, onAddNote, onCancel, initialNote }) => {
+const NoteModal = ({ visible, onAddNote, onCancel, initialNote,scannedData }) => {
     const [noteText, setNoteText] = useState('');
 
     useEffect(() => {
@@ -12,6 +12,10 @@ const NoteModal = ({ visible, onAddNote, onCancel, initialNote }) => {
     }, [initialNote]);
 
     const handleAddNote = () => {
+        if (!scannedData) {
+            console.warn('Cannot add note: scannedData is null');
+            return;
+        }
         if (noteText.trim().length > 0) {
             onAddNote(noteText);
             setNoteText('');

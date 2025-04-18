@@ -12,7 +12,6 @@ import { ticketService } from '../api/apiService';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ eventInfo }) => {
-  console.log('Event info received in HomeScreen:', eventInfo); 
   const navigation = useNavigation();
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions()
@@ -32,10 +31,10 @@ const HomeScreen = ({ eventInfo }) => {
 
   useFocusEffect(
     useCallback(() => {
-      setScannedData(null);
-      setScanResult(null);
+      //setScannedData(null);
+      //setScanResult(null);
       setScanning(false);
-      setScanTime(null);
+      //setScanTime(null);
     }, [])
   );
 
@@ -99,7 +98,7 @@ const HomeScreen = ({ eventInfo }) => {
         };
 
         // Handle different response statuses
-        if (response.status === 'already_scanned') {
+        if (response.data.scan_count > 1) {
             scanData = { 
                 text: 'Scanned Already', 
                 color: '#D8A236', 
@@ -139,7 +138,7 @@ const HomeScreen = ({ eventInfo }) => {
     }
 
     setTimeout(() => {
-        setScannedData(null);
+        //setScannedData(null);
         setScanning(false);
         setShowAnimation(false);
     }, 2000);
@@ -155,16 +154,32 @@ const HomeScreen = ({ eventInfo }) => {
     }).start();
   };
 
-  const handleAddNote = (newNote) => {
-    if (newNote.trim().length > 0) {
-      setNotes((prevNotes) => ({
-        ...prevNotes,
-        [scannedData]: newNote,
-      }));
+  const handleAddNote = async (newNote) => {
+    if (!scannedData) {
+      console.warn("Cannot update note: scannedData is null.");
+      return;
     }
+  
+    // Extract ticket code from scanned URL
+    const ticketCode = scannedData.split('/').pop();
+  
+    try {
+      if (newNote.trim().length > 0) {
+        console.log("Updating note for scanned ticket:", ticketCode);
+        await ticketService.updateTicketNote(ticketCode, newNote);
+        setNotes((prevNotes) => ({
+          ...prevNotes,
+          [scannedData]: newNote,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to update ticket note:", error.message);
+    }
+  
     setNoteModalVisible(false);
   };
-
+  
+  
   const handleNoteButtonPress = () => {
     if (noteCount === 1) {
       navigation.navigate('TicketScanned', {
@@ -232,13 +247,13 @@ const HomeScreen = ({ eventInfo }) => {
                 <TouchableOpacity style={styles.detailButton} onPress={handleDetailButtonPress}>
                   <Text style={styles.detailColor}>Details</Text>
                 </TouchableOpacity>
-                {(scanResult.text === 'Scan Unsuccessful' || scanResult.text === 'Scanned Already') && (
+                {(scanResult.text === 'Scanned Already') && (
                   <TouchableOpacity style={styles.noteButton} onPress={handleNoteButtonPress}>
                     <Text style={styles.noteColor}>Note</Text>
-                    {noteCount > 0 && (
+                    {Object.keys(notes).length > 0 && (
                       <View style={styles.greyCircle}>
                         <View style={styles.redCircle}>
-                          <Text style={styles.redCircleText}>{noteCount}</Text>
+                          <Text style={styles.redCircleText}>{Object.keys(notes).length}</Text>
                         </View>
                       </View>
                     )}
@@ -249,7 +264,7 @@ const HomeScreen = ({ eventInfo }) => {
           </View>
         )}
       </View>
-      {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit} />}
+      {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit}  scannedData={scannedData} />}
     </View>
   );
 };
