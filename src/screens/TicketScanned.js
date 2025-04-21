@@ -3,15 +3,19 @@ import { color } from '../color/color';
 import Header from '../../components/header';
 import SvgIcons from '../../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
+import { getFormattedDate } from '../constants/dateAndTime';
 
 const TicketScanned = ({ route }) => {
-    const { status, note } = route.params;
+    const { scanResponse, eventInfo, note, status } = route.params;
     const navigation = useNavigation();
+
+    console.log('Scanned Data:', scanResponse);
+    console.log('Event Info:', eventInfo);
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
-            <Header />
+            <Header eventInfo={eventInfo}/>
             <TouchableOpacity 
                 style={styles.backButton} 
                 onPress={() => navigation.goBack()}
@@ -22,35 +26,35 @@ const TicketScanned = ({ route }) => {
 
                 <View style={styles.popUp}>
                     <Text style={styles.labeltickets}>
-                        {status === 'Scanned' ? 'Ticket Scanned' : 'Ticket Unscanned'}
+                        {scanResponse?.message}
                     </Text>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.userName}>John Doe</Text>
+                    <Text style={styles.userName}>{scanResponse?.ticket_holder || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.ticketContainer}>
                     <View>
-                        <Text style={styles.ticketType}>Standard Ticket</Text>
+                        <Text style={styles.ticketType}>{scanResponse?.ticket}</Text>
                         <View style={styles.priceContainer}>
-                            <Text style={styles.priceCurrency}>USD </Text>
-                            <Text style={styles.ticketPrice}>456</Text>
+                            <Text style={styles.priceCurrency}>{scanResponse?.currency} </Text>
+                            <Text style={styles.ticketPrice}>{scanResponse?.ticket_price}</Text>
                         </View>
                         <Text style={styles.tickeScanTime}>Last Scanned On</Text>
-                        <Text style={styles.ticketDate}>12-08-2024  05:00 pm</Text>
+                        <Text style={styles.ticketDate}>{getFormattedDate(scanResponse?.last_scan)}</Text>
 
                     </View>
                     <View style={styles.statusAndDateContainer}>
                         <Text style={styles.ticketScannedBy}>Scanned By</Text>
-                        <Text style={styles.ticketScannedByName}>Mark Jacob</Text>
-                        <Text style={styles.ticketId}>#134566765</Text>
+                        <Text style={styles.ticketScannedByName}>{scanResponse?.scanned_by || ''}</Text>
+                        <Text style={styles.ticketId}>#{scanResponse?.ticket_number}</Text>
                         <Text style={styles.scanCount}>Scan Count</Text>
-                        <Text style={styles.scanCountValue}>3</Text>
+                        <Text style={styles.scanCountValue}>{scanResponse?.scan_count}</Text>
                     </View>
                 </View>
                 <View style={styles.noteContainer}>
                     <Text style={styles.LabelNote}>Note</Text>
-                    <Text style={styles.noteDescription}>{note || 'No note added'}</Text>
+                    <Text style={styles.noteDescription}>{scanResponse?.note || 'No note added'}</Text>
                 </View>
             </View>
         </SafeAreaView>
@@ -112,8 +116,8 @@ const styles = StyleSheet.create({
     },
     tickeScanTime: {
         fontSize: 14,
-        fontWeight: '400',
-        color: color.black_544B45,
+        fontWeight: '500',
+        color: color.black_2F251D,
         marginTop: 50,
     },
     ticketId: {
@@ -135,20 +139,21 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     priceCurrency: {
-        color: color.black_544B45,
+        color: color.brown_5A2F0E,
         fontSize: 14,
         fontWeight: '400',
         marginTop: 3
     },
     ticketPrice: {
         color: color.brown_5A2F0E,
-        fontWeight: '600',
-        fontSize: 18
+        fontWeight: '500',
+        fontSize: 14,
+        marginTop: 3
     },
     ticketDate: {
         fontSize: 14,
-        color: color.black_2F251D,
-        fontWeight: '500',
+        color: color.black_544B45,
+        fontWeight: '400',
         marginTop: 10,
     },
     statusAndDateContainer: {
@@ -157,28 +162,28 @@ const styles = StyleSheet.create({
     },
     ticketScannedBy: {
         fontSize: 14,
-        fontWeight: '400',
-        color: color.black_544B45,
+        fontWeight: '500',
+        color: color.black_2F251D,
         marginTop: -35
 
     },
     ticketScannedByName: {
-        fontWeight: '500',
+        fontWeight: '400',
         fontSize: 14,
-        color: color.brown_3C200A,
+        color: color.black_544B45,
         marginTop: 8
 
     },
     scanCount: {
         fontSize: 14,
-        fontWeight: '400',
-        color: color.black_544B45,
+        fontWeight: '500',
+        color: color.black_2F251D,
         top: 28
     },
     scanCountValue: {
         fontSize: 14,
-        fontWeight: '500',
-        color: color.black_2F251D,
+        fontWeight: '400',
+        color: color.black_544B45,
         top: 38
     },
     noteContainer: {
@@ -206,7 +211,7 @@ const styles = StyleSheet.create({
         marginTop: 5
     },
     backButton: {
-      padding: 10
+        padding: 10
     },
 });
 

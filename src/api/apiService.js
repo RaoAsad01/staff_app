@@ -15,29 +15,37 @@ const apiClient = axios.create({
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
     async (config) => {
+      // Skip auth for public endpoints
+      const publicEndpoints = [endpoints.otpRequest, endpoints.verifyOtp];
+  
+      if (!publicEndpoints.some(endpoint => config.url?.includes(endpoint))) {
         try {
-            const token = await SecureStore.getItemAsync('accessToken');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+          const token = await SecureStore.getItemAsync('accessToken');
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         } catch (error) {
-            console.error('Error getting token from SecureStore:', error);
+          console.error('Error getting token from SecureStore:', error);
         }
-        return config;
+      }
+  
+      return config;
     },
     (error) => {
-        return Promise.reject(error);
+      return Promise.reject(error);
     }
-);
+  );
+  
 
 // API endpoints
 const endpoints = {
     otpRequest: '/api/otp-request/',
     verifyOtp: '/api/login/',
-    scanTicket: '/ticket/scan',
+    scanTicket: '/ticket/scan/{event_uuid}/{ticket_code}/',
     staffEvents: '/organization/staff/events/',
     eventInfo: '/ticket/event/',
-    updateNote: '/ticket/note/',
+    updateNote: '/ticket/note/{event_uuid}/{code}/',
+    userTicketOrdersManual: '/ticket/user-ticket/orders/',
 };
 
 // API services
@@ -110,33 +118,46 @@ export const authService = {
 // Add ticket service
 export const ticketService = {
     // Scan ticket service
-    scanTicket: async (code, note = null) => {
+    scanTicket: async (scannedData, note = null) => {
         try {
-            // Clean the code if it contains any URL
-            let cleanCode = code;
-            
-            // Remove any URL parts if present
-            if (code.includes('scan-ticket/')) {
-                cleanCode = code.split('scan-ticket/')[1];
+            let eventUuidFromScan = null;
+            let ticketCodeFromScan = null;
+
+            // Assuming the scanned data is a full URL like:
+            // http://167.71.195.57:8000/ticket/scan/b25e2a8b-ebc4-4872-b7a3-347bef5466a5/R04LERYMWD79R2PI/
+            if (scannedData.startsWith(BASE_URL) && scannedData.includes('/ticket/scan/')) {
+                const parts = scannedData.split('/ticket/scan/')[1].split('/');
+                if (parts.length >= 2) {
+                    eventUuidFromScan = parts[0];
+                    ticketCodeFromScan = parts[1];
+                }
             }
-            
-            // Remove any trailing slashes
-            cleanCode = cleanCode.replace(/\/$/, '');
-            
-            console.log('Original code:', code);
-            console.log('Cleaned code:', cleanCode);
-            
-            // Get current token for debugging
+
+            if (!eventUuidFromScan || !ticketCodeFromScan) {
+                console.error('Could not extract event UUID and ticket code from scanned data:', scannedData);
+                throw new Error('Invalid QR code format');
+            }
+
+            console.log('Scanned Data:', scannedData);
+            console.log('Extracted Event UUID:', eventUuidFromScan);
+            console.log('Extracted Ticket Code:', ticketCodeFromScan);
+
             const token = await SecureStore.getItemAsync('accessToken');
             console.log('Current token:', token);
             
+            
+            // Prepare request data
+
             // Prepare request data
             const requestData = {
-                note: note || null
+                note: note || null,
             };
-            
-            // Log complete request details
-            const requestUrl = `${endpoints.scanTicket}/${cleanCode}/`;
+
+            // Construct URL using the extracted values
+            const requestUrl = endpoints.scanTicket
+                .replace('{event_uuid}', eventUuidFromScan)
+                .replace('{ticket_code}', ticketCodeFromScan);
+
             console.log('Request Details:', {
                 method: 'POST',
                 url: requestUrl,
@@ -147,33 +168,14 @@ export const ticketService = {
                     'Accept': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : 'No token'
                 },
-                data: requestData
-            });
-            
-            const response = await apiClient.post(requestUrl, requestData);
-            
-            // Check if response is valid JSON
-            if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-                throw new Error('Server returned HTML instead of JSON response');
-            }
-            
-            console.log('Ticket Scan Response:', {
-                success: response.data?.success || false,
-                status: response.status,
-                message: response.data?.message || 'No message received',
-                data: response.data
+                data: requestData // eventUuid is NOT here
             });
 
-            if (response.data?.success || response.status === 200) {
-                console.log('Ticket scan successful!');
-                return response.data;
-            } else {
-                console.log('Ticket scan response indicates failure');
-                throw {
-                    message: response.data?.message || 'Scan failed',
-                    response: response
-                };
-            }
+            const response = await apiClient.post(requestUrl, requestData);
+            return response.data
+
+            // ... rest of your response handling ...
+
         } catch (error) {
             console.error('Ticket Scan Error:', {
                 status: error.response?.status,
@@ -198,34 +200,33 @@ export const ticketService = {
         }
     },
  // Update ticket note service
- updateTicketNote: async (code, note) => {
+ updateTicketNote: async (code, note, eventUuid) => {
     try {
-        const requestUrl = `${endpoints.updateNote}${code}/`;
-        const requestData = { note };
+        const requestUrl = endpoints.updateNote
+            .replace('{event_uuid}', eventUuid)
+            .replace('{code}', code); // This part looks correct
+            console.log('update note:', requestUrl);
 
-        console.log('Update Note Request Details:', {
-            method: 'PATCH',
-            url: requestUrl,
-            baseURL: BASE_URL,
-            fullUrl: `${BASE_URL}${requestUrl}`,
-            headers: apiClient.defaults.headers.common,
-            data: requestData
-        });
+        // ... (rest of the updateTicketNote function)
+    } catch (error) {
+        // ... (error handling)
+    }
+},
 
-        const response = await apiClient.patch(requestUrl, requestData);
-        console.log('Update Ticket Note Response:', response.data);
+fetchUserTicketOrders: async () => {
+    try {
+        const response = await apiClient.get(endpoints.userTicketOrders);
+        console.log('User Ticket Orders Response:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Update Ticket Note Error:', {
+        console.error('Fetch User Ticket Orders Error:', {
             status: error.response?.status,
             data: error.response?.data,
             message: error.message,
-            requestUrl: error.config?.url,
-            requestData: error.config?.data
         });
         if (error.response?.data) {
             throw {
-                message: error.response.data.message || 'Failed to update note.',
+                message: error.response.data.message || 'Failed to fetch ticket orders.',
                 response: error.response
             };
         }
@@ -235,6 +236,7 @@ export const ticketService = {
         };
     }
 },
+
 };
 export const eventService = {
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
-import { View, TouchableOpacity, StyleSheet } from 'react-native'; // Import necessary components
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import HomeScreen from "./CheckIn";
 import Tickets from './Tickets';
 import ManualScan from "./ManualScan";
@@ -15,6 +15,7 @@ const Tab = createBottomTabNavigator();
 function MyTabs() {
   const route = useRoute();
   const eventInformation = route?.params?.eventInfo;
+
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     const focused = accessibilityState.selected;
 
@@ -35,7 +36,7 @@ function MyTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused }) => {
           let IconComponent;
 
           if (route.name === 'Dashboard') {
@@ -66,14 +67,16 @@ function MyTabs() {
       })}
       initialRouteName="Check In"
     >
-      <Tab.Screen name="Dashboard" component={() => <DashboardScreen eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen 
-        name="Tickets" 
-        component={(props) => <Tickets {...props} eventInfo={eventInformation} />}
-        options={{ 
-          headerShown: false, 
-          unmountOnBlur: true
-        }}
+      <Tab.Screen
+        name="Dashboard"
+        options={{ headerShown: false, unmountOnBlur: true }}
+      >
+        {() => <DashboardScreen eventInfo={eventInformation} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Tickets"
+        options={{ headerShown: false, unmountOnBlur: true }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -83,10 +86,29 @@ function MyTabs() {
             });
           },
         })}
+      >
+        {(props) => <Tickets {...props} eventInfo={eventInformation} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Check In"
+        options={{ headerShown: false, unmountOnBlur: true }}
+      >
+        {() => <HomeScreen eventInfo={eventInformation} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Manual Scan"
+        options={{ headerShown: false, unmountOnBlur: true }}
+      >
+        {() => <ManualScan eventInfo={eventInformation} />}
+      </Tab.Screen>
+
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false, unmountOnBlur: true }}
       />
-      <Tab.Screen name="Check In" component={() => <HomeScreen eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen name="Manual Scan"   component={() => <ManualScan eventInfo={eventInformation} />} options={{ headerShown: false, unmountOnBlur: true }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, unmountOnBlur: true }} />
     </Tab.Navigator>
   );
 }
@@ -100,7 +122,7 @@ const styles = StyleSheet.create({
   activeTabBarButton: {
     backgroundColor: 'white',
     marginVertical: 5,
-    marginHorizontal: 6
+    marginHorizontal: 6,
   },
 });
 

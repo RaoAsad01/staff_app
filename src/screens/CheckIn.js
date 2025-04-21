@@ -28,6 +28,8 @@ const HomeScreen = ({ eventInfo }) => {
   const [noteToEdit, setNoteToEdit] = useState(null);
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const [showAnimation, setShowAnimation] = useState(false);
+  const [scanResponse, setScanResponse] = useState(null);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -86,61 +88,62 @@ const HomeScreen = ({ eventInfo }) => {
     setScanTime(getFormattedDate());
 
     try {
-        // Get the note for this ticket
-        const note = notes[data] || '';
-        console.log('Sending note with scan:', note);
-        
-        const response = await ticketService.scanTicket(data, note);
-        let scanData = {
-            text: 'Scan Successful',
-            color: '#4BB543',
-            icon: 'check'
+      // Get the note for this ticket
+      const note = notes[data] || '';
+      console.log('Sending note with scan:', note);
+
+      const response = await ticketService.scanTicket(data, note);
+      setScanResponse(response.data);
+      let scanData = {
+        text: 'Scan Successful',
+        color: '#4BB543',
+        icon: 'check'
+      };
+
+      // Handle different response statuses
+      if (response.data.scan_count > 1) {
+        scanData = {
+          text: 'Scanned Already',
+          color: '#D8A236',
+          icon: 'close'
         };
+      } else if (response.status === 'error' || response.status === 'invalid') {
+        scanData = {
+          text: 'Scan Unsuccessful',
+          color: '#ED4337',
+          icon: 'close'
+        };
+      } else {
+        console.log('Ticket scanned successfully');
+      }
 
-        // Handle different response statuses
-        if (response.data.scan_count > 1) {
-            scanData = { 
-                text: 'Scanned Already', 
-                color: '#D8A236', 
-                icon: 'close' 
-            };
-        } else if (response.status === 'error' || response.status === 'invalid') {
-            scanData = { 
-                text: 'Scan Unsuccessful', 
-                color: '#ED4337', 
-                icon: 'close' 
-            };
-        } else {
-            console.log('Ticket scanned successfully');
-        }
-
-        setScanResult(scanData);
-        animateProgressBar();
-        setShowAnimation(true);
+      setScanResult(scanData);
+      animateProgressBar();
+      setShowAnimation(true);
 
     } catch (error) {
-        let errorMessage = 'Scan Unsuccessful';
-        let errorColor = '#ED4337';
-        
-        // Check for specific error messages
-        if (error.response?.data?.non_field_errors?.includes('Scan limit reached.')) {
-            errorMessage = 'Scan Limit Reached';
-            errorColor = '#D8A236'; // Use warning color for limit reached
-        }
-        
-        setScanResult({ 
-            text: errorMessage, 
-            color: errorColor, 
-            icon: 'close' 
-        });
-        animateProgressBar();
-        setShowAnimation(true);
+      let errorMessage = 'Scan Unsuccessful';
+      let errorColor = '#ED4337';
+
+      // Check for specific error messages
+      if (error.response?.data?.non_field_errors?.includes('Scan limit reached.')) {
+        errorMessage = 'Scan Limit Reached';
+        errorColor = '#D8A236'; // Use warning color for limit reached
+      }
+
+      setScanResult({
+        text: errorMessage,
+        color: errorColor,
+        icon: 'close'
+      });
+      animateProgressBar();
+      setShowAnimation(true);
     }
 
     setTimeout(() => {
-        //setScannedData(null);
-        setScanning(false);
-        setShowAnimation(false);
+      //setScannedData(null);
+      setScanning(false);
+      setShowAnimation(false);
     }, 2000);
   };
 
@@ -159,14 +162,18 @@ const HomeScreen = ({ eventInfo }) => {
       console.warn("Cannot update note: scannedData is null.");
       return;
     }
-  
-    // Extract ticket code from scanned URL
-    const ticketCode = scannedData.split('/').pop();
-  
+
+    // Extract ticket code from scanned URL (more robust approach)
+    const parts = scannedData.split('/');
+    const ticketCode = parts[parts.length - 2]; // Assuming ticket code is the second to last part
+
+    // Assuming you have the eventUuid available in your component
+    const currentEventUuid = 'YOUR_EVENT_UUID_HERE'; // Replace with your actual event UUID
+
     try {
       if (newNote.trim().length > 0) {
-        console.log("Updating note for scanned ticket:", ticketCode);
-        await ticketService.updateTicketNote(ticketCode, newNote);
+        console.log("Updating note for ticket code:", ticketCode, "for event:", currentEventUuid);
+        await ticketService.updateTicketNote(ticketCode, newNote, currentEventUuid);
         setNotes((prevNotes) => ({
           ...prevNotes,
           [scannedData]: newNote,
@@ -175,14 +182,16 @@ const HomeScreen = ({ eventInfo }) => {
     } catch (error) {
       console.error("Failed to update ticket note:", error.message);
     }
-  
+
     setNoteModalVisible(false);
   };
-  
-  
+
+
   const handleNoteButtonPress = () => {
     if (noteCount === 1) {
       navigation.navigate('TicketScanned', {
+        scanResponse,
+        eventInfo,
         note: notes[scannedData] || '',
       });
     } else {
@@ -202,7 +211,11 @@ const HomeScreen = ({ eventInfo }) => {
   };
 
   const handleDetailButtonPress = () => {
-    navigation.navigate('TicketScanned', { note: notes[scannedData] || '' });
+    navigation.navigate('TicketScanned', {
+      scanResponse,
+      eventInfo,
+      note: notes[scannedData] || '',
+    });
   };
 
   return (
@@ -264,7 +277,7 @@ const HomeScreen = ({ eventInfo }) => {
           </View>
         )}
       </View>
-      {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit}  scannedData={scannedData} />}
+      {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit} scannedData={scannedData} />}
     </View>
   );
 };
