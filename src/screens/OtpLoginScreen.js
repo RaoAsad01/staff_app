@@ -100,6 +100,8 @@ const OtpLoginScreen = ({ route }) => {
                 time: eventInfoData?.data?.start_time,
                 userId: eventInfoData?.data?.staff_id,
                 scanCount: eventInfoData?.data?.scan_count,
+                event_uuid: eventInfoData?.data?.location?.uuid,
+                eventUuid: eventUuid
               }, }, 
              }],
           });

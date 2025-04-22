@@ -213,29 +213,29 @@ export const ticketService = {
     }
 },
 
-fetchUserTicketOrders: async () => {
+fetchUserTicketOrders: async (event_uuid) => {
     try {
-        const response = await apiClient.get(endpoints.userTicketOrders);
-        console.log('User Ticket Orders Response:', response.data);
-        return response.data;
+      const response = await apiClient.get(`${endpoints.userTicketOrdersManual}?event_uuid=${event_uuid}`); // Include event_uuid as a query parameter
+      console.log('User Ticket Orders Response:', response.data);
+      return response.data;
     } catch (error) {
-        console.error('Fetch User Ticket Orders Error:', {
-            status: error.response?.status,
-            data: error.response?.data,
-            message: error.message,
-        });
-        if (error.response?.data) {
-            throw {
-                message: error.response.data.message || 'Failed to fetch ticket orders.',
-                response: error.response
-            };
-        }
+      console.error('Fetch User Ticket Orders Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      if (error.response?.data) {
         throw {
-            message: 'Network error. Please check your connection.',
-            error: error
+          message: error.response.data.message || 'Failed to fetch ticket orders.',
+          response: error.response
         };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
-},
+  },
 
 };
 export const eventService = {
