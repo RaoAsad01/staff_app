@@ -56,7 +56,13 @@ const ManualScan = ({ eventInfo }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.ticketCard}
-      onPress={() => navigation.navigate('ManualCheckInAllTickets', { ticket: item, total: item.ticket_count })}
+      onPress={() => navigation.navigate('ManualCheckInAllTickets', { 
+        ticket: item, 
+        total: item.ticket_count,
+        orderNumber: item.order_number, // Pass order number
+        eventUuid: eventInfo?.eventUuid, // Pass event UUID
+        eventInfo: eventInfo
+      })}
     >
       <View style={styles.ticketRow}>
         {/* Left Column */}

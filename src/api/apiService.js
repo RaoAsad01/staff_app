@@ -46,6 +46,8 @@ const endpoints = {
     eventInfo: '/ticket/event/',
     updateNote: '/ticket/note/{event_uuid}/{code}/',
     userTicketOrdersManual: '/ticket/user-ticket/orders/',
+    userTicketOrdersManualDetail: (orderNumber, eventUuid) => `/ticket/user-ticket/?order_number=${orderNumber}&event_uuid=${eventUuid}`,
+    manualDetailChekin: (uuid, code) => `/ticket/scan/${uuid}/${code}/`,
 };
 
 // API services
@@ -144,11 +146,6 @@ export const ticketService = {
 
             const token = await SecureStore.getItemAsync('accessToken');
             console.log('Current token:', token);
-            
-            
-            // Prepare request data
-
-            // Prepare request data
             const requestData = {
                 note: note || null,
             };
@@ -237,6 +234,46 @@ fetchUserTicketOrders: async (event_uuid) => {
     }
   },
 
+  fetchUserTicketOrdersDetail: async (orderNumber, eventUuid) => {
+    try {
+      const response = await apiClient.get(endpoints.userTicketOrdersManualDetail(orderNumber, eventUuid)); // Use the endpoint definition
+      console.log('Ticket Details Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Fetch Ticket Details Error:', error);
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch ticket orders Detail.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
+    }
+  },
+
+  manualDetailCheckin: async (uuid, code) => {
+    console.log("Manual Checkin Params:", uuid, code);
+    try {
+      const response = await apiClient.post(endpoints.manualDetailChekin(uuid, code));
+      console.log('Manual Ticket Details Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Fetch Manual Ticket Details Error:', error);
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch manual ticket orders Detail.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
+    }
+  },
 };
 export const eventService = {
 

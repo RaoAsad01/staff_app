@@ -1,36 +1,121 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView } from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
-import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
-import { ticketslist } from '../constants/ticketslist';
 import SvgIcons from '../../components/SvgIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ticketService } from '../api/apiService'; // Import your ticket service
+import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct import path
 
-const ManualCheckInAllTickets = ({ route }) => {
-    const { total } = route.params;
-    console.log('Tickets List:', ticketslist);
-    console.log('Total Tickets:', total);
-    const displayedTickets = ticketslist.slice(0, total);
+const ManualCheckInAllTickets = () => {
+    const { orderNumber, eventUuid, total, eventInfo } = useRoute().params;
     const navigation = useNavigation();
+    const [ticketDetails, setTicketDetails] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [userDetails, setUserDetails] = useState(null);
+
+    useEffect(() => {
+        const fetchTicketDetails = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
+                console.log('Ticket Details Response:', response);
+                if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+                    setTicketDetails(response.data);
+                    // Assuming all tickets in the order belong to the same user
+                    setUserDetails({
+                        email: response.data[0]?.user_email || 'N/A',
+                        firstName: response.data[0]?.user_first_name || '',
+                        lastName: response.data[0]?.user_last_name || '',
+                        fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
+                    });
+                } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
+                    setError('No tickets found for this order.');
+                    setTicketDetails([]);
+                    setUserDetails(null);
+                } else {
+                    setError('Invalid ticket details response.');
+                    setTicketDetails(null);
+                    setUserDetails(null);
+                }
+            } catch (err) {
+                setError(err.message || 'Failed to fetch ticket details.');
+                console.error('Error fetching ticket details:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (orderNumber && eventUuid) {
+            fetchTicketDetails();
+        } else {
+            setError('Order Number or Event UUID not provided.');
+            setLoading(false);
+        }
+    }, [orderNumber, eventUuid]);
+
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="white" />
+                <Header eventInfo={eventInfo} />
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+                </TouchableOpacity>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (error) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="white" />
+                <Header eventInfo={eventInfo} />
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+                </TouchableOpacity>
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!ticketDetails || ticketDetails.length === 0) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="white" />
+                <Header eventInfo={eventInfo} />
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+                </TouchableOpacity>
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No ticket details found for this order.</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
-            <Header />
-            <TouchableOpacity 
-                style={styles.backButton} 
+            <Header eventInfo={eventInfo} />
+            <TouchableOpacity
+                style={styles.backButton}
                 onPress={() => navigation.goBack()}
             >
                 <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
             </TouchableOpacity>
             <View style={styles.wrapper}>
-
                 <View style={styles.popUp}>
-                    {/* {total > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>} */}
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
-
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.userEmail}>johndoe@gmail.com</Text>
+                    <Text style={styles.userEmail}>{userDetails?.email || 'N/A'}</Text>
 
                     {total === 1 && (
                         <TouchableOpacity style={styles.button}>
@@ -39,10 +124,21 @@ const ManualCheckInAllTickets = ({ route }) => {
                     )}
                 </View>
 
-                {/* Ticket List Section */}
-                {total > 1 && (
+                {total > 1 && ticketDetails.length > 0 && (
                     <View style={styles.ticketsList}>
-                        <CheckInAllPopUp ticketslist={displayedTickets} />
+                        <CheckInAllPopup ticketslist={ticketDetails.map(ticket => ({
+                            order_number: ticket.ticket_number,
+                            type: ticket.ticket_type,
+                            price: ticket.ticket_price,
+                            date: ticket.date,
+                            status: ticket.checkin_status,
+                            code: ticket.code,
+                            note: ticket.note,
+                            uuid: ticket.uuid,
+                            eventUuid: eventInfo.eventUuid
+                            // Add other relevant properties if needed
+                        }))} 
+                        />
                     </View>
                 )}
             </View>
@@ -53,12 +149,10 @@ const ManualCheckInAllTickets = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        //backgroundColor: color.white_FFFFFF,
     },
     wrapper: {
         flex: 1,
         paddingHorizontal: 10,
-        //backgroundColor: color.white_FFFFFF,
     },
     popUp: {
         alignItems: 'center',
@@ -85,11 +179,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    labeltickets: {
-        color: color.black_2F251D,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
     ticketHolder: {
         color: color.brown_3C200A,
         fontSize: 14,
@@ -111,7 +200,31 @@ const styles = StyleSheet.create({
     },
     backButton: {
         padding: 10
-      },
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    errorText: {
+        textAlign: 'center',
+        color: 'red',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#999999',
+    },
 });
 
 export default ManualCheckInAllTickets;

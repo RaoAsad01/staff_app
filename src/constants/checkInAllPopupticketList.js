@@ -1,21 +1,39 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity,Alert } from 'react-native';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
+import { ticketService } from '../api/apiService';
 
 const CheckInAllPopup = ({ ticketslist }) => {
     const navigation = useNavigation();
     const [tickets, setTickets] = useState(ticketslist);
 
-    const handleStatusChange = (id) => {
-        setTickets(prevTickets =>
-            prevTickets.map(ticket =>
-                ticket.id === id
-                    ? { ...ticket, status: 'Scanned', note: ticket.note || '' } // Preserve or initialize note
-                    : ticket
-            )
-        );
+    const handleStatusChange = async (ticketToCheckIn) => {
+        console.log("Check-in ticket data:", ticketToCheckIn); // 👈 DEBUG LOG
+        try {
+            console.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
+            const response = await ticketService.manualDetailCheckin(ticketToCheckIn.eventUuid, ticketToCheckIn.code);
+            console.log("API Response:", response); // Log the entire response for debugging
+    
+            if (response?.data?.status === 'SCANNED') {
+                // Update the local state to reflect the scanned status
+                setTickets(prevTickets =>
+                    prevTickets.map(ticket =>
+                        ticket.uuid === ticketToCheckIn.uuid
+                            ? { ...ticket, status: 'Scanned' } // ← change this line
+                            : ticket
+                    )
+                );
+                
+            } else {
+                Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
+            }
+        } catch (error) {
+            console.error('Check-in error:', error);
+            Alert.alert('Error', error.message || 'Something went wrong.');
+        }
     };
+      
 
     const handleItemPress = (item) => {
         if (item.status === 'Scanned') {
@@ -31,7 +49,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
         >
             <View>
                 <Text style={styles.ticketheading}>Ticket ID</Text>
-                <Text style={styles.ticketId}>{item.id}</Text>
+                <Text style={styles.ticketId}>#{item.order_number}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>USD </Text>
@@ -44,7 +62,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
                         styles.statusButton, 
                         item.status === 'Scanned' && styles.scannedButton
                     ]} 
-                    onPress={() => handleStatusChange(item.id)}
+                    onPress={() => handleStatusChange(item)}
                 >
                     <Text 
                         style={[
@@ -65,7 +83,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
         <FlatList
             data={tickets}
             renderItem={renderItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.uuid}
         />
     );
 };
@@ -90,10 +108,10 @@ const styles = StyleSheet.create({
         // elevation: 5,
     },
     ticketId: {
-        fontWeight: '500',
+        fontWeight: '400',
         marginTop: 10,
         fontSize: 14,
-        color: color.black_2F251D
+        color: color.black_544B45
     },
     ticketType: {
         fontSize: 14,
@@ -114,20 +132,20 @@ const styles = StyleSheet.create({
     },
     ticketDate: {
         fontSize: 14,
-        color: color.black_2F251D,
-        fontWeight: '500',
+        color: color.black_544B45,
+        fontWeight: '400',
         marginTop: 14,
     },
     ticketheading: {
         fontSize: 14,
-        color: color.black_544B45,
-        fontWeight: '400'
+        color: color.black_2F251D,
+        fontWeight: '500'
     },
     ticketDateheading: {
         fontSize: 14,
         marginTop: 15,
-        fontWeight: '300',
-       
+        fontWeight: '500',
+        color: color.black_2F251D,
     },
     statusAndDateContainer: {
         flexDirection: 'column',
