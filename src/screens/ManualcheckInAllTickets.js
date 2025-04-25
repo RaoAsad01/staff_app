@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator,Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
@@ -14,6 +14,8 @@ const ManualCheckInAllTickets = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [userDetails, setUserDetails] = useState(null);
+    const [isCheckingIn, setIsCheckingIn] = useState(false); // State for loading during check-in
+    const [checkInSuccess, setCheckInSuccess] = useState(false); // State to show success
 
     useEffect(() => {
         const fetchTicketDetails = async () => {
@@ -24,7 +26,6 @@ const ManualCheckInAllTickets = () => {
                 console.log('Ticket Details Response:', response);
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
                     setTicketDetails(response.data);
-                    // Assuming all tickets in the order belong to the same user
                     setUserDetails({
                         email: response.data[0]?.user_email || 'N/A',
                         firstName: response.data[0]?.user_first_name || '',
@@ -55,6 +56,34 @@ const ManualCheckInAllTickets = () => {
             setLoading(false);
         }
     }, [orderNumber, eventUuid]);
+
+    const handleSingleCheckIn = async () => {
+        if (total === 1 && ticketDetails.length === 1) {
+            setIsCheckingIn(true);
+            setError(null);
+            const ticket = ticketDetails[0];
+            console.log('Attempting to check-in ticket with UUID:', eventInfo.eventUuid, 'and Code:', ticket.code);
+            try {
+                const response = await ticketService.manualDetailCheckin(eventInfo.eventUuid, ticket.code);
+                console.log('Full Single Ticket Check-in Response:', JSON.stringify(response, null, 2)); // Log the entire response
+    
+                if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
+                    console.log('Check-in successful according to response.');
+                    setCheckInSuccess(true);
+                    setTicketDetails([{ ...ticket, checkin_status: 'Scanned' }]);
+                } else {
+                    console.log('Check-in failed according to response. Status:', response?.data?.status);
+                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
+                }
+            } catch (err) {
+                console.error('Single Ticket Check-in Error:', err);
+                setError(err.message || 'Failed to check in ticket.');
+                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+            } finally {
+                setIsCheckingIn(false);
+            }
+        }
+    };
 
     if (loading) {
         return (
@@ -118,26 +147,39 @@ const ManualCheckInAllTickets = () => {
                     <Text style={styles.userEmail}>{userDetails?.email || 'N/A'}</Text>
 
                     {total === 1 && (
-                        <TouchableOpacity style={styles.button}>
-                            <Text style={styles.buttonText}>Check-In</Text>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={handleSingleCheckIn}
+                            disabled={isCheckingIn || checkInSuccess}
+                        >
+                            {isCheckingIn ? (
+                                <ActivityIndicator color={color.btnTxt_FFF6DF} />
+                            ) : checkInSuccess ? (
+                                <Text style={styles.buttonText}>Scanned</Text>
+                            ) : (
+                                <Text style={styles.buttonText}>Check-In</Text>
+                            )}
                         </TouchableOpacity>
                     )}
                 </View>
 
                 {total > 1 && ticketDetails.length > 0 && (
                     <View style={styles.ticketsList}>
-                        <CheckInAllPopup ticketslist={ticketDetails.map(ticket => ({
-                            order_number: ticket.ticket_number,
-                            type: ticket.ticket_type,
-                            price: ticket.ticket_price,
-                            date: ticket.date,
-                            status: ticket.checkin_status,
-                            code: ticket.code,
-                            note: ticket.note,
-                            uuid: ticket.uuid,
-                            eventUuid: eventInfo.eventUuid
-                            // Add other relevant properties if needed
-                        }))} 
+                        <CheckInAllPopup
+                            ticketslist={ticketDetails.map(ticket => ({
+                                order_number: ticket.ticket_number,
+                                type: ticket.ticket_type,
+                                price: ticket.ticket_price,
+                                date: ticket.date,
+                                status: ticket.checkin_status,
+                                code: ticket.code,
+                                note: ticket.note,
+                                uuid: ticket.uuid,
+                                eventUuid: eventInfo.eventUuid,
+                                message: ticket.message,
+                                eventInfo: eventInfo
+                                // Add other relevant properties if needed
+                            }))}
                         />
                     </View>
                 )}

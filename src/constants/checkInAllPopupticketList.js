@@ -1,26 +1,26 @@
 import { StyleSheet, Text, View, FlatList, TouchableOpacity,Alert } from 'react-native';
 import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { color } from '../color/color';
 import { ticketService } from '../api/apiService';
 
 const CheckInAllPopup = ({ ticketslist }) => {
+    const {eventInfo } = useRoute().params;
     const navigation = useNavigation();
     const [tickets, setTickets] = useState(ticketslist);
-
+    console.log("eventInfo:", eventInfo)
     const handleStatusChange = async (ticketToCheckIn) => {
-        console.log("Check-in ticket data:", ticketToCheckIn); // 👈 DEBUG LOG
+        console.log("Check-in ticket data:", ticketToCheckIn)
         try {
             console.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             const response = await ticketService.manualDetailCheckin(ticketToCheckIn.eventUuid, ticketToCheckIn.code);
-            console.log("API Response:", response); // Log the entire response for debugging
+            console.log("API Response:", response);
     
             if (response?.data?.status === 'SCANNED') {
-                // Update the local state to reflect the scanned status
                 setTickets(prevTickets =>
                     prevTickets.map(ticket =>
                         ticket.uuid === ticketToCheckIn.uuid
-                            ? { ...ticket, status: 'Scanned' } // ← change this line
+                            ? { ...ticket, status: 'Scanned' }
                             : ticket
                     )
                 );
@@ -36,9 +36,27 @@ const CheckInAllPopup = ({ ticketslist }) => {
       
 
     const handleItemPress = (item) => {
-        if (item.status === 'Scanned') {
-            const note = item.note || ''; // Ensure there's a default empty note if none exists
-            navigation.navigate('TicketScanned', { note });
+        if (item.status === 'SCANNED') {
+            navigation.navigate('TicketScanned', {
+                scanResponse: {
+                    message: item.message,
+                    ticket_holder: item.name,
+                    ticket: item.type,
+                    currency: 'USD',
+                    ticket_price: item.price,
+                    last_scan: new Date().toISOString(),
+                    scanned_by: item.scanned,
+                    ticket_number: item.order_number,
+                    scan_count: 'N/A',
+                    note: null,
+                    event_uuid: item.eventUuid,
+                    scanned_by_email: 'N/A',
+                    ticket_holder_email: 'N/A',
+                    status: 'SCANNED',
+                    eventInfo: eventInfo,
+                },
+                
+            });
         }
     };
 
@@ -60,17 +78,26 @@ const CheckInAllPopup = ({ ticketslist }) => {
                 <TouchableOpacity 
                     style={[
                         styles.statusButton, 
-                        item.status === 'Scanned' && styles.scannedButton
+                        item.status === 'SCANNED' && styles.scannedButton, 
+                        item.status !== 'SCANNED' && styles.checkInButton
                     ]} 
-                    onPress={() => handleStatusChange(item)}
+                    onPress={() => {
+                        if (item.status !== 'SCANNED') {
+                            handleStatusChange(item);
+                        } else {
+                            Alert.alert('Already Scanned.');
+                            console.log("Ticket is already scanned.");
+                        }
+                    }}
                 >
                     <Text 
                         style={[
                             styles.statusButtonText, 
-                            item.status === 'Scanned' && styles.scannedText
+                        item.status === 'SCANNED' && styles.scannedText,
+                        item.status !== 'SCANNED' && styles.checkInText
                         ]}
                     >
-                        {item.status === 'Scanned' ? 'Scanned' : 'Check-in'}
+                        {item.status === 'SCANNED' ? 'Scanned' : 'Check-in'}
                     </Text>
                 </TouchableOpacity>
                 <Text style={styles.ticketDateheading}>Date</Text>
@@ -171,6 +198,13 @@ const styles = StyleSheet.create({
         color: color.brown_D58E00,
         fontWeight: '500',
         
+    },
+    checkInButton: {
+        backgroundColor: color.btnBrown_AE6F28,
+    },
+    checkInText: {
+        color: color.btnTxt_FFF6DF,
+        fontWeight: '500',
     },
 });
 
