@@ -26,6 +26,11 @@ const ManualCheckInAllTickets = () => {
                 console.log('Ticket Details Response:', response);
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
                     setTicketDetails(response.data);
+    
+                    // Check if the first ticket is already scanned, and set the success state accordingly
+                    const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
+                    setCheckInSuccess(isScanned);
+    
                     setUserDetails({
                         email: response.data[0]?.user_email || 'N/A',
                         firstName: response.data[0]?.user_first_name || '',
@@ -48,14 +53,16 @@ const ManualCheckInAllTickets = () => {
                 setLoading(false);
             }
         };
-
+    
         if (orderNumber && eventUuid) {
             fetchTicketDetails();
         } else {
             setError('Order Number or Event UUID not provided.');
             setLoading(false);
         }
-    }, [orderNumber, eventUuid]);
+    }, [orderNumber, eventUuid]); // You can add checkInSuccess as a dependency if you want to control state updates
+    
+    
 
     const handleSingleCheckIn = async () => {
         if (total === 1 && ticketDetails.length === 1) {
@@ -177,6 +184,11 @@ const ManualCheckInAllTickets = () => {
                                 uuid: ticket.uuid,
                                 eventUuid: eventInfo.eventUuid,
                                 message: ticket.message,
+                                last_scanned_on: ticket.last_scanned_on,
+                                scanCount: ticket.scan_count,
+                                ticketHolder: ticket.ticket_holder,
+                                lastScannedByName: ticket.last_scanned_by_name,
+                                currency: ticket.currency,
                                 eventInfo: eventInfo
                                 // Add other relevant properties if needed
                             }))}

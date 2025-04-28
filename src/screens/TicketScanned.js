@@ -9,6 +9,8 @@ const TicketScanned = ({ route }) => {
     const { scanResponse, eventInfo, note, status } = route.params;
     const navigation = useNavigation();
 
+    const displayedNote = note || scanResponse?.note || 'No note added';
+
     console.log('Scanned Data:', scanResponse);
     console.log('Event Info:', eventInfo);
 
@@ -37,7 +39,7 @@ const TicketScanned = ({ route }) => {
                     <View>
                         <Text style={styles.ticketType}>{scanResponse?.ticket}</Text>
                         <View style={styles.priceContainer}>
-                            <Text style={styles.priceCurrency}>{scanResponse?.currency} </Text>
+                            <Text style={styles.priceCurrency}>{scanResponse?.currency || 'PKR'} </Text>
                             <Text style={styles.ticketPrice}>{scanResponse?.ticket_price}</Text>
                         </View>
                         <Text style={styles.tickeScanTime}>Last Scanned On</Text>
@@ -54,7 +56,7 @@ const TicketScanned = ({ route }) => {
                 </View>
                 <View style={styles.noteContainer}>
                     <Text style={styles.LabelNote}>Note</Text>
-                    <Text style={styles.noteDescription}>{scanResponse?.note || 'No note added'}</Text>
+                    <Text style={styles.noteDescription}>{displayedNote}</Text>
                 </View>
             </View>
         </SafeAreaView>

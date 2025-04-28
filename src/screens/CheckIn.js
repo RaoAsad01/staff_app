@@ -5,7 +5,7 @@ import CameraOverlay from '../../components/CameraOverlay';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { getFormattedDate } from '../constants/dateAndTime';
+import { getFormatDate } from '../constants/currentdateandtime';
 import NoteModal from '../constants/noteModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
@@ -85,7 +85,7 @@ const HomeScreen = ({ eventInfo }) => {
 
     setScanning(true);
     setScannedData(data);
-    setScanTime(getFormattedDate());
+    setScanTime(getFormatDate());
 
     try {
       // Get the note for this ticket
@@ -192,7 +192,7 @@ const HomeScreen = ({ eventInfo }) => {
       navigation.navigate('TicketScanned', {
         scanResponse,
         eventInfo,
-        note: notes[scannedData] || '',
+        note: notes[scannedData] || 'No note added',
       });
     } else {
       const existingNote = notes[scannedData] || '';
@@ -214,7 +214,7 @@ const HomeScreen = ({ eventInfo }) => {
     navigation.navigate('TicketScanned', {
       scanResponse,
       eventInfo,
-      note: notes[scannedData] || '',
+      note: notes[scannedData] || 'No note added',
     });
   };
 

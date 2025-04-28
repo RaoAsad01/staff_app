@@ -126,7 +126,7 @@ const DashboardScreen = ({eventInfo}) => {
         <SafeAreaView style={styles.safeAreaContainer}>
        <View style={styles.header}>
             <Text style={styles.eventName}>{eventInfo?.event_title}</Text>
-            <Text style={styles.cityName}>{eventInfo?.cityName}</Text>
+            <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
             <Text style={styles.date}>{eventInfo?.date}</Text>
             <Text style={styles.date}>at</Text>
             <Text style={styles.time}>{eventInfo?.time}</Text>

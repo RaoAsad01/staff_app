@@ -20,7 +20,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
                 setTickets(prevTickets =>
                     prevTickets.map(ticket =>
                         ticket.uuid === ticketToCheckIn.uuid
-                            ? { ...ticket, status: 'Scanned' }
+                            ? { ...ticket, status: 'SCANNED' }
                             : ticket
                     )
                 );
@@ -40,22 +40,21 @@ const CheckInAllPopup = ({ ticketslist }) => {
             navigation.navigate('TicketScanned', {
                 scanResponse: {
                     message: item.message,
-                    ticket_holder: item.name,
+                    ticket_holder: item.ticketHolder,
                     ticket: item.type,
-                    currency: 'USD',
+                    currency: item.currency,
                     ticket_price: item.price,
-                    last_scan: new Date().toISOString(),
-                    scanned_by: item.scanned,
+                    last_scan: item.last_scanned_on,
+                    scanned_by: item.lastScannedByName,
                     ticket_number: item.order_number,
-                    scan_count: 'N/A',
-                    note: null,
+                    scan_count: item.scanCount,
+                    note: item.note || 'No note added',
                     event_uuid: item.eventUuid,
                     scanned_by_email: 'N/A',
                     ticket_holder_email: 'N/A',
                     status: 'SCANNED',
-                    eventInfo: eventInfo,
                 },
-                
+                eventInfo: eventInfo,
             });
         }
     };
