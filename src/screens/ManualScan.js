@@ -18,12 +18,18 @@ const ManualScan = ({ eventInfo }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await ticketService.fetchUserTicketOrders(eventInfo?.eventUuid);
+        if (!eventInfo) {
+          setError("Event UUID is not available.");
+          setLoading(false);
+          return; // Important: Exit if eventUuid is missing
+        }
+
+        const response = await ticketService.fetchUserTicketOrders(eventInfo.eventUuid);
         console.log('manual scan response', response);
         if (response?.data) {
           setTicketOrders(response.data);
         } else {
-          setTicketOrders([]); // Handle empty data array
+          setTicketOrders([]);
         }
       } catch (err) {
         setError(err.message || 'Failed to fetch ticket orders.');
@@ -33,13 +39,10 @@ const ManualScan = ({ eventInfo }) => {
       }
     };
 
-    if (eventInfo?.eventUuid) {
+    if (eventInfo) {
       fetchOrders();
-    } else {
-      setError("Event UUID is not available.");
-      setLoading(false);
     }
-  }, [eventInfo?.eventUuid]);
+  }, [eventInfo]);
 
   const filterTickets = () => {
     if (!searchText) return ticketOrders;
@@ -56,8 +59,8 @@ const ManualScan = ({ eventInfo }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.ticketCard}
-      onPress={() => navigation.navigate('ManualCheckInAllTickets', { 
-        ticket: item, 
+      onPress={() => navigation.navigate('ManualCheckInAllTickets', {
+        ticket: item,
         total: item.ticket_count,
         orderNumber: item.order_number, // Pass order number
         eventUuid: eventInfo?.eventUuid, // Pass event UUID
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
   total: {
     fontSize: 14,
     color: '#000000',
-    top:4
+    top: 4
   },
   flatListContent: {
     paddingBottom: 20,

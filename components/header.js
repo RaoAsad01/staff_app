@@ -20,6 +20,7 @@ const Header = ({ eventInfo }) => {
   const handleCountPress = () => {
     setTabKey(prevKey => prevKey + 1);
     navigation.navigate('LoggedIn', {
+      eventInfo: eventInfo,
       screen: 'Tickets',
       params: {
         initialTab: 'Scanned',
