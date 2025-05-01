@@ -48,6 +48,8 @@ const endpoints = {
     userTicketOrdersManual: '/ticket/user-ticket/orders/',
     userTicketOrdersManualDetail: (orderNumber, eventUuid) => `/ticket/user-ticket/?order_number=${orderNumber}&event_uuid=${eventUuid}`,
     manualDetailChekin: (uuid, code) => `/ticket/scan/${uuid}/${code}/`,
+    ticketStats: '/ticket/',
+    ticketStatslist: '/ticket/user-ticket/',
 };
 
 // API services
@@ -274,6 +276,29 @@ fetchUserTicketOrders: async (event_uuid) => {
       };
     }
   },
+
+  ticketStatsInfo: async (eventUuid) => {
+    try {
+      const response = await apiClient.get(`${endpoints.ticketStats}${eventUuid}/stats/`);
+      console.log(' Ticket Tab Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch ticket stats:', error);
+      throw error;
+    }
+  },
+
+  ticketStatsListing: async (event_uuid) => {
+    try {
+      const response = await apiClient.get(`${endpoints.ticketStatslist}?event_uuid=${event_uuid}`);
+      console.log(' Ticket Tab listing Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch ticket stats:', error);
+      throw error;
+    }
+  },
+
 };
 export const eventService = {
 

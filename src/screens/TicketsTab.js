@@ -1,19 +1,28 @@
-import React, { useState,useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import { Image as ExpoImage } from 'expo-image';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
+import { ticketService } from '../api/apiService';
 
-const TicketsTab = ({route, tickets }) => {
+const TicketsTab = ({ route, tickets, eventInfo }) => {
     const navigation = useNavigation()
     const [searchText, setSearchText] = useState('');
     const [selectedTab, setSelectedTab] = useState('All');
+    const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
     const isFocused = useIsFocused();
+    const [fetchedTickets, setFetchedTickets] = useState([]);
+
+
     useEffect(() => {
+        if (isFocused && eventInfo?.eventUuid) {
+            fetchTicketStats(eventInfo.eventUuid);
+            fetchTicketList(eventInfo.eventUuid);
+        }
+
         if (isFocused) {
-            console.log("route.params", route.params);
             if (route.params?.fromTab) {
                 setSelectedTab('All');
                 navigation.setParams({ fromTab: undefined });
@@ -26,14 +35,46 @@ const TicketsTab = ({route, tickets }) => {
         }
     }, [isFocused, route.params]);
 
+    const fetchTicketList = async (eventUuid) => {
+        try {
+            const res = await ticketService.ticketStatsListing(eventUuid);
+            const list = res?.data || [];
+            const mappedTickets = list.map((ticket) => ({
+                id: ticket.ticket_number,
+                type: ticket.ticket_type,
+                price: ticket.ticket_price,
+                date: ticket.date,
+                status: ticket.checkin_status === 'SCANNED' ? 'Scanned' : 'Unscanned',
+                note: ticket.note,
+                imageUrl: null, // or a placeholder if needed
+                uuid: ticket.uuid,
+            }));
+
+            setFetchedTickets(mappedTickets);
+        } catch (err) {
+            console.error('Error fetching ticket list:', err);
+        }
+    };
+    const fetchTicketStats = async (eventUuid) => {
+        try {
+            const res = await ticketService.ticketStatsInfo(eventUuid);
+            const statsData = res?.data?.data || {};
+
+            setStats({
+                total: statsData.total || 0,
+                scanned: statsData.scanned || 0,
+                unscanned: statsData.unscanned || 0,
+            });
+        } catch (err) {
+            console.error('Error fetching ticket stats:', err);
+        }
+    };
+
     const filterTickets = () => {
-        if (!tickets) {
-            return [];
-          }
-      
-        let filteredTickets = tickets;
+        let filteredTickets = fetchedTickets;
+
         if (searchText) {
-            filteredTickets = tickets.filter(
+            filteredTickets = filteredTickets.filter(
                 (ticket) =>
                     ticket.id.includes(searchText) ||
                     ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -44,9 +85,9 @@ const TicketsTab = ({route, tickets }) => {
         if (selectedTab !== 'All') {
             filteredTickets = filteredTickets.filter((ticket) => ticket.status === selectedTab);
         }
+
         return filteredTickets;
     };
-
     const handleSearchChange = (text) => {
         setSearchText(text);
     };
@@ -96,7 +137,11 @@ const TicketsTab = ({route, tickets }) => {
             </View>
             <View style={styles.imageContainer}>
                 {item.imageUrl && (
-                    <item.imageUrl width={"100%"} height={"100%"} />
+                    <ExpoImage
+                        source={{ uri: item.imageUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="cover"
+                    />
                 )}
             </View>
         </TouchableOpacity>
@@ -104,9 +149,10 @@ const TicketsTab = ({route, tickets }) => {
 
     const filteredTickets = filterTickets();
 
-    const totalTickets = tickets.length;
-    const scannedTicketsCount = tickets.filter((ticket) => ticket.status === 'Scanned').length;
-    const unscannedTicketsCount = tickets.filter((ticket) => ticket.status === 'Unscanned').length;
+    const totalTickets = stats.total;
+    const scannedTicketsCount = stats.scanned;
+    const unscannedTicketsCount = stats.unscanned;
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -163,7 +209,7 @@ const TicketsTab = ({route, tickets }) => {
             </View>
 
             <FlatList
-                data={filteredTickets}
+                data={filterTickets()}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
             />
@@ -331,12 +377,12 @@ const styles = StyleSheet.create({
     countBadge: {
         borderRadius: 2,
         marginLeft: 5,
-        minWidth:20,
+        minWidth: 20,
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 1,
         paddingHorizontal: 3
-       
+
     },
 
     activeBadge: {

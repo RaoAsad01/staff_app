@@ -16,7 +16,7 @@ import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
 import { authService, eventService } from '../api/apiService';
-import * as SecureStore from 'expo-secure-store'; 
+import * as SecureStore from 'expo-secure-store';
 
 const OtpLoginScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -50,11 +50,11 @@ const OtpLoginScreen = ({ route }) => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       setKeyboardVisible(true);
     });
-  
+
     const keyboardDidHideListener = Platform.OS === 'ios'
       ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false))
       : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-  
+
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
@@ -82,38 +82,42 @@ const OtpLoginScreen = ({ route }) => {
           // Fetch staff events
           const staffEventsData = await eventService.fetchStaffEvents();
 
-          if (staffEventsData && staffEventsData.data.event && staffEventsData.data.event.length > 0) {
-            const firstEvent = staffEventsData.data.event[0]; // Or your logic to select an event
-            const eventUuid = firstEvent.uuid;
-            console.log('UUID of staff: ',eventUuid)
+          const eventsList = staffEventsData?.data?.[0]?.event;
+          if (eventsList && eventsList.length > 0) {
+            const eventUuid = eventsList[0];
+            console.log('UUID of staff: ', eventUuid);
+
             // Fetch event info
             const eventInfoData = await eventService.fetchEventInfo(eventUuid);
-             
-          
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'LoggedIn',
-              params: {  eventInfo: {
-                event_title: eventInfoData?.data?.event_title,
-                cityName: eventInfoData?.data?.location?.city,
-                date: eventInfoData?.data?.start_date,
-                time: eventInfoData?.data?.start_time,
-                userId: eventInfoData?.data?.staff_id,
-                scanCount: eventInfoData?.data?.scan_count,
-                event_uuid: eventInfoData?.data?.location?.uuid,
-                eventUuid: eventUuid
-              }, }, 
-             }],
-          });
-          console.log('Event Info sent to CheckinScreen:', {
-            event_title: eventInfoData?.event_title,
-            cityName: 'Accra',
-            date: eventInfoData?.date,
-            time: eventInfoData?.time,
-            userId: '87621237467',
-            scanCount: eventInfoData?.scanCount,
-          });
-        } else {
+
+
+            navigation.reset({
+              index: 0,
+              routes: [{
+                name: 'LoggedIn',
+                params: {
+                  eventInfo: {
+                    event_title: eventInfoData?.data?.event_title,
+                    cityName: eventInfoData?.data?.location?.city,
+                    date: eventInfoData?.data?.start_date,
+                    time: eventInfoData?.data?.start_time,
+                    userId: eventInfoData?.data?.staff_id,
+                    scanCount: eventInfoData?.data?.scan_count,
+                    event_uuid: eventInfoData?.data?.location?.uuid,
+                    eventUuid: eventUuid
+                  },
+                },
+              }],
+            });
+            console.log('Event Info sent to CheckinScreen:', {
+              event_title: eventInfoData?.event_title,
+              cityName: 'Accra',
+              date: eventInfoData?.date,
+              time: eventInfoData?.time,
+              userId: '87621237467',
+              scanCount: eventInfoData?.scanCount,
+            });
+          } else {
             Alert.alert('Error', 'Could not fetch accessible events.');
             navigation.reset({
               index: 0,
@@ -188,9 +192,9 @@ const OtpLoginScreen = ({ route }) => {
               <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
               <Text style={styles.topText}>HEXALLO</Text>
             </View>
-  
+
             <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
-  
+
             <View style={styles.container}>
               <Text style={styles.appName}>Enter OTP</Text>
               <View style={styles.otpContainer}>
@@ -210,19 +214,19 @@ const OtpLoginScreen = ({ route }) => {
                   />
                 ))}
               </View>
-  
+
               <Text style={styles.labelText}>Didn't receive OTP?</Text>
-  
+
               <View style={styles.rowContainer}>
                 <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
                   <Text style={styles.changeDetailsText}>Resend</Text>
                 </TouchableOpacity>
-  
+
                 <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
                   <Text style={styles.changeDetailsText}>Change Details</Text>
                 </TouchableOpacity>
               </View>
-  
+
               <TouchableOpacity style={styles.button} onPress={handleSignIn}>
                 <Text style={styles.buttonText}>Sign In</Text>
               </TouchableOpacity>
@@ -230,7 +234,7 @@ const OtpLoginScreen = ({ route }) => {
           </ExpoImageBackground>
         </View>
       </TouchableWithoutFeedback>
-  
+
       {!isKeyboardVisible && (
         <View style={styles.bottomtextbg}>
           <Text style={styles.bottomText}>Powered by Hexagram Technologies</Text>
@@ -238,7 +242,7 @@ const OtpLoginScreen = ({ route }) => {
       )}
     </View>
   );
-  
+
 };
 
 const styles = StyleSheet.create({
