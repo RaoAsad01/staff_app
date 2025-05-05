@@ -66,6 +66,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                     note: ticket.note || 'No note added',
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
+                    currency: ticket.currency || 'N/A',
                 };
             });
 
