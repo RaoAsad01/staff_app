@@ -288,10 +288,10 @@ fetchUserTicketOrders: async (event_uuid) => {
     }
   },
 
-  ticketStatsListing: async (event_uuid) => {
+  ticketStatsListing: async (event_uuid, page = 1) => {
     try {
-      const response = await apiClient.get(`${endpoints.ticketStatslist}?event_uuid=${event_uuid}`);
-      console.log(' Ticket Tab listing Response:', response.data);
+      const response = await apiClient.get(`${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}`);
+      console.log('Ticket Tab listing Response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch ticket stats:', error);

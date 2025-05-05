@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '../color/color';
-import { Image as ExpoImage } from 'expo-image';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
+import QRCode from 'react-native-qrcode-svg';
 
 const TicketsTab = ({ route, tickets, eventInfo }) => {
     const navigation = useNavigation()
@@ -14,7 +14,16 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
     const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
     const isFocused = useIsFocused();
     const [fetchedTickets, setFetchedTickets] = useState([]);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [paginationInfo, setPaginationInfo] = useState({
+        count: 0,
+        current_page: 1,
+        next: null,
+        page_size: 10,
+        previous: null
+    });
 
     useEffect(() => {
         if (isFocused && eventInfo?.eventUuid) {
@@ -35,24 +44,50 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
         }
     }, [isFocused, route.params]);
 
-    const fetchTicketList = async (eventUuid) => {
+    const fetchTicketList = async (eventUuid, page = 1, append = false) => {
         try {
-            const res = await ticketService.ticketStatsListing(eventUuid);
+            setIsLoading(true);
+            const res = await ticketService.ticketStatsListing(eventUuid, page);
             const list = res?.data || [];
-            const mappedTickets = list.map((ticket) => ({
-                id: ticket.ticket_number,
-                type: ticket.ticket_type,
-                price: ticket.ticket_price,
-                date: ticket.date,
-                status: ticket.checkin_status === 'SCANNED' ? 'Scanned' : 'Unscanned',
-                note: ticket.note,
-                imageUrl: null, // or a placeholder if needed
-                uuid: ticket.uuid,
-            }));
+            const mappedTickets = list.map((ticket) => {
+                const qrCodeUrl = `http://167.71.195.57:8000/ticket/scan/${ticket.event}/${ticket.code}/`;
+                return {
+                    id: ticket.ticket_number || 'N/A',
+                    type: ticket.ticket_type || 'N/A',
+                    price: ticket.ticket_price || 'N/A',
+                    date: ticket.date || 'N/A',
+                    status: ticket.checkin_status === 'SCANNED' ? 'Scanned' : 'Unscanned',
+                    note: ticket.note || 'N/A',
+                    imageUrl: null,
+                    uuid: ticket.uuid || 'N/A',
+                    ticketHolder: ticket.ticket_holder || 'N/A',
+                    lastScannedByName: ticket.last_scanned_by_name || 'N/A',
+                    scanCount: ticket.scan_count || 'N/A',
+                    note: ticket.note || 'No note added',
+                    lastScannedOn: ticket.last_scanned_on || 'N/A',
+                    qrCodeUrl: qrCodeUrl,
+                };
+            });
 
-            setFetchedTickets(mappedTickets);
+            if (append) {
+                setFetchedTickets(prev => [...prev, ...mappedTickets]);
+            } else {
+                setFetchedTickets(mappedTickets);
+            }
+
+            setPaginationInfo(res.pagination || {
+                count: 0,
+                current_page: 1,
+                next: null,
+                page_size: 10,
+                previous: null
+            });
+            setHasMore(!!res.pagination?.next);
+            setCurrentPage(page);
         } catch (err) {
             console.error('Error fetching ticket list:', err);
+        } finally {
+            setIsLoading(false);
         }
     };
     const fetchTicketStats = async (eventUuid) => {
@@ -97,10 +132,30 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
     };
 
     const handleTicketPress = (ticket) => {
+        const scanResponse = {
+            message: ticket.status === 'Scanned' ? 'Ticket Scanned' : 'Ticket Unscanned',
+            ticket_holder: ticket.ticketHolder || 'N/A',
+            ticket: ticket.type || 'N/A',
+            currency: ticket.currency || 'N/A',
+            ticket_price: ticket.price || 'N/A',
+            last_scan: ticket.lastScannedOn || 'N/A',
+            scanned_by: ticket.lastScannedByName || 'N/A',
+            ticket_number: ticket.id || 'N/A',
+            scan_count: ticket.scanCount || 0,
+            note: ticket.note || 'No note added',
+            qrCodeUrl: ticket.qrCodeUrl,
+        };
+
         navigation.navigate('TicketScanned', {
-            status: ticket.status,
-            note: ticket.note || 'No note added'
+            scanResponse: scanResponse,
+            eventInfo: eventInfo,
         });
+    };
+
+    const loadMoreTickets = () => {
+        if (!isLoading && hasMore && eventInfo?.eventUuid) {
+            fetchTicketList(eventInfo.eventUuid, currentPage + 1, true);
+        }
     };
 
     const renderItem = ({ item }) => (
@@ -136,11 +191,14 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                 </TouchableOpacity>
             </View>
             <View style={styles.imageContainer}>
-                {item.imageUrl && (
-                    <ExpoImage
-                        source={{ uri: item.imageUrl }}
+                {item.qrCodeUrl && ( // Display QR code if URL is available
+                    <QRCode
+                        value={item.qrCodeUrl}
+                        size={100}
                         style={{ width: '100%', height: '100%' }}
-                        contentFit="cover"
+                        logoSize={30}
+                        logoBackgroundColor="transparent"
+                        quietZone={5}
                     />
                 )}
             </View>
@@ -212,6 +270,15 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                 data={filterTickets()}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
+                onEndReached={loadMoreTickets}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={() => (
+                    isLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color={color.brown_5A2F0E} />
+                        </View>
+                    ) : null
+                )}
             />
         </SafeAreaView>
     );
@@ -405,8 +472,11 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: color.black_544B45,
         textAlign: 'center',
-    }
-
+    },
+    loadingContainer: {
+        paddingVertical: 20,
+        alignItems: 'center',
+    },
 });
 
 export default TicketsTab;
