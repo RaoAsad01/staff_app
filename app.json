@@ -26,7 +26,12 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.asad_ahmad.staffapp",
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResources": true,
+      "enableDexGuard": false,
+      "enableHermes": true,
+      "enableSeparateBuildPerCPUArchitecture": true
     },
     "web": {
       "bundler": "metro",

@@ -1,29 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal } from 'react-native';
 import { boxofficetablist } from '../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
 import { color } from '../color/color';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
+import { ticketService } from '../api/apiService';
 
-const BoxOfficeTab = () => {
-  const navigation = useNavigation()
+const BoxOfficeTab = ({eventInfo}) => {
+  const navigation = useNavigation();
+  // const route = useRoute();
+  // const eventUuid = route.params?.eventUuid;
   const [selectedTab, setSelectedTab] = useState(boxofficetablist[0]);
   const [email, setEmail] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
   const [isPOSModalVisible, setPOSModalVisible] = useState(false);
   const [transactionNumber, setTransactionNumber] = useState('');
+  const [ticketPricing, setTicketPricing] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { width } = Dimensions.get('window');
 
+  useEffect(() => {
+    const fetchTicketPricing = async () => {
+      try {
+        if (!eventInfo?.eventUuid) {
+          console.error('BoxOfficeTab: No event_uuid provided');
+          return;
+        }
 
+        console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
+        const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
+        console.log('BoxOfficeTab: Received pricing data:', pricingData);
+        
+        if (!pricingData) {
+          console.error('BoxOfficeTab: No pricing data received');
+          return;
+        }
 
-  const [selectedTickets, setSelectedTickets] = useState([
-    { type: 'Standard Ticket', price: 40, discountPrice: 30, quantity: 2 },
-    { type: 'VIP Ticket', price: 40, discountPrice: 30, quantity: 2 }
-  ]);
+        // Process pricing type options into ticket categories
+        const categories = pricingData.pricing_type_options.map(option => ({
+          category: option.class_name,
+          tickets: [{
+            name: option.description,
+            price: parseFloat(option.price),
+            discount_price: parseFloat(option.price), // Using same price as no discount provided
+            quantity: option.quantity,
+            remaining: option.remaining_tickets,
+            purchase_limit: option.purchase_limit
+          }]
+        }));
+
+        console.log('BoxOfficeTab: Processed categories:', categories);
+        
+        setTicketPricing(categories);
+        
+        // Set initial selected tickets based on the first category
+        if (categories.length > 0) {
+          console.log('BoxOfficeTab: Processing first category:', categories[0]);
+          const initialTickets = categories[0].tickets.map(ticket => ({
+            type: ticket.name,
+            price: ticket.price,
+            discountPrice: ticket.discount_price,
+            quantity: 0,
+            remaining: ticket.remaining,
+            purchase_limit: ticket.purchase_limit
+          }));
+          console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
+          setSelectedTickets(initialTickets);
+          setSelectedTab(categories[0].category); // Set the first category as selected
+        }
+      } catch (error) {
+        console.error('BoxOfficeTab: Error processing ticket pricing:', error);
+        // You might want to show an error message to the user here
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTicketPricing();
+  }, [eventInfo?.eventUuid]);
+
+  const [selectedTickets, setSelectedTickets] = useState([]);
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
+
+  const handleTabPress = (tab) => {
+    console.log('BoxOfficeTab: Tab pressed:', tab);
+    setSelectedTab(tab);
+    const category = ticketPricing.find(cat => cat.category === tab);
+    console.log('BoxOfficeTab: Found category:', category);
+    
+    if (category) {
+      const updatedTickets = category.tickets.map(ticket => ({
+        type: ticket.name,
+        price: ticket.price,
+        discountPrice: ticket.discount_price,
+        quantity: 0,
+        remaining: ticket.remaining,
+        purchase_limit: ticket.purchase_limit
+      }));
+      console.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
+      setSelectedTickets(updatedTickets);
+    }
+  };
 
   const navigateToCheckInAllTicketsScreen = () => {
     if (!email) {
@@ -54,7 +134,6 @@ const BoxOfficeTab = () => {
     navigation.navigate('CheckInAllTickets', { totalTickets: totalQuantity, email, paymentOption, transactionNumber });
   };
 
-
   const allTickets = {
     'Early Bird': [
       { type: 'Standard Ticket', price: 40, discountPrice: 30, quantity: 2 },
@@ -79,33 +158,29 @@ const BoxOfficeTab = () => {
     // ],
   };
 
-  const handleTabPress = (tab) => {
-    setSelectedTab(tab);
-    setSelectedTickets(allTickets[tab] || []);
-    // You can update the selectedTickets list based on the tab selection here.
-    // Example: Filter the tickets dynamically based on the selected tab
-    // setSelectedTickets(filteredTicketsBasedOnTab);
-  };
+  const renderTab = ({ item }) => {
+    const category = ticketPricing.find(cat => cat.category === item);
+    if (!category) return null;
 
-  const renderTab = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.tabButton,
-        selectedTab === item && styles.selectedTabButton, // Apply selected styles
-      ]}
-      onPress={() => handleTabPress(item)}
-    >
-      <Text
+    return (
+      <TouchableOpacity
         style={[
-          styles.tabButtonText,
-          selectedTab === item && styles.selectedTabButtonText, // Apply selected styles
+          styles.tabButton,
+          selectedTab === item && styles.selectedTabButton,
         ]}
+        onPress={() => handleTabPress(item)}
       >
-        {item}
-      </Text>
-    </TouchableOpacity>
-  );
-
+        <Text
+          style={[
+            styles.tabButtonText,
+            selectedTab === item && styles.selectedTabButtonText,
+          ]}
+        >
+          {item}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   const validationSchema = Yup.object().shape({
     email: Yup.string()
@@ -114,7 +189,6 @@ const BoxOfficeTab = () => {
       )
       .required('Required'),
   });
-
 
   const QuantitySelector = ({ quantity, onIncrease, onDecrease }) => {
     return (
@@ -152,7 +226,9 @@ const BoxOfficeTab = () => {
       <View style={styles.ticketRow}>
         <View style={styles.leftColumn}>
           <Text style={styles.ticketType}>{item.type}</Text>
-          <Text style={styles.discountText}>Early Bird Discount</Text>
+          {item.discountPrice <= item.price && (
+            <Text style={styles.discountText}>Early Bird Discount</Text>
+          )}
           <View style={styles.validTillContainer}>
             <Text style={styles.validTillText}>valid till</Text>
             <Text style={styles.dateText}>12-09-2024</Text>
@@ -163,30 +239,60 @@ const BoxOfficeTab = () => {
         </View>
         <View style={styles.rightColumn}>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>USD {item.price}</Text>
-            <Text style={styles.discountPrice}>USD {item.discountPrice}</Text>
+            <Text style={styles.originalPrice}>GHS {item.price}</Text>
+            <Text style={styles.discountPrice}>GHS {item.discountPrice}</Text>
           </View>
-          <QuantitySelector
-            quantity={item.quantity}
-            onIncrease={() => handleQuantityChange(index, item.quantity + 1)}
-            onDecrease={() => handleQuantityChange(index, item.quantity - 1)}
-          />
+          <View style={styles.quantitySelectorContainer}>
+            <TouchableOpacity 
+              style={styles.quantityButton}
+              onPress={() => handleQuantityChange(index, item.quantity - 1)}
+              disabled={item.quantity <= 0}
+            >
+              {item.quantity <= 0 ? (
+                <SvgIcons.removeIcon width={12} height={12} />
+              ) : (
+                <SvgIcons.removeIcon width={12} height={12} />
+              )}
+            </TouchableOpacity>
+            <View style={styles.quantityCountContainer}>
+              <Text style={styles.quantityText}>{item.quantity}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.quantityButton}
+              onPress={() => handleQuantityChange(index, item.quantity + 1)}
+              disabled={item.quantity >= item.purchase_limit}
+            >
+              {item.quantity >= item.purchase_limit ? (
+                <SvgIcons.addIcon width={12} height={12} />
+              ) : (
+                <SvgIcons.addIcon width={12} height={12} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading ticket information...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.tabContainer}>
         <FlatList
           horizontal
-          data={Object.keys(allTickets)}
+          data={ticketPricing.map(cat => cat.category)}
           renderItem={renderTab}
           keyExtractor={(item) => item}
           showsHorizontalScrollIndicator={false}
         />
       </View>
-
 
       <FlatList
         data={selectedTickets}
@@ -195,7 +301,6 @@ const BoxOfficeTab = () => {
         contentContainerStyle={styles.listContent}
         scrollEnabled={false}
       />
-
 
       <View style={styles.footer}>
         <View style={styles.lineView}></View>
@@ -313,7 +418,6 @@ const BoxOfficeTab = () => {
               Mobile Money
             </Text>
           </TouchableOpacity>
-
         </View>
 
         {/* <TouchableOpacity style={[styles.paymentOptioncard, paymentOption === 'Card/Mobile Money' && { borderColor: '#AE6F28' }]} onPress={() => setPaymentOption('Card/Mobile Money')}>
@@ -409,7 +513,7 @@ const styles = StyleSheet.create({
     top: 10
   },
   ticketType: {
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 5,
     fontSize: 14,
     color: color.black_2F251D
@@ -427,9 +531,9 @@ const styles = StyleSheet.create({
   },
   discountText: {
     fontSize: 12,
-    color: '#5A2F0E',
+    color: color.brown_5A2F0E,
     marginTop: 5,
-    fontWeight: 'bold'
+    fontWeight: '400'
   },
   descriptionText: {
     fontSize: 12,
@@ -571,7 +675,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantityButton: {
-    padding: 5,
+    padding: 10,
   },
 
   quantityCountContainer: {

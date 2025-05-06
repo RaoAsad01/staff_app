@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Base URL configuration
-const BASE_URL = 'http://167.71.195.57:8000';
+const BASE_URL = 'https://dev-api.hexallo.com/';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -50,6 +50,7 @@ const endpoints = {
     manualDetailChekin: (uuid, code) => `/ticket/scan/${uuid}/${code}/`,
     ticketStats: '/ticket/',
     ticketStatslist: '/ticket/user-ticket/',
+    ticketPricing: '/ticket/pricing/',
 };
 
 // API services
@@ -296,6 +297,65 @@ fetchUserTicketOrders: async (event_uuid) => {
     } catch (error) {
       console.error('Failed to fetch ticket stats:', error);
       throw error;
+    }
+  },
+
+  fetchTicketPricing: async (eventUuid) => {
+    try {
+      if (!eventUuid) {
+        throw new Error('event_uuid is required');
+      }
+
+      console.log('Fetching ticket pricing for event:', eventUuid);
+      const response = await apiClient.get(`${endpoints.ticketPricing}?event_uuid=${eventUuid}`);
+      
+      // Log the complete response
+      console.log('Ticket Pricing API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: response.data,
+        config: {
+          url: response.config.url,
+          method: response.config.method,
+          headers: response.config.headers
+        }
+      });
+
+      // Extract the actual pricing data from the nested structure
+      const pricingData = response.data?.data?.data;
+      
+      // Log the data structure
+      console.log('Ticket Pricing Data Structure:', {
+        hasData: !!pricingData,
+        eventTitle: pricingData?.event_title,
+        pricingTypeOptions: pricingData?.pricing_type_options,
+        saleStartDate: pricingData?.sale_start_date_time,
+        saleEndDate: pricingData?.sale_end_date_time
+      });
+
+      return pricingData;
+    } catch (error) {
+      console.error('Fetch Ticket Pricing Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method
+        }
+      });
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch ticket pricing.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
   },
 

@@ -145,7 +145,7 @@ const SettingsScreen = ({ route, eventInfo,navigation }) => {
         {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} route={route} key={tabKey}
          eventInfo={eventInfo}
          />}
-        {activeView === 'BoxOfficeTab' && <BoxOfficeTab />}
+        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={eventInfo}/>}
       </View>
     </View>
   );

@@ -28,6 +28,8 @@ import DashboardInactiveIcon from '../assets/svgs/dashboard_inactive_icon.svg';
 import DashboardActiveIcon from '../assets/svgs/dashboard_active_icon.svg'; 
 import ProfileActiveTab from '../assets/svgs/profile_active_tab.svg';
 import BackArrow from '../assets/svgs/back_arrow.svg';
+import RemoveIcon from '../assets/svgs/remove_icon.svg';
+import AddIcon from '../assets/svgs/add_icon.svg';
 
 
 export default {
@@ -61,5 +63,7 @@ export default {
     dashboardActiveIcon: DashboardActiveIcon,
     profileActiveTab: ProfileActiveTab,
     backArrow: BackArrow,
+    removeIcon: RemoveIcon,
+    addIcon: AddIcon,
 
 };
