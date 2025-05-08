@@ -50,7 +50,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
             const res = await ticketService.ticketStatsListing(eventUuid, page);
             const list = res?.data || [];
             const mappedTickets = list.map((ticket) => {
-                const qrCodeUrl = `http://167.71.195.57:8000/ticket/scan/${ticket.event}/${ticket.code}/`;
+                const qrCodeUrl = `https://dev-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
                     id: ticket.ticket_number || 'N/A',
                     type: ticket.ticket_type || 'N/A',

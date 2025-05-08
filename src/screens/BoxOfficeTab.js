@@ -13,23 +13,35 @@ const BoxOfficeTab = ({eventInfo}) => {
   const navigation = useNavigation();
   // const route = useRoute();
   // const eventUuid = route.params?.eventUuid;
-  const [selectedTab, setSelectedTab] = useState(boxofficetablist[0]);
+  const [selectedTab, setSelectedTab] = useState('');
   const [email, setEmail] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
   const [isPOSModalVisible, setPOSModalVisible] = useState(false);
   const [transactionNumber, setTransactionNumber] = useState('');
   const [ticketPricing, setTicketPricing] = useState([]);
+  const [pricingCategories, setPricingCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { width } = Dimensions.get('window');
 
   useEffect(() => {
-    const fetchTicketPricing = async () => {
+    const fetchData = async () => {
       try {
         if (!eventInfo?.eventUuid) {
           console.error('BoxOfficeTab: No event_uuid provided');
           return;
         }
 
+        // Fetch pricing categories
+        const pricingStatsResponse = await ticketService.fetchTicketPricingStats();
+        if (pricingStatsResponse?.data) {
+          const categories = pricingStatsResponse.data.map(item => item.title);
+          setPricingCategories(categories);
+          if (categories.length > 0) {
+            setSelectedTab(categories[0]);
+          }
+        }
+
+        // Fetch ticket pricing
         console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
         const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
         console.log('BoxOfficeTab: Received pricing data:', pricingData);
@@ -40,17 +52,31 @@ const BoxOfficeTab = ({eventInfo}) => {
         }
 
         // Process pricing type options into ticket categories
-        const categories = pricingData.pricing_type_options.map(option => ({
-          category: option.class_name,
-          tickets: [{
+        const categories = pricingData.pricing_type_options.reduce((acc, option) => {
+          const categoryTitle = option.type_obj.title;
+          const existingCategory = acc.find(category => category.title === categoryTitle);
+          
+          const ticket = {
             name: option.description,
             price: parseFloat(option.price),
-            discount_price: parseFloat(option.price), // Using same price as no discount provided
+            discount_price: option.discounted_price ? parseFloat(option.discounted_price) : parseFloat(option.price),
             quantity: option.quantity,
             remaining: option.remaining_tickets,
-            purchase_limit: option.purchase_limit
-          }]
-        }));
+            purchase_limit: option.purchase_limit,
+            currency: option.currency
+          };
+
+          if (existingCategory) {
+            existingCategory.tickets.push(ticket);
+          } else {
+            acc.push({
+              title: categoryTitle,
+              tickets: [ticket]
+            });
+          }
+          
+          return acc;
+        }, []);
 
         console.log('BoxOfficeTab: Processed categories:', categories);
         
@@ -65,21 +91,20 @@ const BoxOfficeTab = ({eventInfo}) => {
             discountPrice: ticket.discount_price,
             quantity: 0,
             remaining: ticket.remaining,
-            purchase_limit: ticket.purchase_limit
+            purchase_limit: ticket.purchase_limit,
+            currency: ticket.currency
           }));
           console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
           setSelectedTickets(initialTickets);
-          setSelectedTab(categories[0].category); // Set the first category as selected
         }
       } catch (error) {
         console.error('BoxOfficeTab: Error processing ticket pricing:', error);
-        // You might want to show an error message to the user here
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTicketPricing();
+    fetchData();
   }, [eventInfo?.eventUuid]);
 
   const [selectedTickets, setSelectedTickets] = useState([]);
@@ -88,7 +113,7 @@ const BoxOfficeTab = ({eventInfo}) => {
   const handleTabPress = (tab) => {
     console.log('BoxOfficeTab: Tab pressed:', tab);
     setSelectedTab(tab);
-    const category = ticketPricing.find(cat => cat.category === tab);
+    const category = ticketPricing.find(cat => cat.title === tab);
     console.log('BoxOfficeTab: Found category:', category);
     
     if (category) {
@@ -98,7 +123,8 @@ const BoxOfficeTab = ({eventInfo}) => {
         discountPrice: ticket.discount_price,
         quantity: 0,
         remaining: ticket.remaining,
-        purchase_limit: ticket.purchase_limit
+        purchase_limit: ticket.purchase_limit,
+        currency: ticket.currency
       }));
       console.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
       setSelectedTickets(updatedTickets);
@@ -159,9 +185,6 @@ const BoxOfficeTab = ({eventInfo}) => {
   };
 
   const renderTab = ({ item }) => {
-    const category = ticketPricing.find(cat => cat.category === item);
-    if (!category) return null;
-
     return (
       <TouchableOpacity
         style={[
@@ -226,7 +249,7 @@ const BoxOfficeTab = ({eventInfo}) => {
       <View style={styles.ticketRow}>
         <View style={styles.leftColumn}>
           <Text style={styles.ticketType}>{item.type}</Text>
-          {item.discountPrice <= item.price && (
+          {item.discountPrice < item.price && (
             <Text style={styles.discountText}>Early Bird Discount</Text>
           )}
           <View style={styles.validTillContainer}>
@@ -239,8 +262,8 @@ const BoxOfficeTab = ({eventInfo}) => {
         </View>
         <View style={styles.rightColumn}>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>GHS {item.price}</Text>
-            <Text style={styles.discountPrice}>GHS {item.discountPrice}</Text>
+            <Text style={styles.originalPrice}>{item.currency} {item.price}</Text>
+            <Text style={styles.discountPrice}>{item.currency} {item.discountPrice}</Text>
           </View>
           <View style={styles.quantitySelectorContainer}>
             <TouchableOpacity 
@@ -287,7 +310,7 @@ const BoxOfficeTab = ({eventInfo}) => {
       <View style={styles.tabContainer}>
         <FlatList
           horizontal
-          data={ticketPricing.map(cat => cat.category)}
+          data={pricingCategories}
           renderItem={renderTab}
           keyExtractor={(item) => item}
           showsHorizontalScrollIndicator={false}

@@ -50,6 +50,7 @@ const endpoints = {
     manualDetailChekin: (uuid, code) => `/ticket/scan/${uuid}/${code}/`,
     ticketStats: '/ticket/',
     ticketStatslist: '/ticket/user-ticket/',
+    ticketPricingStats: '/ticket/pricing-types/',
     ticketPricing: '/ticket/pricing/',
 };
 
@@ -129,7 +130,7 @@ export const ticketService = {
             let ticketCodeFromScan = null;
 
             // Assuming the scanned data is a full URL like:
-            // http://167.71.195.57:8000/ticket/scan/b25e2a8b-ebc4-4872-b7a3-347bef5466a5/R04LERYMWD79R2PI/
+            // https://dev-api.hexallo.com/ticket/scan/b25e2a8b-ebc4-4872-b7a3-347bef5466a5/R04LERYMWD79R2PI/
             if (scannedData.startsWith(BASE_URL) && scannedData.includes('/ticket/scan/')) {
                 const parts = scannedData.split('/ticket/scan/')[1].split('/');
                 if (parts.length >= 2) {
@@ -297,6 +298,34 @@ fetchUserTicketOrders: async (event_uuid) => {
     } catch (error) {
       console.error('Failed to fetch ticket stats:', error);
       throw error;
+    }
+  },
+  fetchTicketPricingStats: async () => {
+    try {
+      const response = await apiClient.get(endpoints.ticketPricingStats);
+      console.log('Ticket Pricing Stats API Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Fetch Ticket Pricing Stats Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method
+        }
+      });
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch ticket pricing.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
   },
 
