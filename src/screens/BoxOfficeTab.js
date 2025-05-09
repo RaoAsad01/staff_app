@@ -9,7 +9,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 
-const BoxOfficeTab = ({eventInfo}) => {
+const BoxOfficeTab = ({ eventInfo }) => {
   const navigation = useNavigation();
   // const route = useRoute();
   // const eventUuid = route.params?.eventUuid;
@@ -45,7 +45,7 @@ const BoxOfficeTab = ({eventInfo}) => {
         console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
         const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
         console.log('BoxOfficeTab: Received pricing data:', pricingData);
-        
+
         if (!pricingData) {
           console.error('BoxOfficeTab: No pricing data received');
           return;
@@ -55,9 +55,10 @@ const BoxOfficeTab = ({eventInfo}) => {
         const categories = pricingData.pricing_type_options.reduce((acc, option) => {
           const categoryTitle = option.type_obj.title;
           const existingCategory = acc.find(category => category.title === categoryTitle);
-          
+
           const ticket = {
             name: option.description,
+            uuid: option.uuid,
             price: parseFloat(option.price),
             discount_price: option.discounted_price ? parseFloat(option.discounted_price) : parseFloat(option.price),
             quantity: option.quantity,
@@ -74,19 +75,20 @@ const BoxOfficeTab = ({eventInfo}) => {
               tickets: [ticket]
             });
           }
-          
+
           return acc;
         }, []);
 
         console.log('BoxOfficeTab: Processed categories:', categories);
-        
+
         setTicketPricing(categories);
-        
+
         // Set initial selected tickets based on the first category
         if (categories.length > 0) {
           console.log('BoxOfficeTab: Processing first category:', categories[0]);
           const initialTickets = categories[0].tickets.map(ticket => ({
             type: ticket.name,
+            uuid: ticket.uuid,
             price: ticket.price,
             discountPrice: ticket.discount_price,
             quantity: 0,
@@ -115,10 +117,11 @@ const BoxOfficeTab = ({eventInfo}) => {
     setSelectedTab(tab);
     const category = ticketPricing.find(cat => cat.title === tab);
     console.log('BoxOfficeTab: Found category:', category);
-    
+
     if (category) {
       const updatedTickets = category.tickets.map(ticket => ({
         type: ticket.name,
+        uuid: ticket.uuid,
         price: ticket.price,
         discountPrice: ticket.discount_price,
         quantity: 0,
@@ -131,7 +134,7 @@ const BoxOfficeTab = ({eventInfo}) => {
     }
   };
 
-  const navigateToCheckInAllTicketsScreen = () => {
+  const navigateToCheckInAllTicketsScreen = async () => {
     if (!email) {
       alert('Please enter a valid email or phone number.');
       return;
@@ -142,11 +145,48 @@ const BoxOfficeTab = ({eventInfo}) => {
       return;
     }
 
-    const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
-    navigation.navigate('CheckInAllTickets', { totalTickets: totalQuantity, email, paymentOption });
+    try {
+      const items = selectedTickets
+        .filter(ticket => ticket.quantity > 0)
+        .map(ticket => ({
+          ticket_type: ticket.uuid,
+          quantity: ticket.quantity
+        }));
+
+      if (items.length === 0) {
+        alert('Please select at least one ticket.');
+        return;
+      }
+
+      // Generate a unique transaction ID for non-POS payments
+      const transactionId = paymentOption === 'P.O.S' ? null : `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      const response = await ticketService.fetchBoxOfficeGetTicket(
+        eventInfo.eventUuid,
+        items,
+        email,
+        paymentOption.toUpperCase(),
+        transactionId
+      );
+
+      // Extract order number from response
+      const orderNumber = response?.data?.order_number;
+
+      navigation.navigate('CheckInAllTickets', {
+        totalTickets: totalQuantity,
+        email,
+        paymentOption,
+        transactionNumber: transactionId,
+        orderData: response,
+        eventInfo: eventInfo,
+        orderNumber: orderNumber // Add order number to navigation params
+      });
+    } catch (error) {
+      alert(error.message || 'Failed to process tickets. Please try again.');
+    }
   };
 
-  const handlePOSPayment = () => {
+  const handlePOSPayment = async () => {
     if (!transactionNumber.trim()) {
       alert('Please enter a valid transaction number.');
       return;
@@ -156,8 +196,43 @@ const BoxOfficeTab = ({eventInfo}) => {
       return;
     }
 
-    setPOSModalVisible(false);
-    navigation.navigate('CheckInAllTickets', { totalTickets: totalQuantity, email, paymentOption, transactionNumber });
+    try {
+      const items = selectedTickets
+        .filter(ticket => ticket.quantity > 0)
+        .map(ticket => ({
+          ticket_type: ticket.uuid,
+          quantity: ticket.quantity
+        }));
+
+      if (items.length === 0) {
+        alert('Please select at least one ticket.');
+        return;
+      }
+
+      const response = await ticketService.fetchBoxOfficeGetTicket(
+        eventInfo.eventUuid,
+        items,
+        email,
+        'POS',
+        transactionNumber.trim()
+      );
+
+      // Extract order number from response
+      const orderNumber = response?.data?.order_number;
+
+      setPOSModalVisible(false);
+      navigation.navigate('CheckInAllTickets', {
+        totalTickets: totalQuantity,
+        email,
+        paymentOption: 'POS',
+        transactionNumber,
+        orderData: response,
+        eventInfo: eventInfo,
+        orderNumber: orderNumber // Add order number to navigation params
+      });
+    } catch (error) {
+      alert(error.message || 'Failed to process tickets. Please try again.');
+    }
   };
 
   const allTickets = {
@@ -266,7 +341,7 @@ const BoxOfficeTab = ({eventInfo}) => {
             <Text style={styles.discountPrice}>{item.currency} {item.discountPrice}</Text>
           </View>
           <View style={styles.quantitySelectorContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => handleQuantityChange(index, item.quantity - 1)}
               disabled={item.quantity <= 0}
@@ -280,7 +355,7 @@ const BoxOfficeTab = ({eventInfo}) => {
             <View style={styles.quantityCountContainer}>
               <Text style={styles.quantityText}>{item.quantity}</Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => handleQuantityChange(index, item.quantity + 1)}
               disabled={item.quantity >= item.purchase_limit}
@@ -465,33 +540,33 @@ const BoxOfficeTab = ({eventInfo}) => {
         )}
       </View>
       <Modal visible={isPOSModalVisible} transparent animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <View style={styles.modalTitleContainer}>
               <Text style={styles.modalTitle}>Pay with P.O.S</Text></View>
-              <TextInput
-                style={styles.inputTransaction}
-                placeholder="Transaction / Receipt ID"
-                placeholderTextColor={color.brown_766F6A}
-                value={transactionNumber}
-                onChangeText={setTransactionNumber}
-                keyboardType="default"
-              />
-              <TouchableOpacity style={[
-                styles.getTicketsButtonPOS,
-                !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
-              ]}
-                onPress={handlePOSPayment}
-                disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
-              >
-                <Text style={styles.getTicketsButtonTextPOS}>Get Ticket(s)</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setPOSModalVisible(false)} style={styles.cancelButtonContainer}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            <TextInput
+              style={styles.inputTransaction}
+              placeholder="Transaction / Receipt ID"
+              placeholderTextColor={color.brown_766F6A}
+              value={transactionNumber}
+              onChangeText={setTransactionNumber}
+              keyboardType="default"
+            />
+            <TouchableOpacity style={[
+              styles.getTicketsButtonPOS,
+              !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
+            ]}
+              onPress={handlePOSPayment}
+              disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
+            >
+              <Text style={styles.getTicketsButtonTextPOS}>Get Ticket(s)</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPOSModalVisible(false)} style={styles.cancelButtonContainer}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -613,7 +688,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     gap: 10
   },
-  paymentOptionsPOS:{
+  paymentOptionsPOS: {
     top: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -825,7 +900,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonContainer: {
     alignItems: 'center',
-  },  
+  },
   modalTitleContainer: {
     width: '100%',
     alignItems: 'center',

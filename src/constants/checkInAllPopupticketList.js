@@ -69,7 +69,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
                 <Text style={styles.ticketId}>#{item.order_number}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
-                    <Text style={styles.priceCurrency}>USD </Text>
+                    <Text style={styles.priceCurrency}>{item.currency} </Text>
                     <Text style={styles.ticketPrice}>{item.price}</Text>
                 </View>
             </View>

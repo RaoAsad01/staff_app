@@ -3,18 +3,16 @@ import React from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
-import { ticketslist } from '../constants/ticketslist';
 import SvgIcons from '../../components/SvgIcons';
 
 const CheckInAllTickets = ({ route }) => {
-    const { totalTickets, email } = route.params;
-    console.log('Tickets List:', ticketslist);
-    console.log('Total Tickets:', totalTickets);
-    const displayedTickets = ticketslist.slice(0, totalTickets);
+    const { totalTickets, email, orderData, eventInfo } = route.params;
+    const tickets = orderData?.data?.data || [];
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
-            <Header />
+            <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
@@ -32,7 +30,25 @@ const CheckInAllTickets = ({ route }) => {
                 {/* Ticket List Section */}
                 {totalTickets > 1 && (
                     <View style={styles.ticketsList}>
-                        <CheckInAllPopUp ticketslist={displayedTickets} />
+                        <CheckInAllPopUp ticketslist={tickets.map(ticket => ({
+                            order_number: ticket.ticket_number,
+                            type: ticket.ticket_type,
+                            price: ticket.ticket_price,
+                            date: ticket.date,
+                            status: ticket.checkin_status,
+                            code: ticket.code,
+                            note: ticket.note,
+                            uuid: ticket.uuid,
+                            eventUuid: eventInfo.eventUuid,
+                            message: ticket.message,
+                            last_scanned_on: ticket.last_scanned_on,
+                            scanCount: ticket.scan_count,
+                            ticketHolder: ticket.ticket_holder,
+                            lastScannedByName: ticket.last_scanned_by_name,
+                            currency: ticket.currency,
+                            eventInfo: eventInfo
+                        }))}
+                        />
                     </View>
                 )}
             </View>
@@ -43,12 +59,10 @@ const CheckInAllTickets = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        //backgroundColor: color.white_FFFFFF,
     },
     wrapper: {
         flex: 1,
         paddingHorizontal: 20,
-        //backgroundColor: color.white_FFFFFF,
     },
     popUp: {
         alignItems: 'center',
@@ -57,11 +71,6 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         borderRadius: 15,
         width: '100%',
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 5,
-        // elevation: 5,
         marginTop: 20,
     },
     button: {
@@ -99,6 +108,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 10,
+    },
+    orderNumber: {
+        color: color.brown_3C200A,
+        fontSize: 14,
+        marginTop: 5,
     },
     successImageIcon: {
         marginTop: 20,

@@ -52,6 +52,7 @@ const endpoints = {
     ticketStatslist: '/ticket/user-ticket/',
     ticketPricingStats: '/ticket/pricing-types/',
     ticketPricing: '/ticket/pricing/',
+    boxOfficeGetTicket: '/order/box-office/'
 };
 
 // API services
@@ -387,6 +388,56 @@ fetchUserTicketOrders: async (event_uuid) => {
       };
     }
   },
+
+  fetchBoxOfficeGetTicket: async (eventUuid, items, userIdentifier, paymentMethod, transactionId = null) => {
+    try {
+      const requestBody = {
+        event: eventUuid,
+        items: items,
+        user_identifier: userIdentifier,
+        payment_method: paymentMethod,
+        transaction_id: transactionId
+      };
+
+      console.log('BoxOffice get ticket request body:', requestBody);
+      const response = await apiClient.post(endpoints.boxOfficeGetTicket, requestBody);
+      console.log('BoxOffice get ticket DetailsResponse:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: response.data,
+        config: {
+          url: response.config.url,
+          method: response.config.method,
+          headers: response.config.headers
+        }
+      });
+      console.log('BoxOffice get ticket API Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('BoxOffice get ticket Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method
+        }
+      });
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch ticket pricing.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
+    }
+  },
+
 
 };
 export const eventService = {
