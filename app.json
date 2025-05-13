@@ -7,7 +7,7 @@
     "icon": "./assets/images/login-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/Hexallo favicon.png",
       "resizeMode": "contain",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
-      "newArchEnabled": true
+      "newArchEnabled": false
     },
     "android": {
       "permissions": [
@@ -26,7 +26,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.asad_ahmad.staffapp",
-      "newArchEnabled": true,
+      "newArchEnabled": false,
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResources": true,
       "enableDexGuard": false,
