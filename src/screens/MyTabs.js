@@ -17,7 +17,7 @@ function MyTabs() {
   const eventInformation = route?.params?.eventInfo;
 
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
-    const focused = accessibilityState.selected;
+    const focused = accessibilityState?.selected || false;
 
     return (
       <TouchableOpacity
