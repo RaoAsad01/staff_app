@@ -1,13 +1,11 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity,Alert } from 'react-native';
-import { useState } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { color } from '../color/color';
 import { ticketService } from '../api/apiService';
 
-const CheckInAllPopup = ({ ticketslist }) => {
-    const {eventInfo } = useRoute().params;
+const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
+    const { eventInfo } = useRoute().params;
     const navigation = useNavigation();
-    const [tickets, setTickets] = useState(ticketslist);
 
     const handleStatusChange = async (ticketToCheckIn) => {
         console.log("Check-in ticket data:", ticketToCheckIn)
@@ -15,16 +13,13 @@ const CheckInAllPopup = ({ ticketslist }) => {
             console.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             const response = await ticketService.manualDetailCheckin(ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             console.log("API Response:", response);
-    
+
             if (response?.data?.status === 'SCANNED') {
-                // Only update the local state for manual check-in
-                setTickets(prevTickets =>
-                    prevTickets.map(ticket =>
-                        ticket.uuid === ticketToCheckIn.uuid
-                            ? { ...ticket, status: 'SCANNED' }
-                            : ticket
-                    )
-                );
+                // Notify parent component about the status change
+                if (onTicketStatusChange) {
+                    onTicketStatusChange(ticketToCheckIn.uuid, 'SCANNED');
+                }
+                Alert.alert('Success', 'Ticket checked in successfully');
             } else {
                 Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
             }
@@ -33,7 +28,6 @@ const CheckInAllPopup = ({ ticketslist }) => {
             Alert.alert('Error', error.message || 'Something went wrong.');
         }
     };
-      
 
     const handleItemPress = (item) => {
         if (item.status === 'SCANNED') {
@@ -62,8 +56,8 @@ const CheckInAllPopup = ({ ticketslist }) => {
     };
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity 
-            style={styles.ticketContainer} 
+        <TouchableOpacity
+            style={styles.ticketContainer}
             onPress={() => handleItemPress(item)}
         >
             <View>
@@ -76,12 +70,12 @@ const CheckInAllPopup = ({ ticketslist }) => {
                 </View>
             </View>
             <View style={styles.statusAndDateContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[
-                        styles.statusButton, 
-                        item.status === 'SCANNED' && styles.scannedButton, 
+                        styles.statusButton,
+                        item.status === 'SCANNED' && styles.scannedButton,
                         item.status !== 'SCANNED' && styles.checkInButton
-                    ]} 
+                    ]}
                     onPress={() => {
                         if (item.status !== 'SCANNED') {
                             handleStatusChange(item);
@@ -91,11 +85,11 @@ const CheckInAllPopup = ({ ticketslist }) => {
                         }
                     }}
                 >
-                    <Text 
+                    <Text
                         style={[
-                            styles.statusButtonText, 
-                        item.status === 'SCANNED' && styles.scannedText,
-                        item.status !== 'SCANNED' && styles.checkInText
+                            styles.statusButtonText,
+                            item.status === 'SCANNED' && styles.scannedText,
+                            item.status !== 'SCANNED' && styles.checkInText
                         ]}
                     >
                         {item.status === 'SCANNED' ? 'Scanned' : 'Check-in'}
@@ -109,7 +103,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
 
     return (
         <FlatList
-            data={tickets}
+            data={ticketslist}
             renderItem={renderItem}
             keyExtractor={(item) => item.uuid}
         />
@@ -198,7 +192,7 @@ const styles = StyleSheet.create({
     scannedText: {
         color: color.brown_D58E00,
         fontWeight: '500',
-        
+
     },
     checkInButton: {
         backgroundColor: color.btnBrown_AE6F28,

@@ -8,12 +8,15 @@ import { ticketService } from '../api/apiService';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo } = route.params;
-    const tickets = orderData?.data?.data || [];
+    const initialTickets = orderData?.data?.data || [];
+    const [tickets, setTickets] = useState(initialTickets);
     const [isCheckingIn, setIsCheckingIn] = useState(false);
     const [checkInSuccess, setCheckInSuccess] = useState(false);
+    const [error, setError] = useState(null);
     const extractResponse = tickets[0];
     const code = extractResponse?.code;
     const eventUuid = extractResponse?.event;
+    const orderNumber = extractResponse?.order_number;
 
     const handleSingleCheckIn = async () => {
         if (totalTickets === 1) {
@@ -35,6 +38,47 @@ const CheckInAllTickets = ({ route }) => {
         }
     };
 
+    const handleCheckInAll = async () => {
+        if (totalTickets > 1) {
+            setIsCheckingIn(true);
+            setError(null);
+            try {
+                const response = await ticketService.boxOfficeDetailCheckinAll(eventUuid, orderNumber);
+                console.log('Check-in All Response:', response);
+
+                if (response?.success && response?.status === 200) {
+                    setCheckInSuccess(true);
+                    // Update all tickets in the list to show as scanned using state
+                    const updatedTickets = tickets.map(ticket => ({
+                        ...ticket,
+                        checkin_status: 'SCANNED',
+                        status: 'SCANNED'
+                    }));
+                    setTickets(updatedTickets);
+                    Alert.alert('Success', response?.data?.message || 'Tickets checked in successfully');
+                } else {
+                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in all tickets.');
+                }
+            } catch (err) {
+                console.error('Check-in All Error:', err);
+                setError(err.message || 'Failed to check in all tickets.');
+                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+            } finally {
+                setIsCheckingIn(false);
+            }
+        }
+    };
+
+    const handleTicketStatusChange = (ticketUuid, newStatus) => {
+        setTickets(prevTickets =>
+            prevTickets.map(ticket =>
+                ticket.uuid === ticketUuid
+                    ? { ...ticket, status: newStatus, checkin_status: newStatus }
+                    : ticket
+            )
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
@@ -48,7 +92,7 @@ const CheckInAllTickets = ({ route }) => {
 
                     <TouchableOpacity
                         style={[styles.button, checkInSuccess && styles.button]}
-                        onPress={totalTickets === 1 ? handleSingleCheckIn : undefined}
+                        onPress={totalTickets === 1 ? handleSingleCheckIn : handleCheckInAll}
                         disabled={isCheckingIn || checkInSuccess}
                     >
                         <Text style={styles.buttonText}>
@@ -61,25 +105,27 @@ const CheckInAllTickets = ({ route }) => {
                 {/* Ticket List Section */}
                 {totalTickets > 1 && (
                     <View style={styles.ticketsList}>
-                        <CheckInAllPopUp ticketslist={tickets.map(ticket => ({
-                            order_number: ticket.order_number,
-                            type: ticket.ticket_type,
-                            price: ticket.ticket_price,
-                            date: ticket.date,
-                            status: ticket.checkin_status,
-                            code: ticket.code,
-                            note: ticket.note,
-                            uuid: ticket.uuid,
-                            eventUuid: eventInfo.eventUuid,
-                            message: ticket.message,
-                            last_scanned_on: ticket.last_scanned_on,
-                            scanCount: ticket.scan_count,
-                            ticketHolder: ticket.ticket_holder,
-                            lastScannedByName: ticket.last_scanned_by_name,
-                            currency: ticket.currency,
-                            eventInfo: eventInfo,
-                            eventUuid: ticket.event
-                        }))}
+                        <CheckInAllPopUp
+                            ticketslist={tickets.map(ticket => ({
+                                order_number: ticket.order_number,
+                                type: ticket.ticket_type,
+                                price: ticket.ticket_price,
+                                date: ticket.date,
+                                status: ticket.status || ticket.checkin_status,
+                                code: ticket.code,
+                                note: ticket.note,
+                                uuid: ticket.uuid,
+                                eventUuid: eventInfo.eventUuid,
+                                message: ticket.message,
+                                last_scanned_on: ticket.last_scanned_on,
+                                scanCount: ticket.scan_count,
+                                ticketHolder: ticket.ticket_holder,
+                                lastScannedByName: ticket.last_scanned_by_name,
+                                currency: ticket.currency,
+                                eventInfo: eventInfo,
+                                eventUuid: ticket.event
+                            }))}
+                            onTicketStatusChange={handleTicketStatusChange}
                         />
                     </View>
                 )}
