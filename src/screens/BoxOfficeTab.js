@@ -448,17 +448,17 @@ const BoxOfficeTab = ({ eventInfo }) => {
           {/* Cash Button */}
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'Cash' && { borderColor: '#AE6F28' },
+            paymentOption === 'CASH' && { borderColor: '#AE6F28' },
             { alignSelf: 'flex-start' }
             ]}
-            onPress={() => setPaymentOption('Cash')}
+            onPress={() => setPaymentOption('CASH')}
           >
-            {paymentOption === 'Cash' ? (
+            {paymentOption === 'CASH' ? (
               <SvgIcons.cameraIconActive width={24} height={24} />
             ) : (
               <SvgIcons.cameraIconInActive width={24} height={24} />
             )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'Cash' && { color: '#5A2F0E' }]}>
+            <Text style={[styles.paymentOptionText, paymentOption === 'CASH' && { color: '#5A2F0E' }]}>
               Cash
             </Text>
           </TouchableOpacity>
@@ -466,17 +466,17 @@ const BoxOfficeTab = ({ eventInfo }) => {
           {/* Debit/Credit Card Button */}
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'Debit/Credit Card' && { borderColor: '#AE6F28' },
+            paymentOption === 'BANK' && { borderColor: '#AE6F28' },
             { flex: 1 }
             ]}
-            onPress={() => setPaymentOption('Debit/Credit Card')}
+            onPress={() => setPaymentOption('BANK')}
           >
-            {paymentOption === 'Debit/Credit Card' ? (
+            {paymentOption === 'BANK' ? (
               <SvgIcons.cardIconActive width={24} height={24} />
             ) : (
               <SvgIcons.cardIconInActive width={24} height={24} />
             )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'Debit/Credit Card' && { color: '#5A2F0E' }]}>
+            <Text style={[styles.paymentOptionText, paymentOption === 'BANK' && { color: '#5A2F0E' }]}>
               Debit/Credit Card
             </Text>
           </TouchableOpacity>
@@ -502,17 +502,17 @@ const BoxOfficeTab = ({ eventInfo }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'Mobile Money' && { borderColor: '#AE6F28' },
+            paymentOption === 'MOBILE_MONEY' && { borderColor: '#AE6F28' },
             { alignSelf: 'flex-start' }
             ]}
-            onPress={() => setPaymentOption('Mobile Money')}
+            onPress={() => setPaymentOption('MOBILE_MONEY')}
           >
-            {paymentOption === 'Mobile Money' ? (
+            {paymentOption === 'MOBILE_MONEY' ? (
               <SvgIcons.mobMoneyIconActive width={24} height={24} />
             ) : (
               <SvgIcons.mobMoneyIconInActive width={24} height={24} />
             )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'Mobile Money' && { color: '#5A2F0E' }]}>
+            <Text style={[styles.paymentOptionText, paymentOption === 'MOBILE_MONEY' && { color: '#5A2F0E' }]}>
               Mobile Money
             </Text>
           </TouchableOpacity>

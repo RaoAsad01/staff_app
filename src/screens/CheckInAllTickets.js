@@ -1,13 +1,39 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView } from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import React, { useState } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
 import SvgIcons from '../../components/SvgIcons';
+import { ticketService } from '../api/apiService';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo } = route.params;
     const tickets = orderData?.data?.data || [];
+    const [isCheckingIn, setIsCheckingIn] = useState(false);
+    const [checkInSuccess, setCheckInSuccess] = useState(false);
+    const extractResponse = tickets[0];
+    const code = extractResponse?.code;
+    const eventUuid = extractResponse?.event;
+
+    const handleSingleCheckIn = async () => {
+        if (totalTickets === 1) {
+            setIsCheckingIn(true);
+            setError(null);
+            try {
+                const response = await ticketService.manualDetailCheckin(eventUuid, code);
+                if (response?.data?.status === 'SCANNED') {
+                    setCheckInSuccess(true);
+                } else {
+                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
+                }
+            } catch (err) {
+                setError(err.message || 'Failed to check in ticket.');
+                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+            } finally {
+                setIsCheckingIn(false);
+            }
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -20,9 +46,14 @@ const CheckInAllTickets = ({ route }) => {
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
                     <Text style={styles.userEmail}>{email}</Text>
 
-                    <TouchableOpacity style={styles.button}>
+                    <TouchableOpacity
+                        style={[styles.button, checkInSuccess && styles.button]}
+                        onPress={totalTickets === 1 ? handleSingleCheckIn : undefined}
+                        disabled={isCheckingIn || checkInSuccess}
+                    >
                         <Text style={styles.buttonText}>
-                            {totalTickets === 1 ? 'Check-In' : `Check-In All`}
+                            {checkInSuccess ? 'Scanned' :
+                                totalTickets === 1 ? 'Check-In' : 'Check-In All'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -31,7 +62,7 @@ const CheckInAllTickets = ({ route }) => {
                 {totalTickets > 1 && (
                     <View style={styles.ticketsList}>
                         <CheckInAllPopUp ticketslist={tickets.map(ticket => ({
-                            order_number: ticket.ticket_number,
+                            order_number: ticket.order_number,
                             type: ticket.ticket_type,
                             price: ticket.ticket_price,
                             date: ticket.date,
@@ -46,7 +77,8 @@ const CheckInAllTickets = ({ route }) => {
                             ticketHolder: ticket.ticket_holder,
                             lastScannedByName: ticket.last_scanned_by_name,
                             currency: ticket.currency,
-                            eventInfo: eventInfo
+                            eventInfo: eventInfo,
+                            eventUuid: ticket.event
                         }))}
                         />
                     </View>

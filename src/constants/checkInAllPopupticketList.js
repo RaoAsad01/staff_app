@@ -8,7 +8,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
     const {eventInfo } = useRoute().params;
     const navigation = useNavigation();
     const [tickets, setTickets] = useState(ticketslist);
-    console.log("eventInfo:", eventInfo)
+
     const handleStatusChange = async (ticketToCheckIn) => {
         console.log("Check-in ticket data:", ticketToCheckIn)
         try {
@@ -17,6 +17,7 @@ const CheckInAllPopup = ({ ticketslist }) => {
             console.log("API Response:", response);
     
             if (response?.data?.status === 'SCANNED') {
+                // Only update the local state for manual check-in
                 setTickets(prevTickets =>
                     prevTickets.map(ticket =>
                         ticket.uuid === ticketToCheckIn.uuid
@@ -24,7 +25,6 @@ const CheckInAllPopup = ({ ticketslist }) => {
                             : ticket
                     )
                 );
-                
             } else {
                 Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
             }
@@ -37,23 +37,25 @@ const CheckInAllPopup = ({ ticketslist }) => {
 
     const handleItemPress = (item) => {
         if (item.status === 'SCANNED') {
+            const scanResponse = {
+                message: item.message || 'Ticket Scanned',
+                ticket_holder: item.ticket_holder || item.ticketHolder || 'N/A',
+                ticket: item.ticket_type || item.type,
+                currency: item.currency,
+                ticket_price: item.ticket_price || item.price,
+                last_scan: item.last_scan || item.last_scanned_on,
+                scanned_by: item.scanned_by || item.lastScannedByName || 'N/A',
+                ticket_number: item.ticket_number || item.order_number,
+                scan_count: item.scan_count || item.scanCount || 0,
+                note: item.note || 'No note added',
+                event_uuid: item.event_uuid || item.eventUuid,
+                scanned_by_email: item.scanned_by_email || 'N/A',
+                ticket_holder_email: item.ticket_holder_email || 'N/A',
+                status: 'SCANNED'
+            };
+
             navigation.navigate('TicketScanned', {
-                scanResponse: {
-                    message: item.message,
-                    ticket_holder: item.ticketHolder,
-                    ticket: item.type,
-                    currency: item.currency,
-                    ticket_price: item.price,
-                    last_scan: item.last_scanned_on,
-                    scanned_by: item.lastScannedByName,
-                    ticket_number: item.order_number,
-                    scan_count: item.scanCount,
-                    note: item.note || 'No note added',
-                    event_uuid: item.eventUuid,
-                    scanned_by_email: 'N/A',
-                    ticket_holder_email: 'N/A',
-                    status: 'SCANNED',
-                },
+                scanResponse,
                 eventInfo: eventInfo,
             });
         }

@@ -319,7 +319,7 @@ fetchUserTicketOrders: async (event_uuid) => {
       });
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch ticket pricing.',
+          message: error.response.data.message || 'Failed to fetch ticket pricing stats.',
           response: error.response
         };
       }
@@ -427,7 +427,7 @@ fetchUserTicketOrders: async (event_uuid) => {
       });
       if (error.response?.data) {
         throw {
-          message: error.response.data.message || 'Failed to fetch ticket pricing.',
+          message: error.response.data.message || 'Failed to fetch get box office ticket',
           response: error.response
         };
       }
