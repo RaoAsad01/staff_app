@@ -54,6 +54,7 @@ const endpoints = {
   ticketPricing: '/ticket/pricing/',
   boxOfficeGetTicket: '/order/box-office/',
   boxOfficeCheckInAllTicket: (eventUuid, orderNumber) => `/ticket/checkin-all/${eventUuid}/${orderNumber}/`,
+  dashboardStats: '/events/{event_uuid}/dashboard/',
 };
 
 // API services
@@ -460,6 +461,29 @@ export const ticketService = {
     }
   },
 
+  fetchDashboardStats: async (eventUuid) => {
+    try {
+      const response = await apiClient.get(endpoints.dashboardStats.replace('{event_uuid}', eventUuid));
+      console.log('Dashboard Stats Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Fetch Dashboard Stats Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch dashboard stats.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
+    }
+  },
 
 };
 export const eventService = {

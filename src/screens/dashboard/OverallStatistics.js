@@ -4,7 +4,13 @@ import { Image as ExpoImage } from 'expo-image';
 import { color } from '../../color/color';
 import SvgIcons from '../../../components/SvgIcons';
 
-const OverallStatistics = () => {
+const OverallStatistics = ({ stats }) => {
+    // Extract data from stats with default values
+    const totalTickets = stats?.data?.total_tickets?.total_quantity || 0;
+    const totalScanned = stats?.data?.total_scanned_tickets?.total_scanned || 0;
+    const totalUnscanned = stats?.data?.total_unscanned_tickets || 0;
+    const availableTickets = stats?.data?.available_tickets?.total_available || 0;
+
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
@@ -15,7 +21,7 @@ const OverallStatistics = () => {
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Tickets</Text>
                         </View>
-                        <Text style={styles.statValue}>545</Text>
+                        <Text style={styles.statValue}>{totalTickets}</Text>
                     </View>
 
                     <View style={styles.statContainer}>
@@ -23,7 +29,7 @@ const OverallStatistics = () => {
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Scanned</Text>
                         </View>
-                        <Text style={styles.statValue}>345</Text>
+                        <Text style={styles.statValue}>{totalScanned}</Text>
                     </View>
                 </View>
                 <View style={styles.row}>
@@ -32,7 +38,7 @@ const OverallStatistics = () => {
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Unscanned</Text>
                         </View>
-                        <Text style={styles.statValue}>200</Text>
+                        <Text style={styles.statValue}>{totalUnscanned}</Text>
                     </View>
 
                     <View style={styles.statContainer}>
@@ -40,7 +46,7 @@ const OverallStatistics = () => {
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Available Tickets</Text>
                         </View>
-                        <Text style={styles.statValue}>80</Text>
+                        <Text style={styles.statValue}>{availableTickets}</Text>
                     </View>
                 </View>
             </View>

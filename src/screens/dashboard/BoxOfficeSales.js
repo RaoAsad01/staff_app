@@ -4,20 +4,57 @@ import { Svg, Circle } from "react-native-svg";
 import { color } from "../../color/color";
 import { formatValue } from "../../constants/formatValue";
 
-const BoxOfficeSales = () => {
-    const total = 20000;
-    const values = [
-        { label: "Cash", value: 8500, color: "#AE6F28" },
-        { label: "Card", value: 8000, color: "#87807C" },
-        { label: "Mobile Money", value: 3500, color: "#EDB58A" },
-    ];
-    const sortedValues = [...values].sort((a, b) => b.value - a.value);
+const BoxOfficeSales = ({ stats }) => {
+    // Extract box office sales data with default values
+    const boxOfficeData = stats?.data?.box_office_sales || {};
+    const total = boxOfficeData?.total_sales || 0;
+    const saleByPaymentMethod = boxOfficeData?.sale_by_payment_method || {};
+
+    // Map payment methods to colors
+    const paymentMethodColors = {
+        "Cash": "#AE6F28",
+        "Card": "#87807C",
+        "Mobile Money": "#EDB58A",
+        "Pos": "#CEBCA0"
+    };
+
+    // Transform the data into the required format
+    const values = Object.entries(saleByPaymentMethod).map(([label, value]) => ({
+        label: label === "Debit/Credit Card" ? "Card" : label,
+        value,
+        color: paymentMethodColors[label === "Debit/Credit Card" ? "Card" : label] || "#AE6F28" // Default color if not found
+    }));
+
+    // Sort values in the order: Cash, Card, Mobile Money, Pos
+    const paymentOrder = ["Cash", "Card", "Mobile Money", "Pos"];
+    const sortedValues = paymentOrder
+        .map(type => values.find(v => v.label === type))
+        .filter(Boolean);
 
     const radius = 50;
     const strokeWidth = 10;
     const circumference = 2 * Math.PI * radius;
     const gapSize = 15;
-    let accumulatedOffset = 0;
+    const totalGap = gapSize * sortedValues.length;
+
+    // Calculate segments for the circle with visible gaps and no overlap
+    const calculateSegments = () => {
+        let currentOffset = 0;
+        return sortedValues.map((item) => {
+            const percentage = item.value / total;
+            // Distribute the circumference minus total gap among the arcs
+            const dashLength = (circumference - totalGap) * percentage;
+            const segment = {
+                ...item,
+                dashLength: dashLength > 0 ? dashLength : 0,
+                dashOffset: currentOffset
+            };
+            currentOffset += dashLength + gapSize;
+            return segment;
+        });
+    };
+
+    const segments = calculateSegments();
 
     return (
         <View style={styles.container}>
@@ -34,29 +71,20 @@ const BoxOfficeSales = () => {
                                 strokeWidth={strokeWidth}
                                 fill="none"
                             />
-                            {sortedValues.map((item, index) => {
-                                const percentage = item.value / total;
-                                const dashLength = circumference * percentage - gapSize;
-                                const strokeOffset = circumference - accumulatedOffset;
-
-                                const segment = (
-                                    <Circle
-                                        key={index}
-                                        cx="60"
-                                        cy="60"
-                                        r={radius}
-                                        stroke={item.color}
-                                        strokeWidth={strokeWidth}
-                                        fill="none"
-                                        strokeDasharray={`${dashLength} ${circumference - dashLength}`}
-                                        strokeDashoffset={strokeOffset}
-                                        strokeLinecap="round"
-                                    />
-                                );
-
-                                accumulatedOffset += dashLength + gapSize;
-                                return segment;
-                            })}
+                            {segments.map((segment, index) => (
+                                <Circle
+                                    key={index}
+                                    cx="60"
+                                    cy="60"
+                                    r={radius}
+                                    stroke={segment.color}
+                                    strokeWidth={strokeWidth}
+                                    fill="none"
+                                    strokeDasharray={`${segment.dashLength} ${circumference - segment.dashLength}`}
+                                    strokeDashoffset={-segment.dashOffset}
+                                    strokeLinecap="round"
+                                />
+                            ))}
                         </Svg>
                         <View style={styles.centerText}>
                             <Text style={styles.amountText}>GHS {formatValue(total)}</Text>
@@ -64,7 +92,7 @@ const BoxOfficeSales = () => {
                         </View>
                     </View>
                     <View style={styles.paymentMethod}>
-                        {values.map((item, index) => (
+                        {sortedValues.map((item, index) => (
                             <View style={styles.paymentItem} key={index}>
                                 <View style={styles.colorBoxWrapper}>
                                     <View style={[styles.colorBox, { backgroundColor: item.color }]} />
