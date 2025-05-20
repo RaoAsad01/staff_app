@@ -6,10 +6,10 @@ import SvgIcons from '../../../components/SvgIcons';
 
 const OverallStatistics = ({ stats }) => {
     // Extract data from stats with default values
-    const totalTickets = stats?.data?.total_tickets?.total_quantity || 0;
-    const totalScanned = stats?.data?.total_scanned_tickets?.total_scanned || 0;
-    const totalUnscanned = stats?.data?.total_unscanned_tickets || 0;
-    const availableTickets = stats?.data?.available_tickets?.total_available || 0;
+    const totalTickets = stats?.data?.overall_statistics?.total_tickets|| 0;
+    const totalScanned = stats?.data?.overall_statistics?.total_scanned_tickets || 0;
+    const totalUnscanned = stats?.data?.overall_statistics?.total_unscanned_tickets || 0;
+    const availableTickets = stats?.data?.overall_statistics?.available_tickets || 0;
 
     return (
         <View style={styles.container}>

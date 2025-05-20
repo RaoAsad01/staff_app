@@ -11,7 +11,7 @@ import AttendeesComponent from './dashboardattendeestab';
 import AnalyticsChart from './AnalyticsChart';
 import { ticketService } from '../../api/apiService';
 
-const DashboardScreen = ({eventInfo}) => {
+const DashboardScreen = ({ eventInfo }) => {
   const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -44,7 +44,10 @@ const DashboardScreen = ({eventInfo}) => {
 
   // Transform data for CheckInSoldTicketsCard
   const getCheckInData = () => {
-    if (!dashboardStats?.data?.total_scanned_tickets || !dashboardStats?.data?.total_tickets) {
+    if (
+      !dashboardStats?.data?.checked_in?.total?.checked_in ||
+      !dashboardStats?.data?.checked_in?.total?.total_quantity
+    ) {
       return [{
         label: "Total Checked In",
         checkedIn: 0,
@@ -52,11 +55,25 @@ const DashboardScreen = ({eventInfo}) => {
         percentage: 0
       }];
     }
-    
-    const { total_scanned_tickets, total_tickets } = dashboardStats.data;
-    const totalCheckedIn = total_scanned_tickets?.total_scanned || 0;
-    const totalTickets = total_tickets?.total_quantity || 0;
-    
+
+    const totalCheckedIn = dashboardStats?.data?.checked_in?.total?.checked_in;
+    const totalTickets = dashboardStats?.data?.checked_in?.total?.total_quantity
+
+    // By type
+    const byType = dashboardStats?.data?.checked_in?.by_type;
+    let typeRows = [];
+    if (byType) {
+      const types = Object.keys(byType.total_quantity || {});
+      typeRows = types.map(type => ({
+        label: type,
+        checkedIn: byType.checked_in?.[type] || 0,
+        total: byType.total_quantity?.[type] || 0,
+        percentage: byType.total_quantity?.[type]
+          ? Math.round((byType.checked_in?.[type] || 0) / byType.total_quantity[type] * 100)
+          : 0
+      }));
+    }
+
     return [
       {
         label: "Total Checked In",
@@ -64,17 +81,15 @@ const DashboardScreen = ({eventInfo}) => {
         total: totalTickets,
         percentage: totalTickets ? Math.round((totalCheckedIn / totalTickets) * 100) : 0
       },
-      ...Object.entries(total_scanned_tickets?.types || {}).map(([type, checkedIn]) => ({
-        label: type,
-        checkedIn: checkedIn || 0,
-        total: total_tickets?.types?.[type] || 0,
-        percentage: total_tickets?.types?.[type] ? Math.round((checkedIn / total_tickets.types[type]) * 100) : 0
-      }))
+      ...typeRows
     ];
   };
 
   const getSoldTicketsData = () => {
-    if (!dashboardStats?.data?.total_sold_tickets || !dashboardStats?.data?.total_tickets) {
+    if (
+      !dashboardStats?.data?.sold_tickets?.total?.total_quantity ||
+      !dashboardStats?.data?.sold_tickets?.total?.sold
+    ) {
       return [{
         label: "Total Sold",
         checkedIn: 0,
@@ -82,11 +97,24 @@ const DashboardScreen = ({eventInfo}) => {
         percentage: 0
       }];
     }
-    
-    const { total_sold_tickets, total_tickets } = dashboardStats.data;
-    const totalSold = total_sold_tickets?.total_sold || 0;
-    const totalTickets = total_tickets?.total_quantity || 0;
-    
+    const totalSold = dashboardStats?.data?.sold_tickets?.total?.sold|| 0;
+    const totalTickets = dashboardStats?.data?.sold_tickets?.total?.total_quantity || 0;
+
+    // By type
+    const byType = dashboardStats?.data?.sold_tickets?.by_type;
+    let typeRows = [];
+    if (byType) {
+      const types = Object.keys(byType.total_quantity || {});
+      typeRows = types.map(type => ({
+        label: type,
+        checkedIn: byType.sold?.[type] || 0,
+        total: byType.total_quantity?.[type] || 0,
+        percentage: byType.total_quantity?.[type]
+          ? Math.round((byType.sold?.[type] || 0) / byType.total_quantity[type] * 100)
+          : 0
+      }));
+    }
+
     return [
       {
         label: "Total Sold",
@@ -94,12 +122,7 @@ const DashboardScreen = ({eventInfo}) => {
         total: totalTickets,
         percentage: totalTickets ? Math.round((totalSold / totalTickets) * 100) : 0
       },
-      ...Object.entries(total_sold_tickets?.types || {}).map(([type, sold]) => ({
-        label: type,
-        checkedIn: sold || 0,
-        total: total_tickets?.types?.[type] || 0,
-        percentage: total_tickets?.types?.[type] ? Math.round((sold / total_tickets.types[type]) * 100) : 0
-      }))
+      ...typeRows
     ];
   };
 
@@ -107,7 +130,7 @@ const DashboardScreen = ({eventInfo}) => {
     if (!dashboardStats?.data?.total_scanned_tickets) {
       return [{ label: 'Total Attendees', value: '0' }];
     }
-    
+
     const { total_scanned_tickets } = dashboardStats.data;
     return [
       { label: 'Total Attendees', value: (total_scanned_tickets?.total_scanned || 0).toString() },
@@ -118,6 +141,48 @@ const DashboardScreen = ({eventInfo}) => {
     ];
   };
 
+  // Utility to format hour label (e.g., "5:00 PM" -> "5pm")
+  function formatHourLabel(hourStr) {
+    const [hour, minutePart] = hourStr.split(":");
+    const [minute, period] = minutePart.split(" ");
+    return `${parseInt(hour, 10)}${period.toLowerCase()}`;
+  }
+
+  // Utility to get the latest non-zero hour for highlighting
+  function getLatestNonZeroHour(checkinAnalytics) {
+    if (!checkinAnalytics?.data) return null;
+    const entries = Object.entries(checkinAnalytics.data);
+    // Find the last hour with value > 0
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i][1] > 0) {
+        return formatHourLabel(entries[i][0]);
+      }
+    }
+    // If all are zero, highlight the last hour
+    return formatHourLabel(entries[entries.length - 1][0]);
+  }
+
+  // Map backend checkin_analytics to chart data
+  function getCheckinAnalyticsChartData(checkinAnalytics, highlightHour = null) {
+    if (!checkinAnalytics?.data) return [];
+    return Object.entries(checkinAnalytics.data).map(([hour, value]) => ({
+      time: formatHourLabel(hour),
+      value,
+      isHighlighted: highlightHour
+        ? formatHourLabel(hour) === highlightHour
+        : false,
+    }));
+  }
+
+  // Map backend sold_tickets_analytics to chart data
+  function mapSoldTicketsAnalytics(analyticsData) {
+    if (!analyticsData) return [];
+    return Object.entries(analyticsData).map(([hour, value]) => ({
+      time: formatHourLabel(hour),
+      value,
+    }));
+  }
+
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
 
@@ -125,9 +190,18 @@ const DashboardScreen = ({eventInfo}) => {
       return <AttendeesComponent attendeesData={getAttendeesData()} />;
     } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets") {
       const data = selectedTab === "Checked In" ? getCheckInData() : getSoldTicketsData();
-      const remainingTicketsData = selectedTab === "Sold Tickets" 
+      const remainingTicketsData = selectedTab === "Sold Tickets"
         ? data.filter(item => item.label !== "Total Sold")
         : [];
+
+      // Chart data for checked in and sold tickets
+      const checkedInChartData = getCheckinAnalyticsChartData(
+        dashboardStats?.data?.checkin_analytics,
+        highlightHour
+      );
+      const soldTicketsChartData = mapSoldTicketsAnalytics(
+        dashboardStats?.data?.sold_tickets_analytics?.data
+      );
 
       return (
         <>
@@ -148,39 +222,8 @@ const DashboardScreen = ({eventInfo}) => {
     return null;
   };
 
-  const checkInData = [
-    { label: "Total Checked In", checkedIn: 345, total: 545, percentage: 70 },
-    { label: "Standard", checkedIn: 150, total: 200, percentage: 70 },
-    { label: "VIP", checkedIn: 100, total: 145, percentage: 70 },
-    { label: "Member", checkedIn: 25, total: 50, percentage: 70 },
-  ];
-
-  const soldTicketsData = [
-    { label: "Total Sold", checkedIn: 500, total: 700, percentage: 72 },
-    { label: "Standard", checkedIn: 200, total: 300, percentage: 67 },
-    { label: "VIP", checkedIn: 180, total: 250, percentage: 72 },
-    { label: "Member", checkedIn: 120, total: 150, percentage: 80 },
-  ];
- 
-  const checkedInChartData = [
-    { time: "12pm", value: 40, isHighlighted: false },
-    { time: "1pm", value: 80, isHighlighted: false },
-    { time: "2pm", value: 100, isHighlighted: false },
-    { time: "3pm", value: 85, isHighlighted: false },
-    { time: "4pm", value: 110, isHighlighted: false },
-    { time: "5pm", value: 110, isHighlighted: true },
-    { time: "6pm", value: 105, isHighlighted: false },
-  ];
-
-  const soldTicketsChartData = [
-    { time: "12pm", value: 50, isHighlighted: false },
-    { time: "1pm", value: 90, isHighlighted: false },
-    { time: "2pm", value: 110, isHighlighted: false },
-    { time: "3pm", value: 95, isHighlighted: false },
-    { time: "4pm", value: 120, isHighlighted: false },
-    { time: "5pm", value: 120, isHighlighted: true },
-    { time: "6pm", value: 115, isHighlighted: false },
-  ];
+  // Use backend data for checkedInChartData
+  const highlightHour = getLatestNonZeroHour(dashboardStats?.data?.checkin_analytics);
 
   const attendeesData = [
     { label: 'Total Attendees', value: '500' },
@@ -189,11 +232,11 @@ const DashboardScreen = ({eventInfo}) => {
     { label: 'Members Attendees', value: '50' },
   ];
 
-  const filteredSoldTicketsData = soldTicketsData; // Keep Total Sold in Sold Tickets
+  const soldTicketsData = getSoldTicketsData();
   const remainingTicketsData = soldTicketsData.filter(
-    (item) => item.label !== "Total Sold" //  Remove "Total Sold" from Remaining Tickets
+    (item) => item.label !== "Total Sold"
   );
-  
+
   const renderTab = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -216,42 +259,42 @@ const DashboardScreen = ({eventInfo}) => {
 
   return (
     <View style={styles.mainContainer}>
-        <View style={styles.statusBarPlaceholder} />
-        <SafeAreaView style={styles.safeAreaContainer}>
-       <View style={styles.header}>
-            <Text style={styles.eventName}>{eventInfo?.event_title}</Text>
-            <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
-            <Text style={styles.date}>{eventInfo?.date}</Text>
-            <Text style={styles.date}>at</Text>
-            <Text style={styles.time}>{eventInfo?.time}</Text>
-          </View>
-          </SafeAreaView>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.wrapper}>
-            <Text style={styles.labelDashboard}>Dashboard</Text>
-            {loading ? (
-              <Text style={styles.loadingText}>Loading dashboard stats...</Text>
-            ) : error ? (
-              <Text style={styles.errorText}>{error}</Text>
-            ) : (
-              <>
-                <OverallStatistics stats={dashboardStats} />
-                <BoxOfficeSales stats={dashboardStats} />
-                <View style={styles.tabContainer}>
-                  <FlatList
-                    horizontal
-                    data={dashboardstatuslist}
-                    renderItem={renderTab}
-                    keyExtractor={(item) => item}
-                    showsHorizontalScrollIndicator={false}
-                  />
-                </View>
-                {renderContent()}
-              </>
-            )}
-          </View>
-        </ScrollView>
-      </View>
+      <View style={styles.statusBarPlaceholder} />
+      <SafeAreaView style={styles.safeAreaContainer}>
+        <View style={styles.header}>
+          <Text style={styles.eventName}>{eventInfo?.event_title}</Text>
+          <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
+          <Text style={styles.date}>{eventInfo?.date}</Text>
+          <Text style={styles.date}>at</Text>
+          <Text style={styles.time}>{eventInfo?.time}</Text>
+        </View>
+      </SafeAreaView>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.wrapper}>
+          <Text style={styles.labelDashboard}>Dashboard</Text>
+          {loading ? (
+            <Text style={styles.loadingText}>Loading dashboard stats...</Text>
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : (
+            <>
+              <OverallStatistics stats={dashboardStats} />
+              <BoxOfficeSales stats={dashboardStats} />
+              <View style={styles.tabContainer}>
+                <FlatList
+                  horizontal
+                  data={dashboardstatuslist}
+                  renderItem={renderTab}
+                  keyExtractor={(item) => item}
+                  showsHorizontalScrollIndicator={false}
+                />
+              </View>
+              {renderContent()}
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -273,7 +316,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.white_FFFFFF,
   },
   headerColumn: {
-    paddingTop: Platform.OS === 'android' ? 15: 0,
+    paddingTop: Platform.OS === 'android' ? 15 : 0,
   },
   header: {
     flexDirection: 'row',

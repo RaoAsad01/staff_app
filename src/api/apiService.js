@@ -54,7 +54,7 @@ const endpoints = {
   ticketPricing: '/ticket/pricing/',
   boxOfficeGetTicket: '/order/box-office/',
   boxOfficeCheckInAllTicket: (eventUuid, orderNumber) => `/ticket/checkin-all/${eventUuid}/${orderNumber}/`,
-  dashboardStats: '/events/{event_uuid}/dashboard/',
+  dashboardStats: '/events/{event_uuid}/sales/',
 };
 
 // API services

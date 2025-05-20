@@ -1,60 +1,117 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { color } from "../../color/color";
 
+const CHART_HEIGHT = 140;
+const BAR_WIDTH = 10;
+const BAR_SPACING = 48;
+
+function getYAxisLabels(yAxisMax) {
+    // Use 6 labels if max >= 150, else 5
+    const steps = yAxisMax >= 150 ? 6 : 5;
+    return Array.from({ length: steps }, (_, i) =>
+        Math.round(yAxisMax - (yAxisMax / (steps - 1)) * i)
+    );
+}
+
 const AnalyticsChart = ({ title, data, dataType }) => {
-    const minValue = 0;
-    const maxValue = Math.max(...data.map((item) => item.value), minValue);
-
-    const barWidth = 8;
-    const barSpacing = 20;
-
-    const renderBars = () => {
-        return data.map((item, index) => {
-            const barHeight = (item.value / maxValue) * 100;
-            const isHighlighted = item.isHighlighted;
-
-            return (
-                <View key={index} style={{ alignItems: "center", marginRight: barSpacing }}>
-                    <View
-                        style={[
-                            styles.bar,
-                            { height: barHeight, width: barWidth },
-                            isHighlighted && styles.highlightedBar, // Apply highlighted style if needed
-                        ]}
-                    >
-                        {isHighlighted && (
-                            <View style={styles.tooltip}>
-                                <Text style={styles.tooltipText}>
-                                    {item.time}
-                                </Text>
-                                <Text style={styles.tooltipText}>
-                                    {item.value} {dataType}
-                                </Text>
-                                <View style={styles.tooltipArrow} />
-                            </View>
-                        )}
-                    </View>
-                    <Text style={styles.timeLabel}>{item.time}</Text>
-                </View>
-            );
-        });
-    };
+    const [selectedBar, setSelectedBar] = useState(null);
+    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    let yAxisMax = Math.max(...data.map(d => d.value), 0);
+    yAxisMax = Math.ceil((yAxisMax || 1) / 50) * 50; // round up to nearest 50
+    if (yAxisMax < 100) yAxisMax = 100;
+    if (yAxisMax < totalValue * 1.2) yAxisMax = Math.ceil((totalValue * 1.2) / 50) * 50;
+    const yAxisLabels = getYAxisLabels(yAxisMax);
 
     return (
         <View style={styles.wrapper}>
-            {/* Separate Title View */}
-            <View style={styles.titleContainer}>
-                <Text style={styles.title}>{title} Analytics</Text>
-            </View>
-
-            <View style={styles.container}>
-                <View style={styles.chartContainer}>{renderBars()}</View>
-                <View style={styles.yAxisLabels}>
-                    <Text>150</Text>
-                    <Text>100</Text>
-                    <Text>50</Text>
-                    <Text>0</Text>
+            <Text style={styles.title}>{title} Analytics</Text>
+            <View style={styles.chartRow}>
+                {/* Chart Area with Grid Lines and Y-Axis Labels */}
+                <View style={styles.chartArea}>
+                    {/* Grid Lines and Y-Axis Labels */}
+                    {yAxisLabels.map((label, idx) => {
+                        const y = (CHART_HEIGHT / (yAxisLabels.length - 1)) * idx;
+                        return (
+                            <React.Fragment key={idx}>
+                                <View
+                                    style={[
+                                        styles.gridLine,
+                                        {
+                                            top: y,
+                                            borderStyle: 'dashed',
+                                            borderWidth: 0,
+                                            borderTopWidth: 1,
+                                            borderColor: '#ECECEC',
+                                        },
+                                    ]}
+                                />
+                                <Text
+                                    style={[
+                                        styles.yAxisLabel,
+                                        {
+                                            position: 'absolute',
+                                            left: -40,
+                                            top: y - 8,
+                                            width: 36,
+                                        },
+                                    ]}
+                                >
+                                    {label}
+                                </Text>
+                            </React.Fragment>
+                        );
+                    })}
+                    {/* Bars and X-Axis Labels */}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ height: CHART_HEIGHT + 24, alignItems: "flex-end" }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: CHART_HEIGHT }}>
+                            {data.map((item, index) => {
+                                const barHeight = (item.value / yAxisMax) * CHART_HEIGHT;
+                                const isSelected = selectedBar === index;
+                                return (
+                                    <View key={index} style={{ alignItems: 'center', width: BAR_SPACING }}>
+                                        <TouchableOpacity
+                                            activeOpacity={0.8}
+                                            onPress={() => setSelectedBar(isSelected ? null : index)}
+                                            style={{ height: CHART_HEIGHT, justifyContent: 'flex-end' }}
+                                        >
+                                            <View style={{ alignItems: 'center' }}>
+                                                {isSelected && (
+                                                    <View style={styles.tooltipContainer}>
+                                                        <View style={styles.tooltip}>
+                                                            <Text style={styles.tooltipTime}>{item.time}</Text>
+                                                            <Text style={styles.tooltipValue}>{item.value} checked in</Text>
+                                                            <View style={styles.tooltipArrow} />
+                                                        </View>
+                                                    </View>
+                                                )}
+                                                <View
+                                                    style={[
+                                                        styles.bar,
+                                                        { height: barHeight, width: BAR_WIDTH },
+                                                        isSelected && styles.highlightedBar,
+                                                    ]}
+                                                />
+                                            </View>
+                                        </TouchableOpacity>
+                                        <Text
+                                            style={[
+                                                styles.timeLabel,
+                                                isSelected && styles.timeLabelHighlight,
+                                                { marginTop: 10 },
+                                            ]}
+                                        >
+                                            {item.time}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </ScrollView>
                 </View>
             </View>
         </View>
@@ -63,96 +120,123 @@ const AnalyticsChart = ({ title, data, dataType }) => {
 
 const styles = StyleSheet.create({
     wrapper: {
-        marginHorizontal: 10,
-        padding: 20,
-        backgroundColor: "white",
-        borderRadius: 12,
-        marginVertical: 10,
-    },
-    container: {
-        flex: 1,
-        paddingBottom: 25
-    },
-    titleContainer: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        margin: 0,
+        padding: 0,
+        paddingTop: 18,
         paddingBottom: 10,
-        alignItems: "flex-start",
+        paddingHorizontal: 18,
+        shadowColor: '#000',
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 },
+        marginHorizontal: 8,
     },
     title: {
-        fontSize: 18,
-        fontWeight: "bold",
+        fontSize: 22,
+        fontWeight: "500",
         color: color.brown_3C200A,
+        marginBottom: 8,
+        textAlign: 'left',
+        fontFamily: 'System',
     },
-    chartContainer: {
+    chartRow: {
         flexDirection: "row",
         alignItems: "flex-end",
-        paddingBottom: 20,
+    },
+    chartArea: {
+        flex: 1,
+        height: CHART_HEIGHT + 24,
         position: "relative",
+        overflow: "visible",
+        justifyContent: "flex-end",
         marginLeft: 40,
-        top: 40,
+    },
+    gridLine: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        height: 1,
+        zIndex: 0,
+    },
+    yAxisLabel: {
+        fontSize: 13,
+        color: color.brown_3C200A,
+        fontWeight: "400",
+        opacity: 0.7,
+        fontFamily: 'System',
+        textAlign: 'right',
     },
     bar: {
         backgroundColor: "#F7E4B6",
-        borderRadius: 2,
-        justifyContent: "flex-end",
+        borderRadius: 5,
+        width: BAR_WIDTH,
     },
     highlightedBar: {
         backgroundColor: color.btnBrown_AE6F28,
     },
     timeLabel: {
-        marginTop: 5,
-        fontSize: 11,
+        marginTop: 6,
+        fontSize: 14,
         color: color.brown_3C200A,
+        fontWeight: "400",
+        textAlign: "center",
+        fontFamily: 'System',
     },
-    timeLabelHighlight:{
-        marginTop: 5,
-        fontSize: 11,
+    timeLabelHighlight: {
         color: color.drak_black_000000,
+        fontWeight: "700",
     },
-    yAxisLabels: {
+    tooltipContainer: {
         position: "absolute",
-        justifyContent: "space-between",
-        height: "100%",
-        left: 0,
+        bottom: "100%",
+        left: "50%",
+        transform: [{ translateX: -0.5 * BAR_WIDTH }],
+        zIndex: 10,
+        width: BAR_WIDTH,
+        alignItems: 'center',
+        marginBottom: 10,
     },
     tooltip: {
-        position: "absolute",
-        top: -60,
         backgroundColor: "#2F251D",
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 1,
+        borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        width: 125,
-        left: "50%",
-        transform: [{ translateX: -60 }],
-        zIndex: 10,
+        width: 140,
     },
-
     tooltipArrow: {
         position: "absolute",
-        bottom: -6,
+        bottom: -8,
         left: "50%",
-        marginLeft: 4,
+        marginLeft: -8,
         width: 0,
         height: 0,
-        borderLeftWidth: 6,
-        borderRightWidth: 6,
-        borderTopWidth: 6,
+        borderLeftWidth: 8,
+        borderRightWidth: 8,
+        borderTopWidth: 8,
         borderStyle: "solid",
         borderLeftColor: "transparent",
         borderRightColor: "transparent",
         borderTopColor: "#2F251D",
     },
-
-    tooltipText: {
-        color: "white",
-        fontSize: 14,
+    tooltipTime: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
         textAlign: "center",
-        fontWeight: "500",
+        fontFamily: 'System',
     },
-
-
+    tooltipValue: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "400",
+        textAlign: "center",
+        fontFamily: 'System',
+        marginTop: 2,
+    },
 });
 
 export default AnalyticsChart;
