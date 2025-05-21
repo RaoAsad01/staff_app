@@ -1,39 +1,141 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { color } from '../../color/color';
 import { dashboardattendeestab } from '../../constants/dashboardattendeestab';
-import { ticketslist } from '../../constants/ticketslist';
 import SvgIcons from '../../../components/SvgIcons';
+import { ticketService } from '../../api/apiService';
+import QRCode from 'react-native-qrcode-svg';
+import { useNavigation } from '@react-navigation/native';
 
-const AttendeesComponent = () => {
+const AttendeesComponent = ({ eventInfo }) => {
+  const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
+  const [fetchedTickets, setFetchedTickets] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [paginationInfo, setPaginationInfo] = useState({
+    count: 0,
+    current_page: 1,
+    next: null,
+    page_size: 10,
+    previous: null
+  });
+
+  useEffect(() => {
+    if (eventInfo?.eventUuid) {
+      fetchTicketList(eventInfo.eventUuid);
+    }
+  }, [eventInfo?.eventUuid]);
+
+  const fetchTicketList = async (eventUuid, page = 1, append = false) => {
+    try {
+      setIsLoading(true);
+      const res = await ticketService.ticketStatsListing(eventUuid, page);
+      const list = res?.data || [];
+      const mappedTickets = list.map((ticket) => {
+        const qrCodeUrl = `https://dev-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
+        return {
+          id: ticket.ticket_number || 'N/A',
+          type: ticket.ticket_type || 'N/A',
+          price: ticket.ticket_price || 'N/A',
+          date: ticket.date || 'N/A',
+          status: ticket.checkin_status === 'SCANNED' ? 'Checked In' : 'No Show',
+          note: ticket.note || 'N/A',
+          imageUrl: null,
+          uuid: ticket.uuid || 'N/A',
+          ticketHolder: ticket.ticket_holder || 'N/A',
+          lastScannedByName: ticket.last_scanned_by_name || 'N/A',
+          scanCount: ticket.scan_count || 'N/A',
+          note: ticket.note || 'No note added',
+          lastScannedOn: ticket.last_scanned_on || 'N/A',
+          qrCodeUrl: qrCodeUrl,
+          currency: ticket.currency || 'N/A',
+        };
+      });
+
+      if (append) {
+        setFetchedTickets(prev => [...prev, ...mappedTickets]);
+      } else {
+        setFetchedTickets(mappedTickets);
+      }
+
+      setPaginationInfo(res.pagination || {
+        count: 0,
+        current_page: 1,
+        next: null,
+        page_size: 10,
+        previous: null
+      });
+      setHasMore(!!res.pagination?.next);
+      setCurrentPage(page);
+    } catch (err) {
+      console.error('Error fetching ticket list:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMoreTickets = () => {
+    if (!isLoading && hasMore && eventInfo?.eventUuid) {
+      fetchTicketList(eventInfo.eventUuid, currentPage + 1, true);
+    }
+  };
 
   const filterTickets = () => {
-    let filteredTickets = ticketslist;
+    let filteredTickets = fetchedTickets;
 
     if (searchText) {
       filteredTickets = filteredTickets.filter(
         (ticket) =>
-          ticket.id.includes(searchText) ||
+          ticket.id.toLowerCase().includes(searchText.toLowerCase()) ||
           ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-          ticket.name.toLowerCase().includes(searchText.toLowerCase())
+          ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
     if (activeTab !== 'All') {
-      filteredTickets = filteredTickets.filter((ticket) => ticket.dashboardstatus === activeTab);
+      filteredTickets = filteredTickets.filter((ticket) => {
+        if (activeTab === 'Checked In') {
+          return ticket.status === 'Checked In';
+        } else if (activeTab === 'No Show') {
+          return ticket.status === 'No Show';
+        }
+        return true;
+      });
     }
 
     if (selectedFilter) {
       filteredTickets = filteredTickets.filter((ticket) =>
-        ticket.type === selectedFilter || ticket.dashboardstatus === selectedFilter
+        ticket.type === selectedFilter || ticket.status === selectedFilter
       );
     }
 
     return filteredTickets;
+  };
+
+  const handleTicketPress = (ticket) => {
+    const scanResponse = {
+      message: ticket.status === 'Checked In' ? 'Ticket Scanned' : 'Ticket Unscanned',
+      ticket_holder: ticket.ticketHolder || 'N/A',
+      ticket: ticket.type || 'N/A',
+      currency: ticket.currency || 'N/A',
+      ticket_price: ticket.price || 'N/A',
+      last_scan: ticket.lastScannedOn || 'N/A',
+      scanned_by: ticket.lastScannedByName || 'N/A',
+      ticket_number: ticket.id || 'N/A',
+      scan_count: ticket.scanCount || 0,
+      note: ticket.note || 'No note added',
+      qrCodeUrl: ticket.qrCodeUrl,
+    };
+
+    navigation.navigate('TicketScanned', {
+      scanResponse: scanResponse,
+      eventInfo: eventInfo,
+    });
   };
 
   const handleSearchChange = (text) => {
@@ -42,10 +144,9 @@ const AttendeesComponent = () => {
 
   const handleTabPress = (tab) => {
     setActiveTab(tab);
-    setSelectedFilter(null);  // Clear any selected filter
-    setSearchText('');        // Clear the search text
+    setSelectedFilter(null);
+    setSearchText('');
   };
-
 
   const handleFilterButtonPress = () => {
     setModalVisible(true);
@@ -58,11 +159,20 @@ const AttendeesComponent = () => {
 
   const clearFilter = () => {
     setSelectedFilter(null);
-    //setModalVisible(false);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      onScroll={({ nativeEvent }) => {
+        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+        const paddingToBottom = 20;
+        if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+          loadMoreTickets();
+        }
+      }}
+      scrollEventThrottle={400}
+    >
       <View style={styles.tabContainer}>
         {dashboardattendeestab.map((tab, index) => (
           <TouchableOpacity
@@ -97,169 +207,36 @@ const AttendeesComponent = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.filterButton} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity style={styles.filterButton} onPress={handleFilterButtonPress}>
           <SvgIcons.filterIcon width={20} height={20} />
-
-          <Modal visible={isModalVisible} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Filters</Text>
-                  <TouchableOpacity onPress={clearFilter}>
-                    <Text style={styles.clearAllText}>Clear all</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.filterOptionsContainer}>
-                  <View style={styles.lineView} />
-                  <Text style={styles.tickettype}>Ticket Type</Text>
-                  <TouchableOpacity
-                    style={styles.filterOption}
-                    onPress={() =>
-                      setSelectedFilter(
-                        selectedFilter === 'Standard Ticket' ? null : 'Standard Ticket'
-                      )
-                    }
-                  >
-                    <View style={styles.checkboxContainer}>
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedFilter === 'Standard Ticket' && styles.checkedCheckbox,
-                        ]}
-                      >
-                        {selectedFilter === 'Standard Ticket' && (
-                          <SvgIcons.tickIcon width={15} height={15} />
-                        )}
-                      </View>
-                      <Text style={styles.filterOptionText}>Standard Tickets</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.filterOption}
-                    onPress={() =>
-                      setSelectedFilter(
-                        selectedFilter === 'VIP Ticket' ? null : 'VIP Ticket'
-                      )
-                    }
-                  >
-                    <View style={styles.checkboxContainer}>
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedFilter === 'VIP Ticket' && styles.checkedCheckbox,
-                        ]}
-                      >
-                        {selectedFilter === 'VIP Ticket' && (
-                          <SvgIcons.tickIcon width={15} height={15} />
-                        )}
-                      </View>
-                      <Text style={styles.filterOptionText}>VIP Tickets</Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.filterOption}
-                    onPress={() =>
-                      setSelectedFilter(
-                        selectedFilter === 'Members' ? null : 'Members'
-                      )
-                    }
-                  >
-                    <View style={styles.checkboxContainer}>
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedFilter === 'Members' && styles.checkedCheckbox,
-                        ]}
-                      >
-                        {selectedFilter === 'Members' && (
-                          <SvgIcons.tickIcon width={15} height={15} />
-                        )}
-                      </View>
-                      <Text style={styles.filterOptionText}>Members</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <View>
-                    <Text style={styles.tickettype}>Attendees</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.filterOption}
-                    onPress={() =>
-                      setSelectedFilter(
-                        selectedFilter === 'Checked In' ? null : 'Checked In'
-                      )
-                    }
-                  >
-                    <View style={styles.checkboxContainer}>
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedFilter === 'Checked In' && styles.checkedCheckbox,
-                        ]}
-                      >
-                        {selectedFilter === 'Checked In' && (
-                          <SvgIcons.tickIcon width={15} height={15} />
-                        )}
-                      </View>
-                      <Text style={styles.filterOptionText}>Checked In</Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.filterOption}
-                    onPress={() =>
-                      setSelectedFilter(
-                        selectedFilter === 'No Show' ? null : 'No Show'
-                      )
-                    }
-                  >
-                    <View style={styles.checkboxContainer}>
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedFilter === 'No Show' && styles.checkedCheckbox,
-                        ]}
-                      >
-                        {selectedFilter === 'No Show' && (
-                          <SvgIcons.tickIcon width={15} height={15} />
-                        )}
-                      </View>
-                      <Text style={styles.filterOptionText}>No Show</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.applyButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.applyButtonText}>Apply</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
         </TouchableOpacity>
       </View>
 
       {filterTickets().map((item, index) => (
-        <View
+        <TouchableOpacity
           key={index}
           style={styles.card}
+          onPress={() => handleTicketPress(item)}
         >
           <View style={styles.cardContent}>
             <View>
               <Text style={styles.label}>Name</Text>
-              <Text style={styles.value}>{item.name}</Text>
+              <Text style={styles.value}>{item.ticketHolder}</Text>
               <Text style={styles.label}>Ticket ID</Text>
-              <Text style={styles.value}>{item.id}</Text>
+              <Text style={styles.value}>#{item.id}</Text>
               <Text style={styles.label}>{item.type}</Text>
-              <Text style={styles.value}>USD {item.price}</Text>
+              <Text style={styles.value}>{item.currency} {item.price}</Text>
             </View>
             <View style={styles.qrCode}>
-              {item.imageUrl && (
-                <item.imageUrl width={"100%"} height={"100%"} />
+              {item.qrCodeUrl && (
+                <QRCode
+                  value={item.qrCodeUrl}
+                  size={100}
+                  style={{ width: '100%', height: '100%' }}
+                  logoSize={30}
+                  logoBackgroundColor="transparent"
+                  quietZone={5}
+                />
               )}
             </View>
           </View>
@@ -267,27 +244,173 @@ const AttendeesComponent = () => {
           <View
             style={[
               styles.badge,
-              item.dashboardstatus === 'Checked In' ? styles.checkInBadge : styles.noShowBadge,
+              item.status === 'Checked In' ? styles.checkInBadge : styles.noShowBadge,
             ]}
           >
             <Text
               style={[
                 styles.badgeText,
-                item.dashboardstatus === 'Checked In' ? styles.checkInText : styles.noShowText,
+                item.status === 'Checked In' ? styles.checkInText : styles.noShowText,
               ]}
             >
-              {item.dashboardstatus}
+              {item.status}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
       ))}
+
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={color.brown_5A2F0E} />
+        </View>
+      )}
+
+      <Modal visible={isModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filters</Text>
+              <TouchableOpacity onPress={clearFilter}>
+                <Text style={styles.clearAllText}>Clear all</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterOptionsContainer}>
+              <View style={styles.lineView} />
+              <Text style={styles.tickettype}>Ticket Type</Text>
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() =>
+                  setSelectedFilter(
+                    selectedFilter === 'Standard Ticket' ? null : 'Standard Ticket'
+                  )
+                }
+              >
+                <View style={styles.checkboxContainer}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedFilter === 'Standard Ticket' && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedFilter === 'Standard Ticket' && (
+                      <SvgIcons.tickIcon width={15} height={15} />
+                    )}
+                  </View>
+                  <Text style={styles.filterOptionText}>Standard Tickets</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() =>
+                  setSelectedFilter(
+                    selectedFilter === 'VIP Ticket' ? null : 'VIP Ticket'
+                  )
+                }
+              >
+                <View style={styles.checkboxContainer}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedFilter === 'VIP Ticket' && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedFilter === 'VIP Ticket' && (
+                      <SvgIcons.tickIcon width={15} height={15} />
+                    )}
+                  </View>
+                  <Text style={styles.filterOptionText}>VIP Tickets</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() =>
+                  setSelectedFilter(
+                    selectedFilter === 'Members' ? null : 'Members'
+                  )
+                }
+              >
+                <View style={styles.checkboxContainer}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedFilter === 'Members' && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedFilter === 'Members' && (
+                      <SvgIcons.tickIcon width={15} height={15} />
+                    )}
+                  </View>
+                  <Text style={styles.filterOptionText}>Members</Text>
+                </View>
+              </TouchableOpacity>
+
+              <View>
+                <Text style={styles.tickettype}>Attendees</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() =>
+                  setSelectedFilter(
+                    selectedFilter === 'Checked In' ? null : 'Checked In'
+                  )
+                }
+              >
+                <View style={styles.checkboxContainer}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedFilter === 'Checked In' && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedFilter === 'Checked In' && (
+                      <SvgIcons.tickIcon width={15} height={15} />
+                    )}
+                  </View>
+                  <Text style={styles.filterOptionText}>Checked In</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() =>
+                  setSelectedFilter(
+                    selectedFilter === 'No Show' ? null : 'No Show'
+                  )
+                }
+              >
+                <View style={styles.checkboxContainer}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      selectedFilter === 'No Show' && styles.checkedCheckbox,
+                    ]}
+                  >
+                    {selectedFilter === 'No Show' && (
+                      <SvgIcons.tickIcon width={15} height={15} />
+                    )}
+                  </View>
+                  <Text style={styles.filterOptionText}>No Show</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.applyButtonText}>Apply</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
     padding: 15,
   },
   tabContainer: {
@@ -347,7 +470,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   filterButton: {
-    backgroundColor: color.white,
+    backgroundColor: color.white_FFFFFF,
     borderRadius: 10,
     padding: 8,
     borderWidth: 1,
@@ -362,11 +485,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
     position: 'relative',
   },
   cardContent: {
@@ -513,8 +631,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: color.brown_3C200A,
     marginTop: 10
-  }
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
 });
-
 
 export default AttendeesComponent;

@@ -42,7 +42,6 @@ const DashboardScreen = ({ eventInfo }) => {
     setSelectedTab(tab);
   };
 
-  // Transform data for CheckInSoldTicketsCard
   const getCheckInData = () => {
     if (
       !dashboardStats?.data?.checked_in?.total?.checked_in ||
@@ -59,7 +58,6 @@ const DashboardScreen = ({ eventInfo }) => {
     const totalCheckedIn = dashboardStats?.data?.checked_in?.total?.checked_in;
     const totalTickets = dashboardStats?.data?.checked_in?.total?.total_quantity
 
-    // By type
     const byType = dashboardStats?.data?.checked_in?.by_type;
     let typeRows = [];
     if (byType) {
@@ -97,10 +95,9 @@ const DashboardScreen = ({ eventInfo }) => {
         percentage: 0
       }];
     }
-    const totalSold = dashboardStats?.data?.sold_tickets?.total?.sold|| 0;
+    const totalSold = dashboardStats?.data?.sold_tickets?.total?.sold || 0;
     const totalTickets = dashboardStats?.data?.sold_tickets?.total?.total_quantity || 0;
 
-    // By type
     const byType = dashboardStats?.data?.sold_tickets?.by_type;
     let typeRows = [];
     if (byType) {
@@ -126,43 +123,23 @@ const DashboardScreen = ({ eventInfo }) => {
     ];
   };
 
-  const getAttendeesData = () => {
-    if (!dashboardStats?.data?.total_scanned_tickets) {
-      return [{ label: 'Total Attendees', value: '0' }];
-    }
-
-    const { total_scanned_tickets } = dashboardStats.data;
-    return [
-      { label: 'Total Attendees', value: (total_scanned_tickets?.total_scanned || 0).toString() },
-      ...Object.entries(total_scanned_tickets?.types || {}).map(([type, count]) => ({
-        label: `${type} Attendees`,
-        value: (count || 0).toString()
-      }))
-    ];
-  };
-
-  // Utility to format hour label (e.g., "5:00 PM" -> "5pm")
   function formatHourLabel(hourStr) {
     const [hour, minutePart] = hourStr.split(":");
     const [minute, period] = minutePart.split(" ");
     return `${parseInt(hour, 10)}${period.toLowerCase()}`;
   }
 
-  // Utility to get the latest non-zero hour for highlighting
   function getLatestNonZeroHour(checkinAnalytics) {
     if (!checkinAnalytics?.data) return null;
     const entries = Object.entries(checkinAnalytics.data);
-    // Find the last hour with value > 0
     for (let i = entries.length - 1; i >= 0; i--) {
       if (entries[i][1] > 0) {
         return formatHourLabel(entries[i][0]);
       }
     }
-    // If all are zero, highlight the last hour
     return formatHourLabel(entries[entries.length - 1][0]);
   }
 
-  // Map backend checkin_analytics to chart data
   function getCheckinAnalyticsChartData(checkinAnalytics, highlightHour = null) {
     if (!checkinAnalytics?.data) return [];
     return Object.entries(checkinAnalytics.data).map(([hour, value]) => ({
@@ -174,7 +151,6 @@ const DashboardScreen = ({ eventInfo }) => {
     }));
   }
 
-  // Map backend sold_tickets_analytics to chart data
   function mapSoldTicketsAnalytics(analyticsData) {
     if (!analyticsData) return [];
     return Object.entries(analyticsData).map(([hour, value]) => ({
@@ -187,14 +163,13 @@ const DashboardScreen = ({ eventInfo }) => {
     if (!dashboardStats?.data) return null;
 
     if (selectedTab === "Attendees") {
-      return <AttendeesComponent attendeesData={getAttendeesData()} />;
+      return <AttendeesComponent eventInfo={eventInfo} />;
     } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets") {
       const data = selectedTab === "Checked In" ? getCheckInData() : getSoldTicketsData();
       const remainingTicketsData = selectedTab === "Sold Tickets"
         ? data.filter(item => item.label !== "Total Sold")
         : [];
 
-      // Chart data for checked in and sold tickets
       const checkedInChartData = getCheckinAnalyticsChartData(
         dashboardStats?.data?.checkin_analytics,
         highlightHour
@@ -222,15 +197,7 @@ const DashboardScreen = ({ eventInfo }) => {
     return null;
   };
 
-  // Use backend data for checkedInChartData
   const highlightHour = getLatestNonZeroHour(dashboardStats?.data?.checkin_analytics);
-
-  const attendeesData = [
-    { label: 'Total Attendees', value: '500' },
-    { label: 'VIP Attendees', value: '150' },
-    { label: 'Standard Attendees', value: '300' },
-    { label: 'Members Attendees', value: '50' },
-  ];
 
   const soldTicketsData = getSoldTicketsData();
   const remainingTicketsData = soldTicketsData.filter(
@@ -301,7 +268,6 @@ const DashboardScreen = ({ eventInfo }) => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    //backgroundColor: color.white_FFFFFF,
   },
   scrollContainer: {
     paddingBottom: 20,
@@ -309,7 +275,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-    //backgroundColor: color.white_FFFFFF
   },
   statusBarPlaceholder: {
     height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
