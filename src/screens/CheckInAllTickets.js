@@ -5,6 +5,7 @@ import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
+import { useNavigation } from '@react-navigation/native';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo } = route.params;
@@ -12,6 +13,7 @@ const CheckInAllTickets = ({ route }) => {
     const [tickets, setTickets] = useState(initialTickets);
     const [isCheckingIn, setIsCheckingIn] = useState(false);
     const [checkInSuccess, setCheckInSuccess] = useState(false);
+    const navigation = useNavigation();
     const [error, setError] = useState(null);
     const extractResponse = tickets[0];
     const code = extractResponse?.code;
@@ -83,6 +85,9 @@ const CheckInAllTickets = ({ route }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header eventInfo={eventInfo} />
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
+                </TouchableOpacity>
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
@@ -194,6 +199,9 @@ const styles = StyleSheet.create({
     },
     successImageIcon: {
         marginTop: 20,
+    },
+    backButton: {
+        padding: 10
     },
 });
 

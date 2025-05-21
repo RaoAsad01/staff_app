@@ -5,6 +5,8 @@ import { color } from "../../color/color";
 const CHART_HEIGHT = 140;
 const BAR_WIDTH = 10;
 const BAR_SPACING = 48;
+const DOT_SIZE = 2;
+const DOT_SPACING = 4;
 
 function getYAxisLabels(yAxisMax) {
     // Use 6 labels if max >= 150, else 5
@@ -23,6 +25,25 @@ const AnalyticsChart = ({ title, data, dataType }) => {
     if (yAxisMax < totalValue * 1.2) yAxisMax = Math.ceil((totalValue * 1.2) / 50) * 50;
     const yAxisLabels = getYAxisLabels(yAxisMax);
 
+    const renderDottedLine = () => {
+        const dots = [];
+        const numberOfDots = Math.floor(300 / (DOT_SIZE + DOT_SPACING)); // 300 is approximate width
+        
+        for (let i = 0; i < numberOfDots; i++) {
+            dots.push(
+                <View
+                    key={i}
+                    style={[
+                        styles.dot,
+                        { marginRight: DOT_SPACING }
+                    ]}
+                />
+            );
+        }
+        
+        return dots;
+    };
+
     return (
         <View style={styles.wrapper}>
             <Text style={styles.title}>{title} Analytics</Text>
@@ -39,13 +60,13 @@ const AnalyticsChart = ({ title, data, dataType }) => {
                                         styles.gridLine,
                                         {
                                             top: y,
-                                            borderStyle: 'dashed',
-                                            borderWidth: 0,
-                                            borderTopWidth: 1,
-                                            borderColor: '#ECECEC',
                                         },
                                     ]}
-                                />
+                                >
+                                    <View style={styles.dottedLineContainer}>
+                                        {renderDottedLine()}
+                                    </View>
+                                </View>
                                 <Text
                                     style={[
                                         styles.yAxisLabel,
@@ -159,6 +180,17 @@ const styles = StyleSheet.create({
         right: 0,
         height: 1,
         zIndex: 0,
+    },
+    dottedLineContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 1,
+    },
+    dot: {
+        width: DOT_SIZE,
+        height: DOT_SIZE,
+        borderRadius: DOT_SIZE / 2,
+        backgroundColor: '#ECECEC',
     },
     yAxisLabel: {
         fontSize: 13,

@@ -92,6 +92,17 @@ const ManualCheckInAllTickets = () => {
         }
     };
 
+    // Add handleTicketStatusChange function
+    const handleTicketStatusChange = (ticketUuid, newStatus) => {
+        setTicketDetails(prevTickets => 
+            prevTickets.map(ticket => 
+                ticket.uuid === ticketUuid 
+                    ? { ...ticket, checkin_status: newStatus }
+                    : ticket
+            )
+        );
+    };
+
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -190,8 +201,8 @@ const ManualCheckInAllTickets = () => {
                                 lastScannedByName: ticket.last_scanned_by_name,
                                 currency: ticket.currency,
                                 eventInfo: eventInfo
-                                // Add other relevant properties if needed
                             }))}
+                            onTicketStatusChange={handleTicketStatusChange}
                         />
                     </View>
                 )}
