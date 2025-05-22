@@ -282,7 +282,7 @@ const AttendeesComponent = ({ eventInfo }) => {
                 style={styles.filterOption}
                 onPress={() =>
                   setSelectedFilter(
-                    selectedFilter === 'Standard Ticket' ? null : 'Standard Ticket'
+                    selectedFilter === 'Standard Pricing' ? null : 'Standard Pricing'
                   )
                 }
               >
@@ -290,14 +290,14 @@ const AttendeesComponent = ({ eventInfo }) => {
                   <View
                     style={[
                       styles.checkbox,
-                      selectedFilter === 'Standard Ticket' && styles.checkedCheckbox,
+                      selectedFilter === 'Standard Pricing' && styles.checkedCheckbox,
                     ]}
                   >
-                    {selectedFilter === 'Standard Ticket' && (
+                    {selectedFilter === 'Standard Pricing' && (
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>Standard Tickets</Text>
+                  <Text style={styles.filterOptionText}>Standard Pricing</Text>
                 </View>
               </TouchableOpacity>
 
@@ -305,7 +305,7 @@ const AttendeesComponent = ({ eventInfo }) => {
                 style={styles.filterOption}
                 onPress={() =>
                   setSelectedFilter(
-                    selectedFilter === 'VIP Ticket' ? null : 'VIP Ticket'
+                    selectedFilter === 'Early Bird Pricing' ? null : 'Early Bird Pricing'
                   )
                 }
               >
@@ -313,21 +313,21 @@ const AttendeesComponent = ({ eventInfo }) => {
                   <View
                     style={[
                       styles.checkbox,
-                      selectedFilter === 'VIP Ticket' && styles.checkedCheckbox,
+                      selectedFilter === 'Early Bird Pricing' && styles.checkedCheckbox,
                     ]}
                   >
-                    {selectedFilter === 'VIP Ticket' && (
+                    {selectedFilter === 'Early Bird Pricing' && (
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>VIP Tickets</Text>
+                  <Text style={styles.filterOptionText}>Early Bird Pricing</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.filterOption}
                 onPress={() =>
                   setSelectedFilter(
-                    selectedFilter === 'Members' ? null : 'Members'
+                    selectedFilter === 'Members Only Pricing' ? null : 'Members Only Pricing'
                   )
                 }
               >
@@ -335,14 +335,14 @@ const AttendeesComponent = ({ eventInfo }) => {
                   <View
                     style={[
                       styles.checkbox,
-                      selectedFilter === 'Members' && styles.checkedCheckbox,
+                      selectedFilter === 'Members Only Pricing' && styles.checkedCheckbox,
                     ]}
                   >
-                    {selectedFilter === 'Members' && (
+                    {selectedFilter === 'Members Only Pricing' && (
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>Members</Text>
+                  <Text style={styles.filterOptionText}>Members Only Pricing</Text>
                 </View>
               </TouchableOpacity>
 
