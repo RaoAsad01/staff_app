@@ -4,19 +4,23 @@
     "slug": "staffapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/login-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/Hexallo favicon.png",
+      "image": null,
       "resizeMode": "contain",
-      "backgroundColor": "#120b00"
+      "backgroundColor": "transparent"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "splash": {
+        "image": null,
+        "resizeMode": "contain",
+        "backgroundColor": "transparent"
+      }
     },
     "android": {
       "permissions": [
@@ -31,7 +35,12 @@
       "enableShrinkResources": true,
       "enableDexGuard": false,
       "enableHermes": true,
-      "enableSeparateBuildPerCPUArchitecture": true
+      "enableSeparateBuildPerCPUArchitecture": true,
+      "splash": {
+        "image": null,
+        "resizeMode": "contain",
+        "backgroundColor": "transparent"
+      }
     },
     "web": {
       "bundler": "metro",

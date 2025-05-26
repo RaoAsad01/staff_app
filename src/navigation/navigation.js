@@ -8,6 +8,7 @@ import BoxOfficeTab from '../screens/BoxOfficeTab';
 import CheckInAllTickets from '../screens/CheckInAllTickets';
 import ManualCheckInAllTickets from '../screens/ManualcheckInAllTickets';
 import TicketScanned from '../screens/TicketScanned';
+import SplashScreenComponent from '../screens/SplashScreen';
 import * as SecureStore from 'expo-secure-store';
 import { View, Text, ActivityIndicator } from 'react-native';
 
@@ -55,7 +56,15 @@ function Navigation({ route }) {
   }
 
   return (
-    <Stack.Navigator initialRouteName={initialRoute}>
+    <Stack.Navigator initialRouteName="Splash">
+      <Stack.Screen 
+        name="Splash" 
+        component={SplashScreenComponent} 
+        options={{ 
+          headerShown: false,
+          unmountOnBlur: true 
+        }} 
+      />
       <Stack.Screen 
         name="Login" 
         component={LoginScreen} 

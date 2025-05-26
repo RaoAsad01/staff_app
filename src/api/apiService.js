@@ -55,6 +55,8 @@ const endpoints = {
   boxOfficeGetTicket: '/order/box-office/',
   boxOfficeCheckInAllTicket: (eventUuid, orderNumber) => `/ticket/checkin-all/${eventUuid}/${orderNumber}/`,
   dashboardStats: '/events/{event_uuid}/sales/',
+  userProfile: '/api/me/',
+  logout: '/api/logout/',
 };
 
 // API services
@@ -512,17 +514,25 @@ export const eventService = {
 
 }
 // Example of another service group
-// export const userService = {
-//     // Get user profile
-//     getProfile: async () => {
-//         try {
-//             const response = await apiClient.get('/user/profile');
-//             return response.data;
-//         } catch (error) {
-//             throw error.response?.data || error.message;
-//         }
-//     },
-
+export const userService = {
+    // Get user profile
+    getProfile: async () => {
+        try {
+            const response = await apiClient.get(endpoints.userProfile);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    Userlogout: async () => {
+      try {
+          const response = await apiClient.post(endpoints.logout);
+          return response.data;
+      } catch (error) {
+          throw error.response?.data || error.message;
+      }
+  },
+  }
 //     // Update user profile
 //     updateProfile: async (userData) => {
 //         try {
