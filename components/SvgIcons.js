@@ -30,6 +30,8 @@ import ProfileActiveTab from '../assets/svgs/profile_active_tab.svg';
 import BackArrow from '../assets/svgs/back_arrow.svg';
 import RemoveIcon from '../assets/svgs/remove_icon.svg';
 import AddIcon from '../assets/svgs/add_icon.svg';
+import PlaceholderImage from '../assets/svgs/placeholder_img.svg';
+import ProfileCameraIcon from '../assets/svgs/profile_camera_icon.svg';
 
 
 export default {
@@ -65,5 +67,6 @@ export default {
     backArrow: BackArrow,
     removeIcon: RemoveIcon,
     addIcon: AddIcon,
-
+    placeholderImage: PlaceholderImage,
+    profileCameraIcon: ProfileCameraIcon
 };

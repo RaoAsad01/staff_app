@@ -57,6 +57,7 @@ const endpoints = {
   dashboardStats: '/events/{event_uuid}/sales/',
   userProfile: '/api/me/',
   logout: '/api/logout/',
+  updateProfile: '/api/profile-image/',
 };
 
 // API services
@@ -524,6 +525,16 @@ export const userService = {
             throw error.response?.data || error.message;
         }
     },
+
+    updateProfile: async () => {
+      try {
+          const response = await apiClient.patch(endpoints.updateProfile);
+          return response.data;
+      } catch (error) {
+          throw error.response?.data || error.message;
+      }
+  },
+
     Userlogout: async () => {
       try {
           const response = await apiClient.post(endpoints.logout);

@@ -19,9 +19,11 @@ import { userService } from '../api/apiService';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const [profileImage, setProfileImage] = useState(require('../../assets/images/Avatar.png'));
+  const [profileImage, setProfileImage] = useState(null); // local picked image
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
 
   useEffect(() => {
     fetchProfile();
@@ -45,24 +47,65 @@ const ProfileScreen = () => {
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
       if (status !== 'granted') {
         Alert.alert('Permission needed', 'Please grant permission to access your photos');
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       });
-
-      if (!result.canceled) {
+      console.log('ImagePicker result:', result);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         setProfileImage({ uri: result.assets[0].uri });
       }
     } catch (error) {
+      console.log('ImagePicker error:', error);
       Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profileImage) {
+      Alert.alert('No image selected', 'Please select an image to update your profile.');
+      return;
+    }
+    setSaving(true);
+    try {
+      // Dynamically determine MIME type
+      let fileType = 'image/jpeg';
+      if (profileImage.uri) {
+        const ext = profileImage.uri.split('.').pop().toLowerCase();
+        if (ext === 'png') fileType = 'image/png';
+        if (ext === 'jpg' || ext === 'jpeg') fileType = 'image/jpeg';
+      }
+      const formData = new FormData();
+      // Try both field names for compatibility
+      formData.append('image', {
+        uri: profileImage.uri,
+        name: 'profile.' + (profileImage.uri ? profileImage.uri.split('.').pop().toLowerCase() : 'jpg'),
+        type: fileType,
+      });
+      formData.append('profile_image', {
+        uri: profileImage.uri,
+        name: 'profile.' + (profileImage.uri ? profileImage.uri.split('.').pop().toLowerCase() : 'jpg'),
+        type: fileType,
+      });
+      const response = await userService.updateProfile(formData);
+      if (response.success) {
+        Alert.alert('Success', 'Profile image updated successfully.');
+        setImageRefreshKey(Date.now()); // force image refresh
+        fetchProfile();
+        setProfileImage(null); // reset local image after save
+      } else {
+        Alert.alert('Error', response.message || 'Failed to update profile image.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile image.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -97,12 +140,25 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.profileSection}>
-          <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-            <Image source={profileImage} style={styles.avatar} />
+          <View style={styles.avatarWrapper}>
+            <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+              {profileImage || userData?.profile_image ? (
+                <Image
+                  key={imageRefreshKey}
+                  source={profileImage ? profileImage : userData?.profile_image ? { uri: userData.profile_image + '?t=' + imageRefreshKey } : undefined}
+                  style={styles.avatar}
+                  resizeMode="cover"
+                />
+              ) : (
+                <SvgIcons.placeholderImage width={100} height={100} />
+              )}
+            </TouchableOpacity>
             <View style={styles.cameraIconContainer}>
-              <SvgIcons.cameraIconInActive width={24} height={24} />
+              <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
+                <SvgIcons.profileCameraIcon width={32} height={32} />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
           <Text style={styles.userName}>
             {userData ? `${userData.first_name} ${userData.last_name}` : 'Loading...'}
           </Text>
@@ -110,22 +166,20 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.menuSection}>
-          {/* <TouchableOpacity style={styles.menuItem}>
-            <SvgIcons.profileMenuIcon width={24} height={24} />
-            <Text style={styles.menuText}>Edit Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem}>
-            <SvgIcons.dashboardMenuIcon width={24} height={24} />
-            <Text style={styles.menuText}>Settings</Text>
-          </TouchableOpacity> */}
-
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <SvgIcons.logoutMenuIcon width={24} height={24} />
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={handleSave}
+        disabled={!profileImage}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.saveButtonText}>Save</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -142,21 +196,19 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-  },
-  header: {
-    padding: 10,
-    backgroundColor: color.btnBrown_AE6F28,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: color.white_FFFFFF,
+    paddingBottom: 100,
   },
   profileSection: {
     alignItems: 'center',
     padding: 20,
-    paddingTop: 50
+    paddingTop: 50,
+  },
+  avatarWrapper: {
+    width: 104,
+    height: 104,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
   avatarContainer: {
     width: 100,
@@ -164,20 +216,41 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 2,
     borderColor: color.btnBrown_AE6F28,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
+    backgroundColor: '#fff',
   },
   avatar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: 100,
     height: 100,
     borderRadius: 50,
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    bottom: -16,
+    left: '50%',
+    transform: [{ translateX: -16 }],
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: color.btnBrown_AE6F28,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    elevation: 2,
   },
   userName: {
     fontSize: 20,
     fontWeight: '600',
     color: color.brown_3C200A,
     marginBottom: 5,
+    paddingTop: 30
   },
   userEmail: {
     fontSize: 16,
@@ -186,42 +259,36 @@ const styles = StyleSheet.create({
   menuSection: {
     padding: 20,
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  menuText: {
-    marginLeft: 15,
-    fontSize: 16,
-    color: color.black_544B45,
-  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 15,
-    marginTop: 20,
+    marginTop: 15,
   },
   logoutText: {
     marginLeft: 15,
     fontSize: 16,
-    color: color.brown_3C200A,
+    color: color.btnBrown_AE6F28,
     fontWeight: '500',
   },
-  cameraIconContainer: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
+  saveButton: {
     backgroundColor: color.btnBrown_AE6F28,
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
+    borderRadius: 16,
+    paddingVertical: 18,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: color.btnBrown_AE6F28,
+    justifyContent: 'center',
+    marginTop: 5,
+    marginHorizontal: 24,
+    marginBottom: 30,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  saveButtonText: {
+    color: color.btnTxt_FFF6DF,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

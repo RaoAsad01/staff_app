@@ -7,20 +7,10 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": null,
-      "resizeMode": "contain",
-      "backgroundColor": "transparent"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
-      "newArchEnabled": true,
-      "splash": {
-        "image": null,
-        "resizeMode": "contain",
-        "backgroundColor": "transparent"
-      }
+      "newArchEnabled": true
     },
     "android": {
       "permissions": [
@@ -35,12 +25,7 @@
       "enableShrinkResources": true,
       "enableDexGuard": false,
       "enableHermes": true,
-      "enableSeparateBuildPerCPUArchitecture": true,
-      "splash": {
-        "image": null,
-        "resizeMode": "contain",
-        "backgroundColor": "transparent"
-      }
+      "enableSeparateBuildPerCPUArchitecture": true
     },
     "web": {
       "bundler": "metro",
