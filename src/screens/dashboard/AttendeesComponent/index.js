@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { color } from '../../color/color';
-import { dashboardattendeestab } from '../../constants/dashboardattendeestab';
-import SvgIcons from '../../../components/SvgIcons';
-import { ticketService } from '../../api/apiService';
+import { color } from '../../../color/color';
+import { dashboardattendeestab } from '../../../constants/dashboardattendeestab';
+import SvgIcons from '../../../../components/SvgIcons';
+import { ticketService } from '../../../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 

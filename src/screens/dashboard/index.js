@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
 import { dashboardstatuslist } from '../../constants/dashboardstatuslist';
 import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
-import AttendeesComponent from './dashboardattendeestab';
+import AttendeesComponent from './AttendeesComponent';
 import AnalyticsChart from './AnalyticsChart';
 import { ticketService } from '../../api/apiService';
 

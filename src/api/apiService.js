@@ -526,14 +526,19 @@ export const userService = {
         }
     },
 
-    updateProfile: async () => {
+    updateProfile: async (formData) => {
       try {
-          const response = await apiClient.patch(endpoints.updateProfile);
-          return response.data;
+        const response = await apiClient.patch(endpoints.updateProfile, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log("image profile:", response.data);
+        return response.data;
       } catch (error) {
-          throw error.response?.data || error.message;
+        throw error.response?.data || error.message;
       }
-  },
+    },    
 
     Userlogout: async () => {
       try {

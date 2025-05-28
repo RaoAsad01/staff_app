@@ -19,11 +19,10 @@ import { userService } from '../api/apiService';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const [profileImage, setProfileImage] = useState(null); // local picked image
+  const [profileImage, setProfileImage] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [imageRefreshKey, setImageRefreshKey] = useState(Date.now());
 
   useEffect(() => {
     fetchProfile();
@@ -44,6 +43,7 @@ const ProfileScreen = () => {
     }
   };
 
+
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -57,12 +57,10 @@ const ProfileScreen = () => {
         aspect: [1, 1],
         quality: 1,
       });
-      console.log('ImagePicker result:', result);
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setProfileImage({ uri: result.assets[0].uri });
       }
     } catch (error) {
-      console.log('ImagePicker error:', error);
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
@@ -74,31 +72,24 @@ const ProfileScreen = () => {
     }
     setSaving(true);
     try {
-      // Dynamically determine MIME type
       let fileType = 'image/jpeg';
       if (profileImage.uri) {
         const ext = profileImage.uri.split('.').pop().toLowerCase();
         if (ext === 'png') fileType = 'image/png';
         if (ext === 'jpg' || ext === 'jpeg') fileType = 'image/jpeg';
       }
+
       const formData = new FormData();
-      // Try both field names for compatibility
-      formData.append('image', {
-        uri: profileImage.uri,
-        name: 'profile.' + (profileImage.uri ? profileImage.uri.split('.').pop().toLowerCase() : 'jpg'),
-        type: fileType,
-      });
       formData.append('profile_image', {
         uri: profileImage.uri,
-        name: 'profile.' + (profileImage.uri ? profileImage.uri.split('.').pop().toLowerCase() : 'jpg'),
+        name: `profile.${fileType.split('/')[1]}`,
         type: fileType,
       });
       const response = await userService.updateProfile(formData);
+
       if (response.success) {
-        Alert.alert('Success', 'Profile image updated successfully.');
-        setImageRefreshKey(Date.now()); // force image refresh
-        fetchProfile();
-        setProfileImage(null); // reset local image after save
+        await fetchProfile();
+        setProfileImage(null);
       } else {
         Alert.alert('Error', response.message || 'Failed to update profile image.');
       }
@@ -142,15 +133,16 @@ const ProfileScreen = () => {
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
             <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-              {profileImage || userData?.profile_image ? (
+              {profileImage ? (
+                <Image source={profileImage} style={styles.avatar} resizeMode="cover" />
+              ) : userData?.profile_image ? (
                 <Image
-                  key={imageRefreshKey}
-                  source={profileImage ? profileImage : userData?.profile_image ? { uri: userData.profile_image + '?t=' + imageRefreshKey } : undefined}
+                  source={{ uri: userData.profile_image }}
                   style={styles.avatar}
                   resizeMode="cover"
                 />
               ) : (
-                <SvgIcons.placeholderImage width={100} height={100} />
+                <SvgIcons.placeholderImage width={20} height={20} />
               )}
             </TouchableOpacity>
             <View style={styles.cameraIconContainer}>

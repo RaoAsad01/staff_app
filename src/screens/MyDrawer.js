@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import DashboardScreen from './dashboard/DashboardScreen';
+import DashboardScreen from '../screens/dashboard';
 import Navigation from '../navigation/navigation';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { color } from '../color/color';

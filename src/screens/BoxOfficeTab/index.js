@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal } from 'react-native';
-import { boxofficetablist } from '../constants/boxofficetablist';
+// import { boxofficetablist } from '../../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
-import { color } from '../color/color';
+import { color } from '../../color/color';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import SvgIcons from '../../components/SvgIcons';
-import { ticketService } from '../api/apiService';
+import SvgIcons from '../../../components/SvgIcons';
+import { ticketService } from '../../api/apiService';
 
 const BoxOfficeTab = ({ eventInfo }) => {
   const navigation = useNavigation();

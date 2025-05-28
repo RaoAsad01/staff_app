@@ -6,7 +6,7 @@ import Tickets from './Tickets';
 import ManualScan from "./ManualScan";
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
-import DashboardScreen from './dashboard/DashboardScreen';
+import DashboardScreen from "../screens/dashboard";
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
 

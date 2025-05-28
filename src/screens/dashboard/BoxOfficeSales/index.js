@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Svg, Circle } from "react-native-svg";
-import { color } from "../../color/color";
-import { formatValue } from "../../constants/formatValue";
+import { color } from "../../../color/color";
+import { formatValue } from "../../../constants/formatValue";
 
 const BoxOfficeSales = ({ stats }) => {
     // Extract box office sales data with default values

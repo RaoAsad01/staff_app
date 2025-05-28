@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 import Header from '../../components/header';
 import TicketsTab from './TicketsTab';
-import BoxOfficeTab from './BoxOfficeTab';
+import BoxOfficeTab from '../screens/BoxOfficeTab';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 

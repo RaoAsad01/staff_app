@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { color } from "../../color/color";
+import { color } from "../../../color/color";
 
 const CHART_HEIGHT = 140;
 const BAR_WIDTH = 10;

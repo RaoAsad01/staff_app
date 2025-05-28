@@ -5,12 +5,18 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "myapp",
+    "splash": {
+  "backgroundColor": "#000000"
+},
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "splash": {
+        "backgroundColor": "#000000"
+      }
     },
     "android": {
       "permissions": [
@@ -25,7 +31,10 @@
       "enableShrinkResources": true,
       "enableDexGuard": false,
       "enableHermes": true,
-      "enableSeparateBuildPerCPUArchitecture": true
+      "enableSeparateBuildPerCPUArchitecture": true,
+      "splash": {
+        "backgroundColor": "#000000"
+      }
     },
     "web": {
       "bundler": "metro",
