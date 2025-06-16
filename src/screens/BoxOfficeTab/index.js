@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal, ActivityIndicator } from 'react-native';
 // import { boxofficetablist } from '../../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
 import { color } from '../../color/color';
@@ -374,8 +374,8 @@ const BoxOfficeTab = ({ eventInfo }) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading ticket information...</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
       </View>
     );
   }
@@ -905,7 +905,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default BoxOfficeTab;

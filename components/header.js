@@ -27,9 +27,9 @@ const Header = ({ eventInfo }) => {
         fromHeader: true,
       },
     });
-    
+
   };
-  
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.statusBarPlaceholder} />
@@ -37,9 +37,13 @@ const Header = ({ eventInfo }) => {
         <View style={styles.headerColumn}>
           <View style={styles.header}>
             <Text style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+            <Text style={styles.separator}>   </Text>
             <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
+            <Text style={styles.separator}>   </Text>
             <Text style={styles.date}>{eventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.separator}> </Text>
             <Text style={styles.date}>at</Text>
+            <Text style={styles.separator}> </Text>
             <Text style={styles.time}>{eventInfo?.time || '7:00 PM'}</Text>
           </View>
           <View style={styles.profileId}>
@@ -78,12 +82,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'wrap',
     alignItems: 'center',
     padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
+  },
+  separator: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: color.white_FFFFFF,
+    marginHorizontal: 4,
   },
   profileId: {
     flexDirection: 'row',

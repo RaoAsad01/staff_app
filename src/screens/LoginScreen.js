@@ -20,11 +20,11 @@ const LoginScreen = () => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       setKeyboardVisible(true);
     });
-  
+
     const keyboardDidHideListener = Platform.OS === 'ios'
       ? Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false))
       : Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-  
+
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
@@ -50,12 +50,12 @@ const LoginScreen = () => {
       const response = await authService.requestOtp({
         user_identifier: values.user_identifier.trim(),
       });
-      
+
       console.log('OTP Request Response:', response);
-      
+
       // The response contains the UUID directly in the data object
       if (response && response.success) {
-        navigation.navigate('OtpLogin', { 
+        navigation.navigate('OtpLogin', {
           uuid: response.data.uuid,
           user_identifier: values.user_identifier.trim()
         });
@@ -119,12 +119,18 @@ const LoginScreen = () => {
                         <Text style={styles.errorText}>{errors.user_identifier}</Text>
                       )}
 
-                      <TouchableOpacity 
-                        style={styles.button} 
+                      <TouchableOpacity
+                        style={[
+                          styles.button,
+                          !values.user_identifier.trim() && { opacity: 0.6 }
+                        ]}
                         onPress={handleSubmit}
+                        disabled={!values.user_identifier.trim()}
                       >
                         <Text style={styles.buttonText}>Sign In</Text>
                       </TouchableOpacity>
+
+
                     </View>
                   )}
                 </Formik>

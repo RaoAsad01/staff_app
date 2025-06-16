@@ -142,7 +142,7 @@ const ProfileScreen = () => {
                   resizeMode="cover"
                 />
               ) : (
-                <SvgIcons.placeholderImage width={20} height={20} />
+                <SvgIcons.placeholderImage width={100} height={100} />
               )}
             </TouchableOpacity>
             <View style={styles.cameraIconContainer}>

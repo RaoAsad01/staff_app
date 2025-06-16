@@ -276,7 +276,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                 ListFooterComponent={() => (
                     isLoading ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color={color.brown_5A2F0E} />
+                            <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
                         </View>
                     ) : null
                 )}

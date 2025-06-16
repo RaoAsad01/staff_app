@@ -207,6 +207,12 @@ const styles = StyleSheet.create({
     color: '#999999',
     marginTop: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+  
 });
 
 export default ManualScan;
