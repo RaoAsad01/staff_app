@@ -60,11 +60,11 @@ const LoginScreen = () => {
           user_identifier: values.user_identifier.trim()
         });
       } else {
-        Alert.alert('Error', response?.message || 'Failed to get verification code');
+        Alert.alert('Invalid Email or Phone Number');
       }
     } catch (error) {
       if (error.response?.data?.message) {
-        Alert.alert('Error', error.response.data.message);
+        Alert.alert('Error', 'Invalid Email or Phone Number');
       } else {
         Alert.alert('Error', 'Failed to request OTP. Please try again.');
       }

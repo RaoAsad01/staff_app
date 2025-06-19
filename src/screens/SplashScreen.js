@@ -1,46 +1,42 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, SafeAreaView } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Dimensions,
+  SafeAreaView,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
-import * as SplashScreen from 'expo-splash-screen';
-
-SplashScreen.preventAutoHideAsync();
-
+import SvgIcons from '../../components/SvgIcons';
 const { width, height } = Dimensions.get('window');
 
 const SplashScreenComponent = () => {
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const prepare = async () => {
-      try {
-        // Hide the splash screen
-        await SplashScreen.hideAsync();
-        
-        // Navigate to Login screen after 3 seconds
-        const timer = setTimeout(() => {
-          navigation.replace('Login');
-        }, 3000);
-
-        return () => clearTimeout(timer);
-      } catch (e) {
-        console.warn(e);
-      }
-    };
-
-    prepare();
-  }, [navigation]);
+  const handleGetStarted = () => {
+    navigation.replace('Login');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Image
-          source={require('../../assets/images/Hexallo favicon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.text}>Hexallo Staff App</Text>
+      <View style={styles.topSection}>
+        <SvgIcons.splashQrImg width={172} height={163} fill="transparent" />
       </View>
+
+      <View style={styles.middleSection}>
+        <View style={styles.logoContainer}>
+          <SvgIcons.hexalloSvg width={45} height={50} fill="transparent" />
+          <Text style={styles.appName}>HEXALLO</Text>
+        </View>
+        <Text style={styles.subtitle}>Fast, Secure, Seamless Entry</Text>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
+        <Text style={styles.buttonText}>Get Started</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -49,23 +45,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#120b00',
+    justifyContent: 'space-between',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+  topSection: {
     alignItems: 'center',
+    marginTop: height * 0.3,
   },
-  logo: {
-    width: width * 0.4,
-    height: width * 0.4,
-    marginBottom: 20,
+  middleSection: {
+    alignItems: 'center',
+    marginTop: 120,
   },
-  text: {
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  appName: {
     color: color.white_FFFFFF,
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 30,
+    fontWeight: '700',
+  },
+  subtitle: {
+    color: color.white_FFFFFF,
+    fontSize: 16,
+    marginTop: 20,
+    fontWeight: '500',
+  },
+  button: {
+    backgroundColor: color.btnBrown_AE6F28,
+    marginHorizontal: 20,
+    marginBottom: 80,
+    paddingVertical: 15,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: color.btnTxt_FFF6DF,
     textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
 
-export default SplashScreenComponent; 
+export default SplashScreenComponent;

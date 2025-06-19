@@ -56,7 +56,7 @@ const Header = ({ eventInfo }) => {
               <TouchableOpacity
                 style={styles.count}
                 onPress={handleCountPress}>
-                <Text style={styles.countColor}>{eventInfo?.scanCount || '5'}</Text>
+                <Text style={styles.countColor}>{eventInfo?.scanCount || '0'}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -23,6 +23,7 @@ const ProfileScreen = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -59,6 +60,7 @@ const ProfileScreen = () => {
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setProfileImage({ uri: result.assets[0].uri });
+        setHasChanges(true);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
@@ -90,6 +92,7 @@ const ProfileScreen = () => {
       if (response.success) {
         await fetchProfile();
         setProfileImage(null);
+        setHasChanges(false);
       } else {
         Alert.alert('Error', response.message || 'Failed to update profile image.');
       }
@@ -164,6 +167,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {hasChanges && (
       <TouchableOpacity
         style={styles.saveButton}
         onPress={handleSave}
@@ -172,6 +176,7 @@ const ProfileScreen = () => {
       >
         <Text style={styles.saveButtonText}>Save</Text>
       </TouchableOpacity>
+        )}
     </SafeAreaView>
   );
 };

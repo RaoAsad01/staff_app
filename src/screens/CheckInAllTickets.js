@@ -19,6 +19,7 @@ const CheckInAllTickets = ({ route }) => {
     const code = extractResponse?.code;
     const eventUuid = extractResponse?.event;
     const orderNumber = extractResponse?.order_number;
+    const ticketNumber = extractResponse?.ticket_number;
 
     const handleSingleCheckIn = async () => {
         if (totalTickets === 1) {
@@ -93,6 +94,7 @@ const CheckInAllTickets = ({ route }) => {
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
+                    <Text style={styles.ticketHolder}>#{orderNumber}</Text>
                     <Text style={styles.userEmail}>{email}</Text>
 
                     <TouchableOpacity
@@ -128,7 +130,8 @@ const CheckInAllTickets = ({ route }) => {
                                 lastScannedByName: ticket.last_scanned_by_name,
                                 currency: ticket.currency,
                                 eventInfo: eventInfo,
-                                eventUuid: ticket.event
+                                eventUuid: ticket.event,
+                                ticket_number: ticket.ticket_number
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                         />

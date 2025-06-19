@@ -200,7 +200,8 @@ const ManualCheckInAllTickets = () => {
                                 ticketHolder: ticket.ticket_holder,
                                 lastScannedByName: ticket.last_scanned_by_name,
                                 currency: ticket.currency,
-                                eventInfo: eventInfo
+                                eventInfo: eventInfo,
+                                ticket_number: ticket.ticket_number,
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                         />

@@ -44,11 +44,12 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
         }
     }, [isFocused, route.params]);
 
-    const fetchTicketList = async (eventUuid, page = 1, append = false) => {
+    const fetchTicketList = async (eventUuid) => {
         try {
             setIsLoading(true);
-            const res = await ticketService.ticketStatsListing(eventUuid, page);
+            const res = await ticketService.ticketStatsListing(eventUuid); // No need to pass page
             const list = res?.data || [];
+
             const mappedTickets = list.map((ticket) => {
                 const qrCodeUrl = `https://dev-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
@@ -57,34 +58,20 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                     price: ticket.ticket_price || 'N/A',
                     date: ticket.date || 'N/A',
                     status: ticket.checkin_status === 'SCANNED' ? 'Scanned' : 'Unscanned',
-                    note: ticket.note || 'N/A',
+                    note: ticket.note || 'No note added',
                     imageUrl: null,
                     uuid: ticket.uuid || 'N/A',
                     ticketHolder: ticket.ticket_holder || 'N/A',
                     lastScannedByName: ticket.last_scanned_by_name || 'N/A',
                     scanCount: ticket.scan_count || 'N/A',
-                    note: ticket.note || 'No note added',
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
                     currency: ticket.currency || 'N/A',
                 };
             });
 
-            if (append) {
-                setFetchedTickets(prev => [...prev, ...mappedTickets]);
-            } else {
-                setFetchedTickets(mappedTickets);
-            }
 
-            setPaginationInfo(res.pagination || {
-                count: 0,
-                current_page: 1,
-                next: null,
-                page_size: 10,
-                previous: null
-            });
-            setHasMore(!!res.pagination?.next);
-            setCurrentPage(page);
+            setFetchedTickets(mappedTickets);
         } catch (err) {
             console.error('Error fetching ticket list:', err);
         } finally {
@@ -166,7 +153,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                 <Text style={styles.ticketId}>{item.id}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
-                    <Text style={styles.priceCurrency}>USD</Text>
+                    <Text style={styles.priceCurrency}>GHS</Text>
                     <Text style={styles.ticketPrice}>{item.price}</Text>
                 </View>
                 <Text style={styles.ticketDateheading}>Date</Text>
@@ -220,7 +207,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
                     <TextInput
                         style={styles.searchBar}
                         placeholder="John Doe"
-                        placeholderTextColor={color.black_544B45}
+                        placeholderTextColor={color.brown_766F6A}
                         onChangeText={handleSearchChange}
                         value={searchText}
                         selectionColor={color.selectField_CEBCA0}
@@ -268,18 +255,16 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
             </View>
 
             <FlatList
-                data={filterTickets()}
+                data={filteredTickets}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
-                onEndReached={loadMoreTickets}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={() => (
+                ListFooterComponent={() =>
                     isLoading ? (
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
                         </View>
                     ) : null
-                )}
+                }
             />
         </SafeAreaView>
     );

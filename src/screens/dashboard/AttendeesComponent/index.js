@@ -31,10 +31,10 @@ const AttendeesComponent = ({ eventInfo }) => {
     }
   }, [eventInfo?.eventUuid]);
 
-  const fetchTicketList = async (eventUuid, page = 1, append = false) => {
+  const fetchTicketList = async (eventUuid) => {
     try {
       setIsLoading(true);
-      const res = await ticketService.ticketStatsListing(eventUuid, page);
+      const res = await ticketService.ticketStatsListing(eventUuid);
       const list = res?.data || [];
       const mappedTickets = list.map((ticket) => {
         const qrCodeUrl = `https://dev-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
@@ -57,21 +57,7 @@ const AttendeesComponent = ({ eventInfo }) => {
         };
       });
 
-      if (append) {
-        setFetchedTickets(prev => [...prev, ...mappedTickets]);
-      } else {
-        setFetchedTickets(mappedTickets);
-      }
-
-      setPaginationInfo(res.pagination || {
-        count: 0,
-        current_page: 1,
-        next: null,
-        page_size: 10,
-        previous: null
-      });
-      setHasMore(!!res.pagination?.next);
-      setCurrentPage(page);
+      setFetchedTickets(mappedTickets);
     } catch (err) {
       console.error('Error fetching ticket list:', err);
     } finally {
@@ -197,7 +183,7 @@ const AttendeesComponent = ({ eventInfo }) => {
           <TextInput
             style={styles.searchInput}
             placeholder="John Doe"
-            placeholderTextColor={color.placeholderTxt_24282C}
+            placeholderTextColor={color.brown_766F6A}
             onChangeText={handleSearchChange}
             value={searchText}
             selectionColor={color.selectField_CEBCA0}

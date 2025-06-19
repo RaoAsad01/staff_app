@@ -39,7 +39,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
                 ticket_price: item.ticket_price || item.price,
                 last_scan: item.last_scan || item.last_scanned_on,
                 scanned_by: item.scanned_by || item.lastScannedByName || 'N/A',
-                ticket_number: item.ticket_number || item.order_number,
+                ticket_number: item.ticket_number,
                 scan_count: item.scan_count || item.scanCount || 0,
                 note: item.note || 'No note added',
                 event_uuid: item.event_uuid || item.eventUuid,
@@ -62,7 +62,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
         >
             <View>
                 <Text style={styles.ticketheading}>Ticket ID</Text>
-                <Text style={styles.ticketId}>#{item.order_number}</Text>
+                <Text style={styles.ticketId}>#{item.ticket_number}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>{item.currency} </Text>

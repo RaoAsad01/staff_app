@@ -57,7 +57,7 @@ const endpoints = {
   dashboardStats: '/events/{event_uuid}/sales/',
   userProfile: '/api/me/',
   logout: '/api/logout/',
-  updateProfile: '/api/profile-image/',
+  updateProfile: '/api/profile/',
 };
 
 // API services
@@ -319,7 +319,9 @@ export const ticketService = {
 
   ticketStatsListing: async (event_uuid, page = 1) => {
     try {
-      const response = await apiClient.get(`${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}`);
+      const response = await apiClient.get(
+        `${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}&page_size=-1`
+      );
       console.log('Ticket Tab listing Response:', response.data);
       return response.data;
     } catch (error) {
@@ -516,39 +518,39 @@ export const eventService = {
 }
 // Example of another service group
 export const userService = {
-    // Get user profile
-    getProfile: async () => {
-        try {
-            const response = await apiClient.get(endpoints.userProfile);
-            return response.data;
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
-    },
-
-    updateProfile: async (formData) => {
-      try {
-        const response = await apiClient.patch(endpoints.updateProfile, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        console.log("image profile:", response.data);
-        return response.data;
-      } catch (error) {
-        throw error.response?.data || error.message;
-      }
-    },    
-
-    Userlogout: async () => {
-      try {
-          const response = await apiClient.post(endpoints.logout);
-          return response.data;
-      } catch (error) {
-          throw error.response?.data || error.message;
-      }
+  // Get user profile
+  getProfile: async () => {
+    try {
+      const response = await apiClient.get(endpoints.userProfile);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
-  }
+
+  updateProfile: async (formData) => {
+    try {
+      const response = await apiClient.patch(endpoints.updateProfile, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log("image profile:", response.data);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  Userlogout: async () => {
+    try {
+      const response = await apiClient.post(endpoints.logout);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+}
 //     // Update user profile
 //     updateProfile: async (userData) => {
 //         try {

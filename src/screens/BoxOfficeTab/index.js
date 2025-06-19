@@ -171,8 +171,9 @@ const BoxOfficeTab = ({ eventInfo }) => {
 
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
-
+      const ticketNumber = response?.data?.ticket_number;
       navigation.navigate('CheckInAllTickets', {
+        ticketNumber: ticketNumber,
         totalTickets: totalQuantity,
         email,
         paymentOption,
@@ -409,7 +410,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
           </View>
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>Total Amount</Text>
-            <Text style={[styles.totalValue, { textAlign: 'left' }]}>${calculateTotal()}</Text>
+            <Text style={[styles.totalValue, { textAlign: 'left' }]}>GHS{calculateTotal()}</Text>
           </View>
         </View>
 
@@ -423,8 +424,8 @@ const BoxOfficeTab = ({ eventInfo }) => {
               <Text style={styles.inputHeading}>Email or Phone Number</Text>
               <TextInput
                 style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
-                placeholder="johndoe@gmail.com"
-                placeholderTextColor={color.placeholderTxt_24282C}
+                placeholder="Email or Phone Number"
+                placeholderTextColor={color.brown_766F6A}
                 onChangeText={(text) => {
                   handleChange('email')(text);
                   setEmail(text);

@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { color } from '../../color/color';
-import SvgIcons from '../../../components/SvgIcons';
+import { color } from '../../../color/color';
+import SvgIcons from '../../../../components/SvgIcons';
 
 const OverallStatistics = ({ stats }) => {
     // Extract data from stats with default values
