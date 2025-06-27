@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import MyDrawer from "./src/screens/MyDrawer";
 import Navigation from './src/navigation/navigation';
 
 function App() {

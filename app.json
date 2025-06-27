@@ -2,6 +2,7 @@
   "expo": {
     "name": "staffapp",
     "slug": "staffapp",
+    "jsEngine": "hermes",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "myapp",
@@ -13,10 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
-      "newArchEnabled": true,
-      "splash": {
-        "backgroundColor": "#000000"
-      }
+      "newArchEnabled": true
     },
     "android": {
       "permissions": [
@@ -26,20 +24,15 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.asad_ahmad.staffapp",
-      "newArchEnabled": true,
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResources": true,
       "enableDexGuard": false,
-      "enableHermes": true,
       "enableSeparateBuildPerCPUArchitecture": true,
-      "splash": {
-        "backgroundColor": "#000000"
-      }
+      "newArchEnabled": true
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "static"
     },
     "plugins": [
       [
