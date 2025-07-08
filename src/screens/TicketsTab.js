@@ -150,7 +150,7 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
         <TouchableOpacity onPress={() => handleTicketPress(item)} style={styles.ticketContainer}>
             <View>
                 <Text style={styles.ticketheading}>Ticket ID</Text>
-                <Text style={styles.ticketId}>{item.id}</Text>
+                <Text style={styles.ticketId}>#{item.id}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>GHS</Text>

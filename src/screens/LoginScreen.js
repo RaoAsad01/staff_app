@@ -141,7 +141,7 @@ const LoginScreen = () => {
       </TouchableWithoutFeedback>
       {!isKeyboardVisible && (
         <View style={styles.bottomtextbg}>
-          <Text style={styles.bottomText}>Powered by Hexagram Technologies</Text>
+          <Text style={styles.bottomText}>By Hexallo Enterprise</Text>
         </View>
       )}
     </View>

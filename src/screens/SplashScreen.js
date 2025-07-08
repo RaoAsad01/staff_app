@@ -28,10 +28,10 @@ const SplashScreenComponent = () => {
 
       <View style={styles.middleSection}>
         <View style={styles.logoContainer}>
-          <SvgIcons.hexalloSvg width={45} height={50} fill="transparent" />
+          <SvgIcons.hexalloSvg width={40} height={45} fill="transparent" />
           <Text style={styles.appName}>HEXALLO</Text>
         </View>
-        <Text style={styles.subtitle}>Fast, Secure, Seamless Entry</Text>
+        <Text style={styles.subtitle}>Fast.Secure.Seamless</Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   },
   appName: {
     color: color.white_FFFFFF,
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: '700',
   },
   subtitle: {

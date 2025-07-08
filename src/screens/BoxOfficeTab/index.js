@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { color } from '../../color/color';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
 
@@ -21,95 +21,116 @@ const BoxOfficeTab = ({ eventInfo }) => {
   const [ticketPricing, setTicketPricing] = useState([]);
   const [pricingCategories, setPricingCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTickets, setSelectedTickets] = useState([]);
   const { width } = Dimensions.get('window');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!eventInfo?.eventUuid) {
-          console.error('BoxOfficeTab: No event_uuid provided');
-          return;
-        }
+  const resetData = () => {
+    setSelectedTab('');
+    setEmail('');
+    setPaymentOption('');
+    setPOSModalVisible(false);
+    setTransactionNumber('');
+    setTicketPricing([]);
+    setPricingCategories([]);
+    setSelectedTickets([]);
+    setIsLoading(true);
+  };
 
-        // Fetch pricing categories
-        const pricingStatsResponse = await ticketService.fetchTicketPricingStats();
-        if (pricingStatsResponse?.data) {
-          const categories = pricingStatsResponse.data.map(item => item.title);
-          setPricingCategories(categories);
-          if (categories.length > 0) {
-            setSelectedTab(categories[0]);
-          }
-        }
-
-        // Fetch ticket pricing
-        console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
-        const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
-        console.log('BoxOfficeTab: Received pricing data:', pricingData);
-
-        if (!pricingData) {
-          console.error('BoxOfficeTab: No pricing data received');
-          return;
-        }
-
-        // Process pricing type options into ticket categories
-        const categories = pricingData.pricing_type_options.reduce((acc, option) => {
-          const categoryTitle = option.type_obj.title;
-          const existingCategory = acc.find(category => category.title === categoryTitle);
-
-          const ticket = {
-            name: option.description,
-            uuid: option.uuid,
-            price: parseFloat(option.price),
-            discount_price: option.discounted_price ? parseFloat(option.discounted_price) : parseFloat(option.price),
-            quantity: option.quantity,
-            remaining: option.remaining_tickets,
-            purchase_limit: option.purchase_limit,
-            currency: option.currency
-          };
-
-          if (existingCategory) {
-            existingCategory.tickets.push(ticket);
-          } else {
-            acc.push({
-              title: categoryTitle,
-              tickets: [ticket]
-            });
-          }
-
-          return acc;
-        }, []);
-
-        console.log('BoxOfficeTab: Processed categories:', categories);
-
-        setTicketPricing(categories);
-
-        // Set initial selected tickets based on the first category
-        if (categories.length > 0) {
-          console.log('BoxOfficeTab: Processing first category:', categories[0]);
-          const initialTickets = categories[0].tickets.map(ticket => ({
-            type: ticket.name,
-            uuid: ticket.uuid,
-            price: ticket.price,
-            discountPrice: ticket.discount_price,
-            quantity: 0,
-            remaining: ticket.remaining,
-            purchase_limit: ticket.purchase_limit,
-            currency: ticket.currency
-          }));
-          console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
-          setSelectedTickets(initialTickets);
-        }
-      } catch (error) {
-        console.error('BoxOfficeTab: Error processing ticket pricing:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchData = async () => {
+    try {
+      if (!eventInfo?.eventUuid) {
+        console.error('BoxOfficeTab: No event_uuid provided');
+        return;
       }
-    };
 
+      // Fetch pricing categories
+      const pricingStatsResponse = await ticketService.fetchTicketPricingStats();
+      if (pricingStatsResponse?.data) {
+        const categories = pricingStatsResponse.data.map(item => item.title);
+        setPricingCategories(categories);
+        if (categories.length > 0) {
+          setSelectedTab(categories[0]);
+        }
+      }
+
+      // Fetch ticket pricing
+      console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
+      const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
+      console.log('BoxOfficeTab: Received pricing data:', pricingData);
+
+      if (!pricingData) {
+        console.error('BoxOfficeTab: No pricing data received');
+        return;
+      }
+
+      // Process pricing type options into ticket categories
+      const categories = pricingData.pricing_type_options.reduce((acc, option) => {
+        const categoryTitle = option.type_obj.title;
+        const existingCategory = acc.find(category => category.title === categoryTitle);
+
+        const ticket = {
+          name: option.description,
+          uuid: option.uuid,
+          price: parseFloat(option.price),
+          discount_price: option.discounted_price ? parseFloat(option.discounted_price) : parseFloat(option.price),
+          quantity: option.quantity,
+          remaining: option.remaining_tickets,
+          purchase_limit: option.purchase_limit,
+          currency: option.currency
+        };
+
+        if (existingCategory) {
+          existingCategory.tickets.push(ticket);
+        } else {
+          acc.push({
+            title: categoryTitle,
+            tickets: [ticket]
+          });
+        }
+
+        return acc;
+      }, []);
+
+      console.log('BoxOfficeTab: Processed categories:', categories);
+
+      setTicketPricing(categories);
+
+      // Set initial selected tickets based on the first category
+      if (categories.length > 0) {
+        console.log('BoxOfficeTab: Processing first category:', categories[0]);
+        const initialTickets = categories[0].tickets.map(ticket => ({
+          type: ticket.name,
+          uuid: ticket.uuid,
+          price: ticket.price,
+          discountPrice: ticket.discount_price,
+          quantity: 0,
+          remaining: ticket.remaining,
+          purchase_limit: ticket.purchase_limit,
+          currency: ticket.currency
+        }));
+        console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
+        setSelectedTickets(initialTickets);
+      }
+    } catch (error) {
+      console.error('BoxOfficeTab: Error processing ticket pricing:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reset data when screen comes into focus and fetch data
+  useFocusEffect(
+    React.useCallback(() => {
+      resetData();
+      fetchData();
+    }, [eventInfo?.eventUuid])
+  );
+
+  // Initial data fetch
+  useEffect(() => {
     fetchData();
   }, [eventInfo?.eventUuid]);
 
-  const [selectedTickets, setSelectedTickets] = useState([]);
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 
   const handleTabPress = (tab) => {
@@ -421,7 +442,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={{ width: '100%' }}>
-              <Text style={styles.inputHeading}>Email or Phone Number</Text>
+              {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
               <TextInput
                 style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
                 placeholder="Email or Phone Number"
@@ -445,12 +466,12 @@ const BoxOfficeTab = ({ eventInfo }) => {
         <View style={styles.Paylabel}>
           <Text>Pay With</Text>
         </View>
+      
         <View style={styles.paymentOptions}>
           {/* Cash Button */}
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'CASH' && { borderColor: '#AE6F28' },
-            { alignSelf: 'flex-start' }
+            paymentOption === 'CASH' && { borderColor: '#AE6F28' }
             ]}
             onPress={() => setPaymentOption('CASH')}
           >
@@ -467,8 +488,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
           {/* Debit/Credit Card Button */}
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'BANK' && { borderColor: '#AE6F28' },
-            { flex: 1 }
+            paymentOption === 'BANK' && { borderColor: '#AE6F28' }
             ]}
             onPress={() => setPaymentOption('BANK')}
           >
@@ -478,15 +498,14 @@ const BoxOfficeTab = ({ eventInfo }) => {
               <SvgIcons.cardIconInActive width={24} height={24} />
             )}
             <Text style={[styles.paymentOptionText, paymentOption === 'BANK' && { color: '#5A2F0E' }]}>
-              Debit/Credit Card
+              Bank Card
             </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.paymentOptionsPOS}>
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'P.O.S' && { borderColor: '#AE6F28' },
-            { flex: 1 }
+            paymentOption === 'P.O.S' && { borderColor: '#AE6F28' }
             ]}
             onPress={() => {
               setPaymentOption('P.O.S');
@@ -498,13 +517,12 @@ const BoxOfficeTab = ({ eventInfo }) => {
             ) : (
               <SvgIcons.mobMoneyIconActive width={24} height={24} />
             )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'P.O.S' && { color: '#5A2F0E' }]}>P.O.S
+            <Text style={[styles.paymentOptionText, paymentOption === 'P.O.S' && { color: '#5A2F0E' }]}>P.O.S.
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.paymentOption,
-            paymentOption === 'MOBILE_MONEY' && { borderColor: '#AE6F28' },
-            { alignSelf: 'flex-start' }
+            paymentOption === 'MOBILE_MONEY' && { borderColor: '#AE6F28' }
             ]}
             onPress={() => setPaymentOption('MOBILE_MONEY')}
           >
@@ -518,6 +536,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
             </Text>
           </TouchableOpacity>
         </View>
+
 
         {/* <TouchableOpacity style={[styles.paymentOptioncard, paymentOption === 'Card/Mobile Money' && { borderColor: '#AE6F28' }]} onPress={() => setPaymentOption('Card/Mobile Money')}>
           {paymentOption === 'Card/Mobile Money' ? (
@@ -696,33 +715,26 @@ const styles = StyleSheet.create({
     paddingBottom: 35,
     gap: 10
   },
-  paymentOptioncard: {
-    flexDirection: 'row',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#CEBCA0',
-    borderRadius: 10,
-    top: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5
-
-  },
   paymentOption: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 15,
     borderWidth: 1,
     borderColor: '#CEBCA0',
     borderRadius: 10,
-    paddingHorizontal: 45,
-    gap: 5
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    minHeight: 50
   },
   paymentOptionText: {
     margin: Platform.OS === 'ios' ? 2 : 0,
     color: color.black_544B45,
     fontWeight: '400',
     fontSize: 14,
+    textAlign: 'center'
   },
+
   getTicketsButton: {
     backgroundColor: '#AE6F28',
     padding: 15,
