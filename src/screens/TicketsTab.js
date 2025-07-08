@@ -7,10 +7,10 @@ import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 
-const TicketsTab = ({ route, tickets, eventInfo }) => {
+const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const navigation = useNavigation()
     const [searchText, setSearchText] = useState('');
-    const [selectedTab, setSelectedTab] = useState('All');
+    const [selectedTab, setSelectedTab] = useState(initialTab || 'All');
     const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
     const isFocused = useIsFocused();
     const [fetchedTickets, setFetchedTickets] = useState([]);
@@ -30,19 +30,14 @@ const TicketsTab = ({ route, tickets, eventInfo }) => {
             fetchTicketStats(eventInfo.eventUuid);
             fetchTicketList(eventInfo.eventUuid);
         }
+    }, [isFocused, eventInfo?.eventUuid]);
 
-        if (isFocused) {
-            if (route.params?.fromTab) {
-                setSelectedTab('All');
-                navigation.setParams({ fromTab: undefined });
-                return;
-            }
-            if (route.params?.initialTab === 'Scanned' && route.params?.fromHeader) {
-                setSelectedTab('Scanned');
-                return;
-            }
+    // Separate useEffect to handle initialTab changes
+    useEffect(() => {
+        if (initialTab) {
+            setSelectedTab(initialTab);
         }
-    }, [isFocused, route.params]);
+    }, [initialTab]);
 
     const fetchTicketList = async (eventUuid) => {
         try {

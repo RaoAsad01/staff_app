@@ -6,9 +6,13 @@ import BoxOfficeTab from '../screens/BoxOfficeTab';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 
-const SettingsScreen = ({ route, eventInfo,navigation }) => {
+const SettingsScreen = ({ route, eventInfo, navigation }) => {
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
+  const { initialTab, eventInfo: routeEventInfo } = route.params || {};
+  
+  // Use eventInfo from route params if available, otherwise use the prop
+  const finalEventInfo = routeEventInfo || eventInfo;
 
   useEffect(() => {
     // Handle navigation from dashboard
@@ -108,7 +112,7 @@ const SettingsScreen = ({ route, eventInfo,navigation }) => {
 
   return (
     <View style={styles.mainContainer}>
-      <Header eventInfo={eventInfo}/>
+      <Header eventInfo={finalEventInfo}/>
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -142,10 +146,8 @@ const SettingsScreen = ({ route, eventInfo,navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} route={route} key={tabKey}
-         eventInfo={eventInfo}
-         />}
-        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={eventInfo}/>}
+        {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} key={tabKey} eventInfo={finalEventInfo} initialTab={initialTab} />}
+        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo}/>}
       </View>
     </View>
   );

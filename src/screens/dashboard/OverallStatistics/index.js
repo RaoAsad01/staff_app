@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet,TouchableOpacity } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { color } from '../../../color/color';
 import SvgIcons from '../../../../components/SvgIcons';
 
-const OverallStatistics = ({ stats }) => {
+const OverallStatistics = ({ stats, 
+    onTotalTicketsPress, 
+    onTotalScannedPress, 
+    onTotalUnscannedPress, 
+    onAvailableTicketsPress 
+ }) => {
     // Extract data from stats with default values
     const totalTickets = stats?.data?.overall_statistics?.total_tickets|| 0;
     const totalScanned = stats?.data?.overall_statistics?.total_scanned_tickets || 0;
@@ -16,37 +21,46 @@ const OverallStatistics = ({ stats }) => {
             <View style={styles.wrapper}>
                 <Text style={styles.heading}>Overall Statistics</Text>
                 <View style={styles.row}>
+                
                     <View style={styles.statContainer}>
+                    <TouchableOpacity  onPress={onTotalTicketsPress}>
                         <View style={styles.statRow}>
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Tickets</Text>
                         </View>
                         <Text style={styles.statValue}>{totalTickets}</Text>
+                        </TouchableOpacity>
                     </View>
-
+                    
                     <View style={styles.statContainer}>
+                    <TouchableOpacity style={styles.statCard} onPress={onTotalScannedPress}>
                         <View style={styles.statRow}>
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Scanned</Text>
                         </View>
                         <Text style={styles.statValue}>{totalScanned}</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
                 <View style={styles.row}>
                     <View style={styles.statContainer}>
+                    <TouchableOpacity style={styles.statCard} onPress={onTotalUnscannedPress}>
                         <View style={styles.statRow}>
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Total Unscanned</Text>
                         </View>
                         <Text style={styles.statValue}>{totalUnscanned}</Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.statContainer}>
+                    <TouchableOpacity style={styles.statCard} onPress={onAvailableTicketsPress}>
                         <View style={styles.statRow}>
                             <SvgIcons.totalTickets width={18} height={16} fill="white" />
                             <Text style={styles.statTitle}>Available Tickets</Text>
                         </View>
                         <Text style={styles.statValue}>{availableTickets}</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>

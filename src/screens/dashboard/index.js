@@ -41,6 +41,22 @@ const DashboardScreen = ({ eventInfo }) => {
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
   };
+// Add navigation handlers for statistics
+const handleTotalTicketsPress = () => {
+  navigation.navigate('Tickets', { initialTab: 'All', eventInfo });
+};
+
+const handleTotalScannedPress = () => {
+  navigation.navigate('Tickets', { initialTab: 'Scanned', eventInfo });
+};
+
+const handleTotalUnscannedPress = () => {
+  navigation.navigate('Tickets', { initialTab: 'Unscanned', eventInfo });
+};
+
+const handleAvailableTicketsPress = () => {
+  setSelectedTab('Available Tickets');
+};
 
   const getCheckInData = () => {
     if (
@@ -123,6 +139,42 @@ const DashboardScreen = ({ eventInfo }) => {
     ];
   };
 
+ // Add function to get available tickets data
+ const getAvailableTicketsData = () => {
+  if (!dashboardStats?.data?.available_tickets) {
+    return [{
+      label: "Available Tickets",
+      checkedIn: 0,
+      total: 0,
+      percentage: 0
+    }];
+  }
+
+  const availableTickets = dashboardStats?.data?.available_tickets;
+  const byType = availableTickets?.by_type;
+  let typeRows = [];
+  
+  if (byType) {
+    const types = Object.keys(byType || {});
+    typeRows = types.map(type => ({
+      label: type,
+      checkedIn: byType[type] || 0,
+      total: byType[type] || 0,
+      percentage: 100
+    }));
+  }
+
+  return [
+    {
+      label: "Available Tickets",
+      checkedIn: availableTickets?.total || 0,
+      total: availableTickets?.total || 0,
+      percentage: 100
+    },
+    ...typeRows
+  ];
+};
+
   function formatHourLabel(hourStr) {
     const [hour, minutePart] = hourStr.split(":");
     const [minute, period] = minutePart.split(" ");
@@ -164,8 +216,11 @@ const DashboardScreen = ({ eventInfo }) => {
 
     if (selectedTab === "Attendees") {
       return <AttendeesComponent eventInfo={eventInfo} />;
-    } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets") {
-      const data = selectedTab === "Checked In" ? getCheckInData() : getSoldTicketsData();
+    } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets" || selectedTab === "Available Tickets") {
+      const data = selectedTab === "Checked In" ? getCheckInData() : 
+                   selectedTab === "Sold Tickets" ? getSoldTicketsData() : 
+                   getAvailableTicketsData();
+
       const remainingTicketsData = selectedTab === "Sold Tickets"
         ? data.filter(item => item.label !== "Total Sold")
         : [];
@@ -186,11 +241,13 @@ const DashboardScreen = ({ eventInfo }) => {
             remainingTicketsData={remainingTicketsData}
             showRemaining={selectedTab === "Sold Tickets"}
           />
-          <AnalyticsChart
-            title={selectedTab}
-            data={selectedTab === "Checked In" ? checkedInChartData : soldTicketsChartData}
-            dataType={selectedTab === "Checked In" ? "checked in" : "sold"}
-          />
+          {selectedTab !== "Available Tickets" && (
+            <AnalyticsChart
+              title={selectedTab}
+              data={selectedTab === "Checked In" ? checkedInChartData : soldTicketsChartData}
+              dataType={selectedTab === "Checked In" ? "checked in" : "sold"}
+            />
+          )}
         </>
       );
     }
@@ -249,7 +306,13 @@ const DashboardScreen = ({ eventInfo }) => {
             <Text style={styles.errorText}>{error}</Text>
           ) : (
             <>
-              <OverallStatistics stats={dashboardStats} />
+               <OverallStatistics 
+                stats={dashboardStats} 
+                onTotalTicketsPress={handleTotalTicketsPress}
+                onTotalScannedPress={handleTotalScannedPress}
+                onTotalUnscannedPress={handleTotalUnscannedPress}
+                onAvailableTicketsPress={handleAvailableTicketsPress}
+              />
               <BoxOfficeSales stats={dashboardStats} />
               <View style={styles.tabContainer}>
                 <FlatList
