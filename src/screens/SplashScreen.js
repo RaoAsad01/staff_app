@@ -1,16 +1,18 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   Dimensions,
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
+import Typography, { Heading3, Body1, ButtonTextDemiBold, Caption } from '../components/Typography';
+
 const { width, height } = Dimensions.get('window');
 
 const SplashScreenComponent = () => {
@@ -21,31 +23,63 @@ const SplashScreenComponent = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.topSection}>
-        <SvgIcons.splashQrImg width={172} height={163} fill="transparent" />
-      </View>
-
-      <View style={styles.middleSection}>
-        <View style={styles.logoContainer}>
-          <SvgIcons.hexalloSvg width={40} height={45} fill="transparent" />
-          <Text style={styles.appName}>HEXALLO</Text>
+    <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.topSection}>
+          <SvgIcons.splashQrImg width={172} height={163} fill="transparent" />
         </View>
-        <Text style={styles.subtitle}>Fast.Secure.Seamless</Text>
-      </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
-        <Text style={styles.buttonText}>Get Started</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        <View style={styles.middleSection}>
+          <View style={styles.logoContainer}>
+            <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
+            <Typography 
+              weight="700"
+              size={20}
+              color={color.grey_DEDCDC}
+            >
+              Hexallo
+            </Typography>
+          </View>
+          <Typography 
+            weight="500"
+            size={16}
+            color={color.grey_DEDCDC}
+            style={styles.subtitle}
+          >
+            Fast . Secure . Seamless
+          </Typography>
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
+          <ButtonTextDemiBold 
+            size={16}
+            color={color.btnTxt_FFF6DF}
+            align="center"
+          >
+            Get Started
+          </ButtonTextDemiBold>
+        </TouchableOpacity>
+        
+        <View style={styles.bottomtextbg}>
+          <Caption 
+            weight="400"
+            size={12}
+            color={color.grey_E4E4E4}
+          >
+            By Hexallo Enterprise
+          </Caption>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#120b00',
+    // backgroundColor: '#120b00',
     justifyContent: 'space-between',
+    backgroundColor: 'transparent',
   },
   topSection: {
     alignItems: 'center',
@@ -60,29 +94,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  appName: {
-    color: color.white_FFFFFF,
-    fontSize: 22,
-    fontWeight: '700',
-  },
   subtitle: {
-    color: color.white_FFFFFF,
-    fontSize: 16,
     marginTop: 20,
-    fontWeight: '500',
   },
   button: {
     backgroundColor: color.btnBrown_AE6F28,
     marginHorizontal: 20,
-    marginBottom: 80,
+    marginBottom: 20,
     paddingVertical: 15,
     borderRadius: 8,
   },
-  buttonText: {
-    color: color.btnTxt_FFF6DF,
-    textAlign: 'center',
-    fontWeight: '700',
-    fontSize: 16,
+  bottomtextbg: {
+    width: 'auto',
+    paddingHorizontal: 20,
+    height: 32,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    alignSelf: 'center',
+    // Removed position: 'absolute', bottom: 0
+    backgroundColor: 'transparent',
   },
 });
 

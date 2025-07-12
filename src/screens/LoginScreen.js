@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  StyleSheet, Text, View, TextInput, TouchableOpacity, Platform, Keyboard,
-  TouchableWithoutFeedback, Alert,
+  StyleSheet, View, TextInput, TouchableOpacity, Platform, Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import { ImageBackground as ExpoImageBackground } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -11,6 +11,8 @@ import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
 import { authService } from '../api/apiService';
+import Typography, { Body1, Caption } from '../components/Typography';
+import { fontSize, fontWeight } from '../constants/typography';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -37,9 +39,7 @@ const LoginScreen = () => {
       .required('Required')
       .test('emailOrPhone', 'Invalid email or phone number', (value) => {
         if (!value) return false;
-        // Email regex
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        // Phone regex (allows numbers only, 10-15 digits)
         const phoneRegex = /^[0-9]{10,15}$/;
         return emailRegex.test(value) || phoneRegex.test(value);
       }),
@@ -50,29 +50,28 @@ const LoginScreen = () => {
       const response = await authService.requestOtp({
         user_identifier: values.user_identifier.trim(),
       });
-
-      console.log('OTP Request Response:', response);
-
-      // The response contains the UUID directly in the data object
       if (response && response.success) {
         navigation.navigate('OtpLogin', {
           uuid: response.data.uuid,
           user_identifier: values.user_identifier.trim()
         });
       } else {
-        Alert.alert('Invalid Email or Phone Number');
+        alert('Invalid Email or Phone Number');
       }
     } catch (error) {
       if (error.response?.data?.message) {
-        Alert.alert('Error', 'Invalid Email or Phone Number');
+        alert('Invalid Email or Phone Number');
       } else {
-        Alert.alert('Error', 'Failed to request OTP. Please try again.');
+        alert('Failed to request OTP. Please try again.');
       }
     }
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#000000", "#281c10"]}
+      style={{ flex: 1 }}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1 }}>
           <StatusBar
@@ -80,172 +79,164 @@ const LoginScreen = () => {
             backgroundColor="transparent"
             translucent
           />
-          <ExpoImageBackground
-            source={require('../../assets/images/bg-img-signup.png')}
-            contentFit="cover"
-            style={styles.background}
-          >
-            <View style={styles.topSection}>
-              <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
-              <Text style={styles.topText}>HEXALLO</Text>
-            </View>
-
-            <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
-
-            <View style={styles.containerWrapper}>
-              <View style={styles.container}>
-                <Formik
-                  initialValues={{ user_identifier: '' }}
-                  validationSchema={validationSchema}
-                  onSubmit={handleSignIn}
-                >
-                  {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-                    <View style={{ width: '100%' }}>
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <View style={styles.centeredContent}>
+              <Formik
+                initialValues={{ user_identifier: '' }}
+                validationSchema={validationSchema}
+                onSubmit={handleSignIn}
+              >
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                  <View style={{ width: '100%' }}>
+                    <View style={styles.inputRow}>
                       <TextInput
                         style={[
-                          styles.input,
+                          styles.inputField,
                           touched.user_identifier && errors.user_identifier ? styles.inputError : null
                         ]}
                         placeholder="Email or Phone Number"
-                        placeholderTextColor={color.black_544B45}
+                        placeholderTextColor={color.grey_87807C}
                         onChangeText={handleChange('user_identifier')}
                         onBlur={handleBlur('user_identifier')}
                         value={values.user_identifier}
                         keyboardType="email-address"
-                        selectionColor={color.placeholderTxt_24282C}
+                        selectionColor={color.selectField_CEBCA0}
                         autoCapitalize="none"
                       />
-                      {touched.user_identifier && errors.user_identifier && (
-                        <Text style={styles.errorText}>{errors.user_identifier}</Text>
-                      )}
-
                       <TouchableOpacity
-                        style={[
-                          styles.button,
-                          !values.user_identifier.trim() && { opacity: 0.6 }
-                        ]}
+                        style={styles.arrowButton}
                         onPress={handleSubmit}
                         disabled={!values.user_identifier.trim()}
                       >
-                        <Text style={styles.buttonText}>Sign In</Text>
+                        <SvgIcons.ArrowRight width={28} height={28} fill={color.black_544B45} />
                       </TouchableOpacity>
-
-
                     </View>
-                  )}
-                </Formik>
-              </View>
+                    {touched.user_identifier && errors.user_identifier && (
+                      <Caption color={color.red_FF0000} style={styles.errorText}>{errors.user_identifier}</Caption>
+                    )}
+                  </View>
+                )}
+              </Formik>
             </View>
-          </ExpoImageBackground>
+          </View>
+          {!isKeyboardVisible && (
+            <>
+              <View style={styles.middleSection}>
+                <View style={styles.logoContainer}>
+                  <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
+                  <Typography 
+                    weight="700"
+                    size={20}
+                    color={color.grey_DEDCDC}
+                  >
+                    Hexallo
+                  </Typography>
+                </View>
+                <Typography 
+                  weight="500"
+                  size={16}
+                  color={color.grey_DEDCDC}
+                  style={styles.subtitle}
+                >
+                  Fast . Secure . Seamless
+                </Typography>
+              </View>
+              <View style={styles.bottomtextbg}>
+                <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
+              </View>
+            </>
+          )}
         </View>
       </TouchableWithoutFeedback>
-      {!isKeyboardVisible && (
-        <View style={styles.bottomtextbg}>
-          <Text style={styles.bottomText}>By Hexallo Enterprise</Text>
-        </View>
-      )}
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  safeContainer: {
+  centeredContent: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 100, // Remove marginTop to allow true vertical centering
+    width: '100%', // Ensure it takes full width for centering
   },
-  background: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0, // Add padding for Android
+  logoSection: {
+    alignItems: 'center',
+    marginTop: 60, // Less top margin for better vertical balance
+    marginBottom: 40,
+    width: '100%',
   },
-  image: {
-    width: 50,
-    height: 50,
+  hexalloText: {
+    marginTop: 18,
+    marginBottom: 8,
   },
-  topSection: {
+  tagline: {
+    marginBottom: 0,
+  },
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    marginTop: 40
-  },
-  additionalText: {
-    color: color.white_FFFFFF,
-    fontSize: 40,
-    fontWeight: '700',
-    textAlign: 'left',
-    paddingTop: 40
-  },
-  topText: {
-    color: color.white_FFFFFF,
-    marginStart: 10,
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  containerWrapper: {
-    flex: 1,
-    marginTop: 100
-  },
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    height: 166,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  input: {
-    width: '100%',
-    height: 47,
-    borderColor: color.borderBrown_CEBCA0,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
+    borderColor: color.borderBrown_CEBCA0,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
     marginBottom: 10,
+    height: 54,
+    width: 320,
+    alignSelf: 'center', // Center the input row
   },
-  button: {
+  inputField: {
+    flex: 1,
+    paddingHorizontal: 20,
+    color: color.grey_DEDCDC,
+    fontSize: 14,
+    fontWeight: '400',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+  arrowButton: {
     backgroundColor: color.btnBrown_AE6F28,
-    width: '100%',
-    height: 50,
-    borderRadius: 10,
+    height: '100%',
+    width: 70,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 5,
-  },
-  buttonText: {
-    color: color.btnTxt_FFF6DF,
-    fontSize: 16,
-    fontWeight: '700',
+    borderTopRightRadius: 14,
+    borderBottomRightRadius: 14,
   },
   inputError: {
     borderColor: color.red_FF0000,
   },
   errorText: {
-    color: color.red_FF0000,
-    marginBottom: 10,
+    marginTop: 2,
+    marginLeft: 40,
+    marginBottom: 8,
   },
   bottomtextbg: {
-    backgroundColor: color.btnBrown_AE6F28,
     width: 'auto',
     paddingHorizontal: 20,
     height: 32,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 20, // More space from the bottom
     alignSelf: 'center',
-    position: 'absolute',
-    bottom: 0,
+    // Removed position: 'absolute', bottom, left, right
   },
-  bottomText: {
-    color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '400',
+  middleSection: {
+    alignItems: 'center',
+    marginTop: 0,
+    marginBottom: 120,
+    width: '100%',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 24, // Add space between logo and tagline
+  },
+  subtitle: {
+    marginBottom: 10, // Add space between tagline and bottomtextbg
   },
 });
 

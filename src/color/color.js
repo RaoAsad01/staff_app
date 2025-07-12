@@ -29,6 +29,11 @@ export const color = {
     grey_87807C33: "#87807C33",
     brown_5A2F0E: "#5A2F0E",
     brown_CEBCA04D: "#CEBCA04D",
-    grey_6B7785: "#6B7785"
+    grey_6B7785: "#6B7785",
+    grey_DEDCDC: "#DEDCDC",
+    grey_E4E4E4: "#E4E4E4",
+    grey_87807C: "#87807C",
+    grey_E0E0E0: "#E0E0E0",
+    red_EF3E32: "#EF3E32",
   };
   

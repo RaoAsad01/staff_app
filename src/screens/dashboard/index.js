@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView } from 'react-native';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
 import BoxOfficeSales from './BoxOfficeSales';
@@ -10,6 +10,7 @@ import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './AttendeesComponent';
 import AnalyticsChart from './AnalyticsChart';
 import { ticketService } from '../../api/apiService';
+import Typography, { Heading5, Body1, Label } from '../../components/Typography';
 
 const DashboardScreen = ({ eventInfo }) => {
   const navigation = useNavigation();
@@ -269,14 +270,15 @@ const handleAvailableTicketsPress = () => {
       ]}
       onPress={() => handleTabPress(item)}
     >
-      <Text
+      <Typography
+        variant={selectedTab === item ? "tabActive" : "tab"}
         style={[
           styles.tabButtonText,
           selectedTab === item && styles.selectedTabButtonText,
         ]}
       >
         {item}
-      </Text>
+      </Typography>
     </TouchableOpacity>
   );
 
@@ -286,27 +288,27 @@ const handleAvailableTicketsPress = () => {
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>
-        <Text style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
-            <Text style={styles.separator}>   </Text>
-            <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
-            <Text style={styles.separator}>   </Text>
-            <Text style={styles.date}>{eventInfo?.date || '28-12-2024'}</Text>
-            <Text style={styles.separator}></Text>
-            <Text style={styles.date}>at</Text>
-            <Text style={styles.separator}></Text>
-            <Text style={styles.time}>{eventInfo?.time || '7:00 PM'}</Text>
+          <Body1 style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Body1>
+          <Body1 style={styles.separator}>   </Body1>
+          <Body1 style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Body1>
+          <Body1 style={styles.separator}>   </Body1>
+          <Body1 style={styles.date}>{eventInfo?.date || '28-12-2024'}</Body1>
+          <Body1 style={styles.separator}></Body1>
+          <Body1 style={styles.date}>at</Body1>
+          <Body1 style={styles.separator}></Body1>
+          <Body1 style={styles.time}>{eventInfo?.time || '7:00 PM'}</Body1>
         </View>
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
-          <Text style={styles.labelDashboard}>Dashboard</Text>
+          <Heading5 style={styles.labelDashboard}>Dashboard</Heading5>
           {loading ? (
-            <Text style={styles.loadingText}>Loading dashboard stats...</Text>
+            <Body1 style={styles.loadingText}>Loading dashboard stats...</Body1>
           ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
+            <Body1 style={styles.errorText}>{error}</Body1>
           ) : (
             <>
-               <OverallStatistics 
+              <OverallStatistics 
                 stats={dashboardStats} 
                 onTotalTicketsPress={handleTotalTicketsPress}
                 onTotalScannedPress={handleTotalScannedPress}
@@ -361,27 +363,17 @@ const styles = StyleSheet.create({
   },
   eventName: {
     color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '500',
   },
   cityName: {
     color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '400',
   },
   date: {
     color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '400',
   },
   time: {
     color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '400',
   },
   labelDashboard: {
-    fontSize: 20,
-    fontWeight: '500',
     color: color.brown_3C200A,
     paddingLeft: 10,
     marginTop: 10,
@@ -395,8 +387,6 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     color: color.black_544B45,
-    fontSize: 14,
-    fontWeight: '400',
   },
   selectedTabButton: {
     width: 105,
@@ -411,8 +401,6 @@ const styles = StyleSheet.create({
   },
   selectedTabButtonText: {
     color: color.brown_3C200A,
-    fontWeight: '500',
-    fontSize: 14
   },
   loadingText: {
     textAlign: 'center',
@@ -425,8 +413,6 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   separator: {
-    fontSize: 14,
-    fontWeight: '500',
     color: color.white_FFFFFF,
     marginHorizontal: 4,
   },

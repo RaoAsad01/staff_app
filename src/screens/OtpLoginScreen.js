@@ -17,15 +17,27 @@ import { StatusBar } from 'expo-status-bar';
 import SvgIcons from '../../components/SvgIcons';
 import { authService, eventService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
+import { LinearGradient } from 'expo-linear-gradient';
+import Typography, { Body1, Caption } from '../components/Typography';
+
+// Helper function to format seconds as mm:ss
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
 
 const OtpLoginScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [otpResendTime, setOtpResendTime] = useState(60);
+  const [otpResendTime, setOtpResendTime] = useState(120); // 2 minutes
   const [otp, setOtp] = useState(['', '', '', '', '']);
   const inputRefs = useRef([]);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const uuid = route?.params?.uuid;
   const userIdentifier = route?.params?.user_identifier;
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // useEffect(() => {
   //   const checkLoggedIn = async () => {
@@ -65,32 +77,31 @@ const OtpLoginScreen = ({ route }) => {
     navigation.navigate('Login');
   }
 
-  const handleSignIn = async () => {
-    const enteredOtp = otp.join('');
+  const handleSignIn = async (otpArray) => {
+    const enteredOtp = otpArray.join('');
+    console.log('handleSignIn called with OTP:', enteredOtp);
     if (enteredOtp.length === 5) {
+      setLoading(true);
       try {
         const payload = {
           uuid: uuid,
           otp: enteredOtp
         };
         const response = await authService.verifyOtp(payload);
+        console.log('OTP verify response:', response);
         if (response.success && response.data && response.data.access_token) {
+          setShowError(false);
+          setErrorMessage('');
+          setLoading(false);
           // Store the access token
           await SecureStore.setItemAsync('accessToken', response.data.access_token);
-          console.log('Token stored successfully');
-
           // Fetch staff events
           const staffEventsData = await eventService.fetchStaffEvents();
-
           const eventsList = staffEventsData?.data?.[0]?.event;
           if (eventsList && eventsList.length > 0) {
             const eventUuid = eventsList[0];
-            console.log('UUID of staff: ', eventUuid);
-
             // Fetch event info
             const eventInfoData = await eventService.fetchEventInfo(eventUuid);
-
-
             navigation.reset({
               index: 0,
               routes: [{
@@ -109,34 +120,29 @@ const OtpLoginScreen = ({ route }) => {
                 },
               }],
             });
-            console.log('Event Info sent to CheckinScreen:', {
-              event_title: eventInfoData?.event_title,
-              cityName: 'Accra',
-              date: eventInfoData?.date,
-              time: eventInfoData?.time,
-              userId: '87621237467',
-              scanCount: eventInfoData?.scanCount,
-            });
           } else {
-            Alert.alert('Error', 'Could not fetch accessible events.');
             navigation.reset({
               index: 0,
-              routes: [{ name: 'LoggedIn' }], // Navigate even if no events fetched
+              routes: [{ name: 'LoggedIn' }],
             });
           }
         } else {
-          Alert.alert('Error', response.message || 'Verification failed');
+          setErrorMessage('You have entered an invalid OTP');
+          setShowError(true);
+          setLoading(false);
         }
       } catch (error) {
-        console.error('OTP Verification Error:', error);
-        Alert.alert('Error', error.response?.data?.message || 'Failed to verify OTP');
+        setErrorMessage('You have entered an invalid OTP');
+        setShowError(true);
+        setLoading(false);
+        console.log('OTP Verification Error:', error);
       }
-    } else {
-      Alert.alert('Error', 'Please enter a valid 5-digit OTP');
     }
   };
 
   const handleResendOtp = async () => {
+    setShowError(false);
+    setErrorMessage('');
     try {
       const response = await authService.requestOtp({
         user_identifier: userIdentifier
@@ -144,6 +150,7 @@ const OtpLoginScreen = ({ route }) => {
       if (response && response.success) {
         // Update the UUID with the new one from response
         setOtp(['', '', '', '', '']); // Clear the OTP fields
+        setOtpResendTime(120); // Reset timer to 2 minutes
         Alert.alert('Success', 'OTP resent successfully');
       } else {
         Alert.alert('Error', response?.message || 'Failed to get new verification code');
@@ -166,10 +173,16 @@ const OtpLoginScreen = ({ route }) => {
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
     setOtp(updatedOtp);
-
+    setShowError(false);
+    setErrorMessage('');
+    console.log('OTP changed:', updatedOtp);
     // Move to next input field automatically
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();
+    }
+    // If all 5 digits are filled, trigger handleSignIn
+    if (updatedOtp.every((digit) => digit.length === 1)) {
+      handleSignIn(updatedOtp);
     }
   };
 
@@ -179,24 +192,32 @@ const OtpLoginScreen = ({ route }) => {
     }
   };
   return (
-    <View style={{ flex: 1 }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          <StatusBar style="dark" backgroundColor="transparent" translucent />
-          <ExpoImageBackground
+    <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
+            <StatusBar style="dark" backgroundColor="transparent" translucent />
+            {/* <ExpoImageBackground
             source={require('../../assets/images/bg-img-signup.png')}
             contentFit="cover"
             style={styles.background}
-          >
-            <View style={styles.topSection}>
+          > */}
+            {/* <View style={styles.topSection}>
               <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
               <Text style={styles.topText}>HEXALLO</Text>
             </View>
 
-            <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text>
+            <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text> */}
 
             <View style={styles.container}>
-              <Text style={styles.appName}>Enter OTP</Text>
+              <Typography 
+                weight="500"
+                size={20}
+                color={color.grey_DEDCDC}
+                style={styles.appName}
+              >
+                Enter OTP
+              </Typography>
               <View style={styles.otpContainer}>
                 {otp.map((digit, index) => (
                   <TextInput
@@ -204,43 +225,105 @@ const OtpLoginScreen = ({ route }) => {
                     style={styles.otpInput}
                     value={digit}
                     placeholder="-"
-                    placeholderTextColor={color.placeholderTxt_24282C}
+                    placeholderTextColor={color.white_FFFFFF}
                     maxLength={1}
                     keyboardType="numeric"
                     onChangeText={(value) => handleOtpChange(value, index)}
                     onKeyPress={(event) => handleKeyPress(event, index)}
                     ref={(ref) => (inputRefs.current[index] = ref)}
                     selectionColor={color.selectField_CEBCA0}
+                    editable={!loading}
                   />
                 ))}
               </View>
 
-              <Text style={styles.labelText}>Didn't receive OTP?</Text>
+              {/* Remove the 'Didn't receive OTP?' label for a cleaner look */}
 
               <View style={styles.rowContainer}>
-                <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
-                  <Text style={styles.changeDetailsText}>Resend</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
-                  <Text style={styles.changeDetailsText}>Change Details</Text>
-                </TouchableOpacity>
+                {otpResendTime > 0 ? (
+                  <View style={styles.timerRow}>
+                    <Typography 
+                      weight="400"
+                      size={14}
+                      color={color.grey_E0E0E0}
+                    >
+                      Request code again in{' '}
+                    </Typography>
+                    <Typography 
+                      weight="400"
+                      size={14}
+                      color={color.btnBrown_AE6F28}
+                    >
+                      {formatTime(otpResendTime)}
+                    </Typography>
+                  </View>
+                ) : (
+                  <>
+                    <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
+                      <Typography 
+                        weight="600"
+                        size={16}
+                        color={color.grey_DEDCDC}
+                      >
+                        Resend
+                      </Typography>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
+                      <Typography 
+                        weight="600"
+                        size={16}
+                        color={color.grey_DEDCDC}
+                      >
+                        Change Details
+                      </Typography>
+                    </TouchableOpacity>
+                  </>
+                )}
               </View>
 
-              <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-                <Text style={styles.buttonText}>Sign In</Text>
-              </TouchableOpacity>
+              {showError && (
+                <View style={styles.errorContainer}>
+                  <View >
+                    <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                  </View>
+                  <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorText}>
+                    {errorMessage}
+                  </Typography>
+                </View>
+              )}
             </View>
-          </ExpoImageBackground>
-        </View>
-      </TouchableWithoutFeedback>
-
-      {!isKeyboardVisible && (
-        <View style={styles.bottomtextbg}>
-          <Text style={styles.bottomText}>By Hexallo Enterprise</Text>
-        </View>
-      )}
-    </View>
+            
+            {!isKeyboardVisible && (
+            <>
+              <View style={styles.middleSection}>
+                <View style={styles.logoContainer}>
+                  <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
+                  <Typography 
+                    weight="700"
+                    size={20}
+                    color={color.grey_DEDCDC}
+                  >
+                    Hexallo
+                  </Typography>
+                </View>
+                <Typography 
+                  weight="500"
+                  size={16}
+                  color={color.grey_DEDCDC}
+                  style={styles.subtitle}
+                >
+                  Fast . Secure . Seamless
+                </Typography>
+              </View>
+              <View style={styles.bottomtextbg}>
+                <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
+              </View>
+            </>
+          )}
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    </LinearGradient>
   );
 
 };
@@ -270,22 +353,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   container: {
-    backgroundColor: 'white',
     padding: 20,
-    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+    marginTop: 180
   },
   appName: {
-    fontSize: 20,
-    fontWeight: '600',
     marginBottom: 20,
-    color: color.brown_3C200A,
   },
   labelText: {
     fontSize: 14,
@@ -307,6 +381,7 @@ const styles = StyleSheet.create({
     borderColor: color.borderBrown_CEBCA0,
     textAlign: 'center',
     fontSize: 18,
+    color: color.white_FFFFFF,
   },
   button: {
     backgroundColor: color.btnBrown_AE6F28,
@@ -318,26 +393,16 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 10
   },
-  buttonText: {
-    color: color.btnTxt_FFF6DF,
-    fontSize: 16,
-    fontWeight: '700',
-  },
   changeDetailsButton: {
     marginTop: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: color.btnBrown_AE6F28,
+    borderColor: color.borderBrown_CEBCA0,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     width: '47%',
 
-  },
-  changeDetailsText: {
-    color: color.black_2F251D,
-    fontWeight: '600',
-    fontSize: 16
   },
   resendText: {
     color: color.blue,
@@ -349,8 +414,13 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 10,
   },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
   bottomtextbg: {
-    backgroundColor: color.btnBrown_AE6F28,
     width: 'auto',
     paddingHorizontal: 20,
     height: 32,
@@ -366,6 +436,45 @@ const styles = StyleSheet.create({
     color: color.white_FFFFFF,
     fontSize: 14,
     fontWeight: '400',
+  },
+  middleSection: {
+    alignItems: 'center',
+    marginTop: 150,
+    width: '100%',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 24, // Add space between logo and tagline
+  },
+  subtitle: {
+    marginBottom: 10, // Add space between tagline and bottomtextbg
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: color.white_FFFFFF,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginTop: 10,
+    width: '100%',
+    alignSelf: 'center',
+    borderWidth: 2,
+    gap:10,
+  },
+  errorIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: color.red_FF3B30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  errorText: {
+    flex: 1,
   },
 });
 

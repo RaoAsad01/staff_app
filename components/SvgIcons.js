@@ -33,6 +33,8 @@ import AddIcon from '../assets/svgs/add_icon.svg';
 import PlaceholderImage from '../assets/svgs/placeholder_img.svg';
 import ProfileCameraIcon from '../assets/svgs/profile_camera_icon.svg';
 import SplashQrImg from '../assets/svgs/splash_qr_img.svg';
+import ArrowRight from '../assets/svgs/right-arrow.svg';
+import CrossIconRed from '../assets/svgs/cross_icon_red.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -70,4 +72,6 @@ export default {
     placeholderImage: PlaceholderImage,
     profileCameraIcon: ProfileCameraIcon,
     splashQrImg: SplashQrImg,
+    ArrowRight: ArrowRight,
+    crossIconRed: CrossIconRed,
 };
