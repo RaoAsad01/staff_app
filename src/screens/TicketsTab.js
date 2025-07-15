@@ -193,7 +193,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
         if (searchText) {
             return "No Matching Results";
         }
-        
+
         switch (selectedTab) {
             case 'All':
                 return "No Matching Results";
@@ -271,11 +271,17 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 data={filteredTickets}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
-                ListEmptyComponent={() => (
-                    <NoResults message={getNoResultsMessage()} />
-                )}
+                ListEmptyComponent={() =>
+                    !isLoading ? (
+                        <NoResults message={getNoResultsMessage()} />
+                    ) : (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+                        </View>
+                    )
+                }
                 ListFooterComponent={() =>
-                    isLoading ? (
+                    isLoading && filteredTickets.length > 0 ? (
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
                         </View>

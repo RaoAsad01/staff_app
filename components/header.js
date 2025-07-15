@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 const Header = ({ eventInfo }) => {
   const navigation = useNavigation();
+  const route = useRoute();
   const [tabKey, setTabKey] = useState(0);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ const Header = ({ eventInfo }) => {
 
   const formatStaffName = (fullName) => {
     if (!fullName) return 'A Moeez';
-    
+
     const nameParts = fullName.trim().split(' ');
     if (nameParts.length >= 2) {
       const firstName = nameParts[0];
@@ -39,7 +40,17 @@ const Header = ({ eventInfo }) => {
         fromHeader: true,
       },
     });
+  };
 
+  // Check if current screen should show back button
+  const shouldShowBackButton = () => {
+    const currentRouteName = route.name;
+    const detailScreens = ['ManualCheckInAllTickets', 'CheckInAllTickets', 'TicketScanned'];
+    return detailScreens.includes(currentRouteName);
+  };
+
+  const handleBackPress = () => {
+    navigation.goBack();
   };
 
   return (
@@ -60,7 +71,13 @@ const Header = ({ eventInfo }) => {
           </View>
           <View style={styles.profileId}>
             <View style={styles.userSection}>
-              <SvgIcons.userSvg width={28} height={28} fill="transparent" />
+              {shouldShowBackButton() ? (
+                <TouchableOpacity onPress={handleBackPress} style={styles.backButtonContainer}>
+                  <SvgIcons.backArrow width={24} height={24} fill={color.brown_3C200A} />
+                </TouchableOpacity>
+              ) : (
+                <SvgIcons.userSvg width={28} height={28} fill="transparent" />
+              )}
               <Text style={styles.userId}>ID: {formatStaffName(eventInfo?.staff_name)}</Text>
             </View>
             <View style={styles.scanSection}>
@@ -167,6 +184,9 @@ const styles = StyleSheet.create({
   },
   countColor: {
     color: color.white_FFFFFF,
+  },
+  backButtonContainer: {
+    marginRight: 10,
   },
 });
 

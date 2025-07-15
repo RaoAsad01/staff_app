@@ -86,9 +86,6 @@ const CheckInAllTickets = ({ route }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header eventInfo={eventInfo} />
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-                </TouchableOpacity>
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
@@ -202,9 +199,6 @@ const styles = StyleSheet.create({
     },
     successImageIcon: {
         marginTop: 20,
-    },
-    backButton: {
-        padding: 10
     },
 });
 

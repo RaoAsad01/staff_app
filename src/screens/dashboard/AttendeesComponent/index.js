@@ -152,7 +152,7 @@ const AttendeesComponent = ({ eventInfo }) => {
     if (searchText) {
       return "No Matching Results";
     }
-    
+
     switch (activeTab) {
       case 'All':
         return "No Matching Results";
@@ -168,7 +168,7 @@ const AttendeesComponent = ({ eventInfo }) => {
   const filteredTickets = filterTickets();
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       onScroll={({ nativeEvent }) => {
         const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
@@ -265,11 +265,15 @@ const AttendeesComponent = ({ eventInfo }) => {
             </View>
           </TouchableOpacity>
         ))
-      ) : (
+      ) : !isLoading ? (
         <NoResults message={getNoResultsMessage()} />
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={color.brown_5A2F0E} />
+        </View>
       )}
 
-      {isLoading && (
+      {isLoading && filteredTickets.length > 0 && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={color.brown_5A2F0E} />
         </View>

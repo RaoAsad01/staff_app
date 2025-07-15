@@ -18,12 +18,6 @@ const TicketScanned = ({ route }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header eventInfo={eventInfo} />
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-            </TouchableOpacity>
             <View style={styles.wrapper}>
 
                 <View style={styles.popUp}>
@@ -263,9 +257,6 @@ const styles = StyleSheet.create({
         fontWeight: '400',
         color: color.black_544B45,
         marginTop: 5
-    },
-    backButton: {
-        padding: 10
     },
 });
 

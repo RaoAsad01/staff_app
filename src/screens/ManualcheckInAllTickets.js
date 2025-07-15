@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator,Alert } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
@@ -26,11 +26,11 @@ const ManualCheckInAllTickets = () => {
                 console.log('Ticket Details Response:', response);
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
                     setTicketDetails(response.data);
-    
+
                     // Check if the first ticket is already scanned, and set the success state accordingly
                     const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
                     setCheckInSuccess(isScanned);
-    
+
                     setUserDetails({
                         email: response.data[0]?.user_email || 'N/A',
                         firstName: response.data[0]?.user_first_name || '',
@@ -53,7 +53,7 @@ const ManualCheckInAllTickets = () => {
                 setLoading(false);
             }
         };
-    
+
         if (orderNumber && eventUuid) {
             fetchTicketDetails();
         } else {
@@ -61,8 +61,8 @@ const ManualCheckInAllTickets = () => {
             setLoading(false);
         }
     }, [orderNumber, eventUuid]); // You can add checkInSuccess as a dependency if you want to control state updates
-    
-    
+
+
 
     const handleSingleCheckIn = async () => {
         if (total === 1 && ticketDetails.length === 1) {
@@ -73,7 +73,7 @@ const ManualCheckInAllTickets = () => {
             try {
                 const response = await ticketService.manualDetailCheckin(eventInfo.eventUuid, ticket.code);
                 console.log('Full Single Ticket Check-in Response:', JSON.stringify(response, null, 2)); // Log the entire response
-    
+
                 if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
                     console.log('Check-in successful according to response.');
                     setCheckInSuccess(true);
@@ -94,9 +94,9 @@ const ManualCheckInAllTickets = () => {
 
     // Add handleTicketStatusChange function
     const handleTicketStatusChange = (ticketUuid, newStatus) => {
-        setTicketDetails(prevTickets => 
-            prevTickets.map(ticket => 
-                ticket.uuid === ticketUuid 
+        setTicketDetails(prevTickets =>
+            prevTickets.map(ticket =>
+                ticket.uuid === ticketUuid
                     ? { ...ticket, checkin_status: newStatus }
                     : ticket
             )
@@ -108,9 +108,6 @@ const ManualCheckInAllTickets = () => {
             <SafeAreaView style={styles.container}>
                 <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-                </TouchableOpacity>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
                 </View>
@@ -123,9 +120,6 @@ const ManualCheckInAllTickets = () => {
             <SafeAreaView style={styles.container}>
                 <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-                </TouchableOpacity>
                 <View style={styles.errorContainer}>
                     <Text style={styles.errorText}>{error}</Text>
                 </View>
@@ -138,9 +132,6 @@ const ManualCheckInAllTickets = () => {
             <SafeAreaView style={styles.container}>
                 <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-                </TouchableOpacity>
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No ticket details found for this order.</Text>
                 </View>
@@ -152,12 +143,6 @@ const ManualCheckInAllTickets = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header eventInfo={eventInfo} />
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <SvgIcons.backArrow width={24} height={24} fill={color.black_2F251D} />
-            </TouchableOpacity>
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
@@ -263,9 +248,6 @@ const styles = StyleSheet.create({
     },
     successImageIcon: {
         marginTop: 20,
-    },
-    backButton: {
-        padding: 10
     },
     loadingContainer: {
         flex: 1,
