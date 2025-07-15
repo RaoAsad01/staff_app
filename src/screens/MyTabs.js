@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet,Text } from 'react-native';
 import HomeScreen from "./CheckIn";
 import Tickets from './Tickets';
 import ManualScan from "./ManualScan";
@@ -16,14 +16,16 @@ function MyTabs() {
   const route = useRoute();
   const eventInformation = route?.params?.eventInfo;
 
-  const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
+  const CustomTabBarButton = ({ children, accessibilityState, onPress, route }) => {
     const focused = accessibilityState?.selected || false;
+    const isCheckInTab = route?.name === 'Check In';
 
     return (
       <TouchableOpacity
         style={[
           styles.tabBarButton,
-          focused && styles.activeTabBarButton,
+          focused && isCheckInTab && styles.activeCheckInTabBarButton,
+          focused && !isCheckInTab && styles.activeTabBarButton,
         ]}
         onPress={onPress}
         activeOpacity={1}
@@ -33,38 +35,68 @@ function MyTabs() {
     );
   };
 
+  const CustomIcon = ({ route, focused, isCheckInActive }) => {
+    let IconComponent;
+
+    if (route.name === 'Dashboard') {
+      if (isCheckInActive && !focused) {
+        IconComponent = SvgIcons.dashboardInactiveIconWhite;
+      } else {
+        IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
+      }
+    } else if (route.name === 'Tickets') {
+      if (isCheckInActive && !focused) {
+        IconComponent = SvgIcons.ticketInactiveTabSvgWhite;
+      } else {
+        IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
+      }
+    } else if (route.name === 'Check In') {
+      IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.checkinInActiveTabSVG;
+    } else if (route.name === 'Manual Scan') {
+      if (isCheckInActive && !focused) {
+        IconComponent = SvgIcons.manualInActiveTabSVGWhite;
+      } else {
+        IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
+      }
+    } else if (route.name === 'Profile') {
+      if (isCheckInActive && !focused) {
+        IconComponent = SvgIcons.profileMenuIconWhite;
+      } else {
+        IconComponent = focused ? SvgIcons.profileIconActive : SvgIcons.profileIconInActive;
+      }
+    }
+
+    return <IconComponent width={24} height={24} fill="transparent" />;
+  };
+
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused }) => {
-          let IconComponent;
-
-          if (route.name === 'Dashboard') {
-            IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
-          } else if (route.name === 'Tickets') {
-            IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
-          } else if (route.name === 'Check In') {
-            IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.checkinInActiveTabSVG;
-          } else if (route.name === 'Manual Scan') {
-            IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
-          } else if (route.name === 'Profile') {
-            IconComponent = focused ? SvgIcons.profileActiveTab : SvgIcons.profileMenuIcon;
-          }
-
-          return <IconComponent width={24} height={24} fill="transparent" />;
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          marginTop: 8,
-        },
-        tabBarStyle: {
-          height: 66,
-          backgroundColor: '#F5F5F5',
-        },
-        tabBarActiveTintColor: color.btnBrown_AE6F28,
-        tabBarInactiveTintColor: color.brown_766F6A,
-        tabBarButton: (props) => <CustomTabBarButton {...props} />,
-      })}
+      screenOptions={({ route, navigation }) => {
+        const state = navigation.getState();
+        const currentRoute = state.routes[state.index];
+        const isCheckInActive = currentRoute?.name === 'Check In';
+        
+        return {
+          tabBarIcon: ({ focused }) => (
+            <CustomIcon 
+              route={route} 
+              focused={focused} 
+              isCheckInActive={isCheckInActive}
+            />
+          ),
+          tabBarLabelStyle: {
+            fontSize: 10,
+            marginTop: 8,
+          },
+          tabBarStyle: {
+            height: 66,
+            backgroundColor: isCheckInActive ? '#AE6F28' : '#F5F5F5',
+          },
+          tabBarActiveTintColor: isCheckInActive ? '#FFFFFF' : color.btnBrown_AE6F28,
+          tabBarInactiveTintColor: isCheckInActive ? '#FFFFFF' : color.brown_766F6A,
+          tabBarButton: (props) => <CustomTabBarButton {...props} route={route} />,
+        };
+      }}
       initialRouteName="Check In"
     >
       <Tab.Screen
@@ -92,7 +124,20 @@ function MyTabs() {
 
       <Tab.Screen
         name="Check In"
-        options={{ headerShown: false, unmountOnBlur: true }}
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true,
+          tabBarLabel: ({ focused }) => (
+            <Text style={{
+              color: focused ? '#FFFFFF' : '#766F6A',
+              fontSize: 10,
+              marginTop: 8,
+              fontWeight: focused ? 'bold' : 'normal',
+            }}>
+              Check In
+            </Text>
+          ),
+        }}
       >
         {() => <HomeScreen eventInfo={eventInformation} />}
       </Tab.Screen>
@@ -123,6 +168,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginVertical: 5,
     marginHorizontal: 6,
+    borderRadius: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  activeCheckInTabBarButton: {
+    backgroundColor: color.white_FFFFFF,
+    marginVertical: 5,
+    marginHorizontal: 6,
+    borderRadius: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
 });
 

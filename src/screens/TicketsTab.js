@@ -6,6 +6,7 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
+import NoResults from '../components/NoResults';
 
 const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const navigation = useNavigation()
@@ -188,6 +189,23 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
         </TouchableOpacity>
     );
 
+    const getNoResultsMessage = () => {
+        if (searchText) {
+            return "No Matching Results";
+        }
+        
+        switch (selectedTab) {
+            case 'All':
+                return "No Matching Results";
+            case 'Scanned':
+                return "No Matching Results";
+            case 'Unscanned':
+                return "No Matching Results";
+            default:
+                return "No Matching Results";
+        }
+    };
+
     const filteredTickets = filterTickets();
 
     const totalTickets = stats.total;
@@ -253,6 +271,9 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 data={filteredTickets}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
+                ListEmptyComponent={() => (
+                    <NoResults message={getNoResultsMessage()} />
+                )}
                 ListFooterComponent={() =>
                     isLoading ? (
                         <View style={styles.loadingContainer}>

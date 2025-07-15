@@ -15,6 +15,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
   // const eventUuid = route.params?.eventUuid;
   const [selectedTab, setSelectedTab] = useState('');
   const [email, setEmail] = useState('');
+  const [purchaseCode, setPurchaseCode] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
   const [isPOSModalVisible, setPOSModalVisible] = useState(false);
   const [transactionNumber, setTransactionNumber] = useState('');
@@ -27,6 +28,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
   const resetData = () => {
     setSelectedTab('');
     setEmail('');
+    setPurchaseCode('');
     setPaymentOption('');
     setPOSModalVisible(false);
     setTransactionNumber('');
@@ -46,7 +48,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
       // Fetch pricing categories
       const pricingStatsResponse = await ticketService.fetchTicketPricingStats();
       if (pricingStatsResponse?.data) {
-        const categories = pricingStatsResponse.data.map(item => item.title);
+        const categories = pricingStatsResponse.data.map(item => item.alias);
         setPricingCategories(categories);
         if (categories.length > 0) {
           setSelectedTab(categories[0]);
@@ -65,8 +67,8 @@ const BoxOfficeTab = ({ eventInfo }) => {
 
       // Process pricing type options into ticket categories
       const categories = pricingData.pricing_type_options.reduce((acc, option) => {
-        const categoryTitle = option.type_obj.title;
-        const existingCategory = acc.find(category => category.title === categoryTitle);
+        const categoryTitle = option.type_obj.alias;
+        const existingCategory = acc.find(category => category.alias === categoryTitle);
 
         const ticket = {
           name: option.description,
@@ -459,6 +461,20 @@ const BoxOfficeTab = ({ eventInfo }) => {
               {touched.email && errors.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
               )}
+
+              {selectedTab === 'Members' && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Purchase Code"
+                  placeholderTextColor={color.brown_766F6A}
+                  onChangeText={(text) => {
+                    setPurchaseCode(text);
+                  }}
+                  value={purchaseCode}
+                  keyboardType="default"
+                  selectionColor={color.selectField_CEBCA0}
+                />
+              )}
             </View>
           )}
         </Formik>
@@ -466,7 +482,7 @@ const BoxOfficeTab = ({ eventInfo }) => {
         <View style={styles.Paylabel}>
           <Text>Pay With</Text>
         </View>
-      
+
         <View style={styles.paymentOptions}>
           {/* Cash Button */}
           <TouchableOpacity
@@ -536,16 +552,6 @@ const BoxOfficeTab = ({ eventInfo }) => {
             </Text>
           </TouchableOpacity>
         </View>
-
-
-        {/* <TouchableOpacity style={[styles.paymentOptioncard, paymentOption === 'Card/Mobile Money' && { borderColor: '#AE6F28' }]} onPress={() => setPaymentOption('Card/Mobile Money')}>
-          {paymentOption === 'Card/Mobile Money' ? (
-            <SvgIcons.mobMoneyIconActive width={24} height={24} />
-          ) : (
-            <SvgIcons.mobMoneyIconInActive width={24} height={24} />
-          )}
-          <Text style={[styles.paymentOptionText, paymentOption === 'Card/Mobile Money' && { color: '#5A2F0E' }]}>Card/Mobile Money</Text>
-        </TouchableOpacity> */}
         {paymentOption && paymentOption !== 'P.O.S' && (
           <TouchableOpacity
             style={[
@@ -608,6 +614,8 @@ const styles = StyleSheet.create({
     borderColor: '#F7E4B680',
     marginHorizontal: 5,
     backgroundColor: '#F7E4B680',
+    width: "115",
+    alignItems: 'center'
   },
   tabButtonText: {
     color: color.black_544B45,
@@ -615,6 +623,7 @@ const styles = StyleSheet.create({
   selectedTabButton: {
     backgroundColor: color.btnBrown_AE6F28,
     borderColor: color.btnBrown_AE6F28,
+    width: "115",
   },
   selectedTabButtonText: {
     color: color.white_FFFFFF,

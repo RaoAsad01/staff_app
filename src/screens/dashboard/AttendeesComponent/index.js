@@ -6,6 +6,7 @@ import SvgIcons from '../../../../components/SvgIcons';
 import { ticketService } from '../../../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
+import NoResults from '../../../components/NoResults';
 
 const AttendeesComponent = ({ eventInfo }) => {
   const navigation = useNavigation();
@@ -147,6 +148,25 @@ const AttendeesComponent = ({ eventInfo }) => {
     setSelectedFilter(null);
   };
 
+  const getNoResultsMessage = () => {
+    if (searchText) {
+      return "No Matching Results";
+    }
+    
+    switch (activeTab) {
+      case 'All':
+        return "No Matching Results";
+      case 'Checked In':
+        return "No Matching Results";
+      case 'No Show':
+        return "No Matching Results";
+      default:
+        return "No Matching Results";
+    }
+  };
+
+  const filteredTickets = filterTickets();
+
   return (
     <ScrollView 
       style={styles.container}
@@ -198,52 +218,56 @@ const AttendeesComponent = ({ eventInfo }) => {
         </TouchableOpacity>
       </View>
 
-      {filterTickets().map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.card}
-          onPress={() => handleTicketPress(item)}
-        >
-          <View style={styles.cardContent}>
-            <View>
-              <Text style={styles.label}>Name</Text>
-              <Text style={styles.value}>{item.ticketHolder}</Text>
-              <Text style={styles.label}>Ticket ID</Text>
-              <Text style={styles.value}>#{item.id}</Text>
-              <Text style={styles.label}>{item.type}</Text>
-              <Text style={styles.value}>{item.currency} {item.price}</Text>
-            </View>
-            <View style={styles.qrCode}>
-              {item.qrCodeUrl && (
-                <QRCode
-                  value={item.qrCodeUrl}
-                  size={100}
-                  style={{ width: '100%', height: '100%' }}
-                  logoSize={30}
-                  logoBackgroundColor="transparent"
-                  quietZone={5}
-                />
-              )}
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.badge,
-              item.status === 'Checked In' ? styles.checkInBadge : styles.noShowBadge,
-            ]}
+      {filteredTickets.length > 0 ? (
+        filteredTickets.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.card}
+            onPress={() => handleTicketPress(item)}
           >
-            <Text
+            <View style={styles.cardContent}>
+              <View>
+                <Text style={styles.label}>Name</Text>
+                <Text style={styles.value}>{item.ticketHolder}</Text>
+                <Text style={styles.label}>Ticket ID</Text>
+                <Text style={styles.value}>#{item.id}</Text>
+                <Text style={styles.label}>{item.type}</Text>
+                <Text style={styles.value}>{item.currency} {item.price}</Text>
+              </View>
+              <View style={styles.qrCode}>
+                {item.qrCodeUrl && (
+                  <QRCode
+                    value={item.qrCodeUrl}
+                    size={100}
+                    style={{ width: '100%', height: '100%' }}
+                    logoSize={30}
+                    logoBackgroundColor="transparent"
+                    quietZone={5}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View
               style={[
-                styles.badgeText,
-                item.status === 'Checked In' ? styles.checkInText : styles.noShowText,
+                styles.badge,
+                item.status === 'Checked In' ? styles.checkInBadge : styles.noShowBadge,
               ]}
             >
-              {item.status}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+              <Text
+                style={[
+                  styles.badgeText,
+                  item.status === 'Checked In' ? styles.checkInText : styles.noShowText,
+                ]}
+              >
+                {item.status}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <NoResults message={getNoResultsMessage()} />
+      )}
 
       {isLoading && (
         <View style={styles.loadingContainer}>

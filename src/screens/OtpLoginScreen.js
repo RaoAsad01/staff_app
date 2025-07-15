@@ -108,6 +108,7 @@ const OtpLoginScreen = ({ route }) => {
                 name: 'LoggedIn',
                 params: {
                   eventInfo: {
+                    staff_name: eventInfoData?.data?.staff_name,
                     event_title: eventInfoData?.data?.event_title,
                     cityName: eventInfoData?.data?.location?.city,
                     date: eventInfoData?.data?.start_date,
@@ -210,7 +211,7 @@ const OtpLoginScreen = ({ route }) => {
             <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text> */}
 
             <View style={styles.container}>
-              <Typography 
+              <Typography
                 weight="500"
                 size={20}
                 color={color.grey_DEDCDC}
@@ -242,14 +243,14 @@ const OtpLoginScreen = ({ route }) => {
               <View style={styles.rowContainer}>
                 {otpResendTime > 0 ? (
                   <View style={styles.timerRow}>
-                    <Typography 
+                    <Typography
                       weight="400"
                       size={14}
                       color={color.grey_E0E0E0}
                     >
                       Request code again in{' '}
                     </Typography>
-                    <Typography 
+                    <Typography
                       weight="400"
                       size={14}
                       color={color.btnBrown_AE6F28}
@@ -260,7 +261,7 @@ const OtpLoginScreen = ({ route }) => {
                 ) : (
                   <>
                     <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
-                      <Typography 
+                      <Typography
                         weight="600"
                         size={16}
                         color={color.grey_DEDCDC}
@@ -269,7 +270,7 @@ const OtpLoginScreen = ({ route }) => {
                       </Typography>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
-                      <Typography 
+                      <Typography
                         weight="600"
                         size={16}
                         color={color.grey_DEDCDC}
@@ -292,34 +293,34 @@ const OtpLoginScreen = ({ route }) => {
                 </View>
               )}
             </View>
-            
+
             {!isKeyboardVisible && (
-            <>
-              <View style={styles.middleSection}>
-                <View style={styles.logoContainer}>
-                  <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
-                  <Typography 
-                    weight="700"
-                    size={20}
+              <>
+                <View style={styles.middleSection}>
+                  <View style={styles.logoContainer}>
+                    <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
+                    <Typography
+                      weight="700"
+                      size={20}
+                      color={color.grey_DEDCDC}
+                    >
+                      Hexallo
+                    </Typography>
+                  </View>
+                  <Typography
+                    weight="500"
+                    size={16}
                     color={color.grey_DEDCDC}
+                    style={styles.subtitle}
                   >
-                    Hexallo
+                    Fast . Secure . Seamless
                   </Typography>
                 </View>
-                <Typography 
-                  weight="500"
-                  size={16}
-                  color={color.grey_DEDCDC}
-                  style={styles.subtitle}
-                >
-                  Fast . Secure . Seamless
-                </Typography>
-              </View>
-              <View style={styles.bottomtextbg}>
-                <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
-              </View>
-            </>
-          )}
+                <View style={styles.bottomtextbg}>
+                  <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
+                </View>
+              </>
+            )}
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -462,7 +463,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     borderWidth: 2,
-    gap:10,
+    gap: 10,
   },
   errorIconCircle: {
     width: 30,

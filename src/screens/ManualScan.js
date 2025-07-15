@@ -5,6 +5,7 @@ import { color } from '../color/color';
 import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
+import NoResults from '../components/NoResults';
 
 const ManualScan = ({ eventInfo }) => {
   const navigation = useNavigation();
@@ -52,6 +53,13 @@ const ManualScan = ({ eventInfo }) => {
         order.user_full_name?.toLowerCase().includes(searchText.toLowerCase())
       // You might want to add more fields to search by if your API returns them
     );
+  };
+
+  const getNoResultsMessage = () => {
+    if (searchText) {
+      return "No Matching Results";
+    }
+    return "No Matching Results";
   };
 
   const filteredTickets = filterTickets();
@@ -122,7 +130,9 @@ const ManualScan = ({ eventInfo }) => {
           renderItem={renderItem}
           keyExtractor={(item) => item.order_number?.toString() || Math.random().toString()} // Use order_number as key
           contentContainerStyle={styles.flatListContent}
-          ListEmptyComponent={<Text style={styles.emptyText}>No tickets found</Text>}
+          ListEmptyComponent={() => (
+            <NoResults message={getNoResultsMessage()} />
+          )}
         />
       </View>
     </View>

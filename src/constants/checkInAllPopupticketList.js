@@ -30,29 +30,28 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
     };
 
     const handleItemPress = (item) => {
-        if (item.status === 'SCANNED') {
-            const scanResponse = {
-                message: item.message || 'Ticket Scanned',
-                ticket_holder: item.ticket_holder || item.ticketHolder || 'N/A',
-                ticket: item.ticket_type || item.type,
-                currency: item.currency,
-                ticket_price: item.ticket_price || item.price,
-                last_scan: item.last_scan || item.last_scanned_on,
-                scanned_by: item.scanned_by || item.lastScannedByName || 'N/A',
-                ticket_number: item.ticket_number,
-                scan_count: item.scan_count || item.scanCount || 0,
-                note: item.note || 'No note added',
-                event_uuid: item.event_uuid || item.eventUuid,
-                scanned_by_email: item.scanned_by_email || 'N/A',
-                ticket_holder_email: item.ticket_holder_email || 'N/A',
-                status: 'SCANNED'
-            };
+        // Navigate to TicketScanned for all tickets when clicking on container
+        const scanResponse = {
+            message: item.status === 'SCANNED' ? 'Ticket Scanned' : 'Ticket Unscanned',
+            ticket_holder: item.ticket_holder || item.ticketHolder || 'N/A',
+            ticket: item.ticket_type || item.type,
+            currency: item.currency,
+            ticket_price: item.ticket_price || item.price,
+            last_scan: item.last_scan || item.last_scanned_on,
+            scanned_by: item.scanned_by || item.lastScannedByName || 'N/A',
+            ticket_number: item.ticket_number,
+            scan_count: item.scan_count || item.scanCount || 0,
+            note: item.note || 'No note added',
+            event_uuid: item.event_uuid || item.eventUuid,
+            scanned_by_email: item.scanned_by_email || 'N/A',
+            ticket_holder_email: item.ticket_holder_email || 'N/A',
+            status: item.status || 'UNSCANNED'
+        };
 
-            navigation.navigate('TicketScanned', {
-                scanResponse,
-                eventInfo: eventInfo,
-            });
-        }
+        navigation.navigate('TicketScanned', {
+            scanResponse,
+            eventInfo: eventInfo,
+        });
     };
 
     const renderItem = ({ item }) => (

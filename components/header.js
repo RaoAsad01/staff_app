@@ -17,6 +17,18 @@ const Header = ({ eventInfo }) => {
     }
   }, []);
 
+  const formatStaffName = (fullName) => {
+    if (!fullName) return 'A Moeez';
+    
+    const nameParts = fullName.trim().split(' ');
+    if (nameParts.length >= 2) {
+      const firstName = nameParts[0];
+      const lastName = nameParts[nameParts.length - 1];
+      return `${firstName.charAt(0)} ${lastName}`;
+    }
+    return fullName;
+  };
+
   const handleCountPress = () => {
     setTabKey(prevKey => prevKey + 1);
     navigation.navigate('LoggedIn', {
@@ -49,7 +61,7 @@ const Header = ({ eventInfo }) => {
           <View style={styles.profileId}>
             <View style={styles.userSection}>
               <SvgIcons.userSvg width={28} height={28} fill="transparent" />
-              <Text style={styles.userId}>ID: {eventInfo?.userId || '87621237467'}</Text>
+              <Text style={styles.userId}>ID: {formatStaffName(eventInfo?.staff_name)}</Text>
             </View>
             <View style={styles.scanSection}>
               <Text style={styles.scan}>Scans</Text>

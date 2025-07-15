@@ -19,14 +19,14 @@ import MobMoneyIconInActive from '../assets/svgs/mobmoney_icon_inactive.svg';
 import SearchIcon from '../assets/svgs/search_icon.svg';
 import QRIcon from '../assets/svgs/qr_icon.svg';
 import DashboardMenuIcon from '../assets//svgs/dashboard.svg';
-import ProfileMenuIcon from '../assets//svgs/profile-icon.svg';
+import ProfileIconActive from '../assets//svgs/profile_icon_active.svg';
 import LogoutMenuIcon from '../assets//svgs/logout-icon.svg';
 import HomeDrawerIcon from '../assets/svgs/home-drawer-icon.svg';
 import FilterIcon from '../assets/svgs/filter-icon.svg';
 import TickIcon from '../assets/svgs/tick-icon.svg';
 import DashboardInactiveIcon from '../assets/svgs/dashboard_inactive_icon.svg';
 import DashboardActiveIcon from '../assets/svgs/dashboard_active_icon.svg'; 
-import ProfileActiveTab from '../assets/svgs/profile_active_tab.svg';
+import ProfileIconInActive from '../assets/svgs/profile_icon_inactive.svg';
 import BackArrow from '../assets/svgs/back_arrow.svg';
 import RemoveIcon from '../assets/svgs/remove_icon.svg';
 import AddIcon from '../assets/svgs/add_icon.svg';
@@ -35,6 +35,11 @@ import ProfileCameraIcon from '../assets/svgs/profile_camera_icon.svg';
 import SplashQrImg from '../assets/svgs/splash_qr_img.svg';
 import ArrowRight from '../assets/svgs/right-arrow.svg';
 import CrossIconRed from '../assets/svgs/cross_icon_red.svg';
+import DashboardInactiveIconWhite from '../assets/svgs/dashboard_inactive_icon_white.svg';
+import TicketInActiveTabSVGWhite from '../assets/svgs/ticket_inactive_tab_white.svg';
+import ManualInActiveTabSVGWhite from '../assets/svgs/manual_inactive_tab_white.svg';
+import ProfileMenuIconWhite from '../assets/svgs/profile-icon-white.svg';
+import NoResultsIcon from '../assets/svgs/no-results-icon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -58,14 +63,14 @@ export default {
     searchIcon: SearchIcon,
     qRIcon: QRIcon,
     dashboardMenuIcon: DashboardMenuIcon,
-    profileMenuIcon: ProfileMenuIcon,
+    profileIconActive: ProfileIconActive,
     homeDrawerIcon: HomeDrawerIcon,
     logoutMenuIcon: LogoutMenuIcon,
     filterIcon: FilterIcon,
     tickIcon: TickIcon,
     dashboardInactiveIcon: DashboardInactiveIcon,
     dashboardActiveIcon: DashboardActiveIcon,
-    profileActiveTab: ProfileActiveTab,
+    profileIconInActive: ProfileIconInActive,
     backArrow: BackArrow,
     removeIcon: RemoveIcon,
     addIcon: AddIcon,
@@ -74,4 +79,9 @@ export default {
     splashQrImg: SplashQrImg,
     ArrowRight: ArrowRight,
     crossIconRed: CrossIconRed,
+    dashboardInactiveIconWhite: DashboardInactiveIconWhite,
+    ticketInactiveTabSvgWhite: TicketInActiveTabSVGWhite,
+    manualInActiveTabSVGWhite: ManualInActiveTabSVGWhite,
+    profileMenuIconWhite: ProfileMenuIconWhite,
+    noResultsIcon: NoResultsIcon,
 };
