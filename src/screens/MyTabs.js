@@ -1,12 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, TouchableOpacity, StyleSheet,Text } from 'react-native';
-import HomeScreen from "./CheckIn";
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import HomeScreen from './CheckIn';
 import Tickets from './Tickets';
-import ManualScan from "./ManualScan";
+import ManualScan from './ManualScan';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
-import DashboardScreen from "../screens/dashboard";
+import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
 
@@ -16,17 +16,10 @@ function MyTabs() {
   const route = useRoute();
   const eventInformation = route?.params?.eventInfo;
 
-  const CustomTabBarButton = ({ children, accessibilityState, onPress, route }) => {
-    const focused = accessibilityState?.selected || false;
-    const isCheckInTab = route?.name === 'Check In';
-
+  const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     return (
       <TouchableOpacity
-        style={[
-          styles.tabBarButton,
-          focused && isCheckInTab && styles.activeCheckInTabBarButton,
-          focused && !isCheckInTab && styles.activeTabBarButton,
-        ]}
+        style={styles.tabBarButton}
         onPress={onPress}
         activeOpacity={1}
       >
@@ -75,26 +68,58 @@ function MyTabs() {
         const state = navigation.getState();
         const currentRoute = state.routes[state.index];
         const isCheckInActive = currentRoute?.name === 'Check In';
-        
+
         return {
-          tabBarIcon: ({ focused }) => (
-            <CustomIcon 
-              route={route} 
-              focused={focused} 
-              isCheckInActive={isCheckInActive}
-            />
-          ),
-          tabBarLabelStyle: {
-            fontSize: 10,
-            marginTop: 8,
+          tabBarIcon: ({ focused }) => {
+            const icon = (
+              <CustomIcon
+                route={route}
+                focused={focused}
+                isCheckInActive={isCheckInActive}
+              />
+            );
+
+            const label = (
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  styles.tabBarLabel,
+                  {
+                    color: focused
+                      ? '#AE6F28'
+                      : isCheckInActive
+                        ? '#FFFFFF'
+                        : color.brown_766F6A,
+                    fontWeight: focused ? 'bold' : 'normal',
+                  },
+                ]}
+              >
+                {route.name}
+              </Text>
+            );
+
+            return (
+              <View
+                style={[
+                  styles.iconLabelWrapper,
+                  focused && styles.focusedTabWrapper,
+                ]}
+              >
+                {icon}
+                {label}
+              </View>
+            );
           },
+
           tabBarStyle: {
             height: 66,
             backgroundColor: isCheckInActive ? '#AE6F28' : '#F5F5F5',
           },
-          tabBarActiveTintColor: isCheckInActive ? '#FFFFFF' : color.btnBrown_AE6F28,
-          tabBarInactiveTintColor: isCheckInActive ? '#FFFFFF' : color.brown_766F6A,
-          tabBarButton: (props) => <CustomTabBarButton {...props} route={route} />,
+          tabBarShowLabel: false,
+          tabBarButton: (props) => (
+            <CustomTabBarButton {...props} route={route} />
+          ),
         };
       }}
       initialRouteName="Check In"
@@ -114,7 +139,12 @@ function MyTabs() {
             e.preventDefault();
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Tickets', params: { fromTab: true, eventInfo: eventInformation } }],
+              routes: [
+                {
+                  name: 'Tickets',
+                  params: { fromTab: true, eventInfo: eventInformation },
+                },
+              ],
             });
           },
         })}
@@ -124,19 +154,9 @@ function MyTabs() {
 
       <Tab.Screen
         name="Check In"
-        options={{ 
-          headerShown: false, 
+        options={{
+          headerShown: false,
           unmountOnBlur: true,
-          tabBarLabel: ({ focused }) => (
-            <Text style={{
-              color: focused ? '#FFFFFF' : '#766F6A',
-              fontSize: 10,
-              marginTop: 8,
-              fontWeight: focused ? 'bold' : 'normal',
-            }}>
-              Check In
-            </Text>
-          ),
         }}
       >
         {() => <HomeScreen eventInfo={eventInformation} />}
@@ -164,21 +184,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  activeTabBarButton: {
-    backgroundColor: 'white',
-    marginVertical: 5,
-    marginHorizontal: 6,
-    borderRadius: 2,
+
+  iconLabelWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 72,
     paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
+    borderRadius: 5,
   },
-  activeCheckInTabBarButton: {
-    backgroundColor: color.white_FFFFFF,
-    marginVertical: 5,
+
+  focusedTabWrapper: {
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 6,
-    borderRadius: 2,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    marginVertical: -10
+  },
+
+  tabBarLabel: {
+    fontSize: 10,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
 
