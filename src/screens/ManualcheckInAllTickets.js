@@ -6,6 +6,7 @@ import SvgIcons from '../../components/SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ticketService } from '../api/apiService'; // Import your ticket service
 import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct import path
+import SuccessPopup from '../constants/SuccessPopup';
 
 const ManualCheckInAllTickets = () => {
     const { orderNumber, eventUuid, total, eventInfo } = useRoute().params;
@@ -16,6 +17,7 @@ const ManualCheckInAllTickets = () => {
     const [userDetails, setUserDetails] = useState(null);
     const [isCheckingIn, setIsCheckingIn] = useState(false); // State for loading during check-in
     const [checkInSuccess, setCheckInSuccess] = useState(false); // State to show success
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State to control success popup
 
     useEffect(() => {
         const fetchTicketDetails = async () => {
@@ -77,6 +79,7 @@ const ManualCheckInAllTickets = () => {
                 if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
                     console.log('Check-in successful according to response.');
                     setCheckInSuccess(true);
+                    setShowSuccessPopup(true);
                     setTicketDetails([{ ...ticket, checkin_status: 'Scanned' }]);
                 } else {
                     console.log('Check-in failed according to response. Status:', response?.data?.status);
@@ -101,6 +104,10 @@ const ManualCheckInAllTickets = () => {
                     : ticket
             )
         );
+    };
+
+    const handleCloseSuccessPopup = () => {
+        setShowSuccessPopup(false);
     };
 
     if (loading) {
@@ -147,7 +154,7 @@ const ManualCheckInAllTickets = () => {
                 <View style={styles.popUp}>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.userEmail}>{userDetails?.email || 'N/A'}</Text>
+                    <Text style={styles.userEmail}>{userDetails?.email}</Text>
 
                     {total === 1 && (
                         <TouchableOpacity

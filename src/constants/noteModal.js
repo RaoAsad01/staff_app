@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import { color } from '../color/color';
+import SvgIcons from '../../components/SvgIcons';
 
 const NoteModal = ({ visible, onAddNote, onCancel, initialNote,scannedData }) => {
     const [noteText, setNoteText] = useState('');
@@ -34,6 +35,9 @@ const NoteModal = ({ visible, onAddNote, onCancel, initialNote,scannedData }) =>
         >
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
+                    <TouchableOpacity style={styles.closeButton} onPress={onCancel}>
+                        <SvgIcons.CrossIconBrownbg width={24} height={24} />
+                    </TouchableOpacity>
                     <Text style={styles.modalText}>Add Note</Text>
                     <TextInput
                         style={[styles.noteInput, { textAlignVertical: 'top' }]}
@@ -73,7 +77,8 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.25,
         shadowRadius: 4,
-        elevation: 5
+        elevation: 5,
+        position: 'relative',
     },
     button: {
         backgroundColor: color.btnBrown_AE6F28,
@@ -111,6 +116,12 @@ const styles = StyleSheet.create({
         minHeight: 100,
         maxHeight: 100,
         lineHeight: 20
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 10,
+        right: 20,
+        zIndex: 1,
     },
 });
 

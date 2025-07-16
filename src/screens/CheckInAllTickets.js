@@ -6,6 +6,7 @@ import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
 import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import { useNavigation } from '@react-navigation/native';
+import SuccessPopup from '../constants/SuccessPopup';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo } = route.params;
@@ -15,6 +16,7 @@ const CheckInAllTickets = ({ route }) => {
     const [checkInSuccess, setCheckInSuccess] = useState(false);
     const navigation = useNavigation();
     const [error, setError] = useState(null);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const extractResponse = tickets[0];
     const code = extractResponse?.code;
     const eventUuid = extractResponse?.event;
@@ -29,6 +31,7 @@ const CheckInAllTickets = ({ route }) => {
                 const response = await ticketService.manualDetailCheckin(eventUuid, code);
                 if (response?.data?.status === 'SCANNED') {
                     setCheckInSuccess(true);
+                    setShowSuccessPopup(true);
                 } else {
                     Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
                 }
@@ -51,6 +54,7 @@ const CheckInAllTickets = ({ route }) => {
 
                 if (response?.success && response?.status === 200) {
                     setCheckInSuccess(true);
+                    setShowSuccessPopup(true);
                     // Update all tickets in the list to show as scanned using state
                     const updatedTickets = tickets.map(ticket => ({
                         ...ticket,
@@ -58,7 +62,6 @@ const CheckInAllTickets = ({ route }) => {
                         status: 'SCANNED'
                     }));
                     setTickets(updatedTickets);
-                    Alert.alert('Success', response?.data?.message || 'Tickets checked in successfully');
                 } else {
                     Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in all tickets.');
                 }
@@ -80,6 +83,10 @@ const CheckInAllTickets = ({ route }) => {
                     : ticket
             )
         );
+    };
+
+    const handleCloseSuccessPopup = () => {
+        setShowSuccessPopup(false);
     };
 
     return (
@@ -135,6 +142,13 @@ const CheckInAllTickets = ({ route }) => {
                     </View>
                 )}
             </View>
+            
+            <SuccessPopup 
+                visible={showSuccessPopup}
+                onClose={handleCloseSuccessPopup}
+                title="Check-In Successful"
+                subtitle={totalTickets === 1 ? "Ticket checked in successfully" : "Tickets checked in successfully"}
+            />
         </SafeAreaView>
     );
 }

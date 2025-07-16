@@ -40,6 +40,7 @@ import TicketInActiveTabSVGWhite from '../assets/svgs/ticket_inactive_tab_white.
 import ManualInActiveTabSVGWhite from '../assets/svgs/manual_inactive_tab_white.svg';
 import ProfileMenuIconWhite from '../assets/svgs/profile-icon-white.svg';
 import NoResultsIcon from '../assets/svgs/no-results-icon.svg';
+import CrossIconBrownbg from '../assets/svgs/cross_icon_brown_bg.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -84,4 +85,5 @@ export default {
     manualInActiveTabSVGWhite: ManualInActiveTabSVGWhite,
     profileMenuIconWhite: ProfileMenuIconWhite,
     noResultsIcon: NoResultsIcon,
+    CrossIconBrownbg: CrossIconBrownbg,
 };

@@ -2,10 +2,13 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert } from 'react
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { color } from '../color/color';
 import { ticketService } from '../api/apiService';
+import SuccessPopup from './SuccessPopup';
+import { useState } from 'react';
 
 const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
     const { eventInfo } = useRoute().params;
     const navigation = useNavigation();
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const handleStatusChange = async (ticketToCheckIn) => {
         console.log("Check-in ticket data:", ticketToCheckIn)
@@ -19,7 +22,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
                 if (onTicketStatusChange) {
                     onTicketStatusChange(ticketToCheckIn.uuid, 'SCANNED');
                 }
-                Alert.alert('Success', 'Ticket checked in successfully');
+                setShowSuccessPopup(true);
             } else {
                 Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
             }
@@ -27,6 +30,10 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
             console.error('Check-in error:', error);
             Alert.alert('Error', error.message || 'Something went wrong.');
         }
+    };
+
+    const handleCloseSuccessPopup = () => {
+        setShowSuccessPopup(false);
     };
 
     const handleItemPress = (item) => {
@@ -101,11 +108,20 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
     );
 
     return (
-        <FlatList
-            data={ticketslist}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.uuid}
-        />
+        <>
+            <FlatList
+                data={ticketslist}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.uuid}
+            />
+            
+            <SuccessPopup 
+                visible={showSuccessPopup}
+                onClose={handleCloseSuccessPopup}
+                title="Check-In Successful"
+                subtitle="Ticket checked in successfully"
+            />
+        </>
     );
 };
 
