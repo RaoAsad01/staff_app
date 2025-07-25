@@ -66,10 +66,10 @@ const ScanListComponent = ({ eventInfo }) => {
         if (searchText) {
             filteredTickets = filteredTickets.filter(
                 (ticket) =>
-                    ticket.id.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase())
+                    (ticket.id && ticket.id.toLowerCase().includes(searchText.toLowerCase())) ||
+                    (ticket.type && ticket.type.toLowerCase().includes(searchText.toLowerCase())) ||
+                    (ticket.ticketHolder && ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase())) ||
+                    (ticket.userfirstname && ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase()))
             );
         }
 
@@ -155,7 +155,7 @@ const ScanListComponent = ({ eventInfo }) => {
                         <View style={styles.cardContent}>
                             <View>
                                 <Text style={styles.label}>Name</Text>
-                                <Text style={styles.value}>{item.userfirstname}</Text>
+                                <Text style={styles.value}>{item.userfirstname || 'N/A'}</Text>
                                 <Text style={styles.label}>Ticket ID</Text>
                                 <Text style={styles.value}>#{item.id}</Text>
                                 <Text style={styles.label}>{item.type}</Text>

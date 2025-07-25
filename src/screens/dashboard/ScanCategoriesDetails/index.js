@@ -145,6 +145,7 @@ const ScanCategoriesDetails = ({ stats }) => {
 
   return (
     <View style={styles.card}>
+      <Text style={styles.title}>Scan Categories Details</Text>
       {listData.map((item, idx) => renderItem(item, idx))}
     </View>
   );
