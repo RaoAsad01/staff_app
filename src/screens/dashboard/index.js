@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView } from 'react-native';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
@@ -15,10 +15,12 @@ import Typography, { Heading5, Body1, Label } from '../../components/Typography'
 import AvailableTicketsCard from './AvailableTicketsCard';
 import ScanAnalytics from './ScanAnalytics';
 import ScanCategories from './ScanCategories';
+import ScanCategoriesDetails from './ScanCategoriesDetails';
 import ScanListComponent from './ScanListComponent';
 
 const DashboardScreen = ({ eventInfo }) => {
   const navigation = useNavigation();
+  const scrollViewRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -62,7 +64,13 @@ const DashboardScreen = ({ eventInfo }) => {
   };
 
   const handleAvailableTicketsPress = () => {
+    setSelectedSaleScanTab('Sales');
     setSelectedTab('Available Tickets');
+    
+    // Add a small delay to ensure the content is rendered before scrolling
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   const handleSaleScanTabPress = (tab) => {
@@ -91,11 +99,11 @@ const DashboardScreen = ({ eventInfo }) => {
       const types = Object.keys(byCategory || {});
       typeRows = types.map(type => {
         const categoryData = byCategory[type];
-        const checkedIn = categoryData?.checkedins || 0;
-        const total = categoryData?.total || 0;
+        const checkedIn = categoryData?.scanned_tickets || 0;
+        const total = categoryData?.total_tickets || 0;
 
         return {
-          label: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize first letter
+          label: type,
           checkedIn: checkedIn,
           total: total,
           percentage: total ? Math.round((checkedIn / total) * 100) : 0
@@ -139,7 +147,7 @@ const DashboardScreen = ({ eventInfo }) => {
         const total = categoryData?.total || 0;
 
         return {
-          label: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize first letter
+          label: type,
           checkedIn: sold,
           total: total,
           percentage: total ? Math.round((sold / total) * 100) : 0
@@ -160,7 +168,7 @@ const DashboardScreen = ({ eventInfo }) => {
 
   // Add function to get available tickets data
   const getAvailableTicketsData = () => {
-    if (!dashboardStats?.data?.scan_categories) {
+    if (!dashboardStats?.data?.available_tickets) {
       return [{
         label: "Available Tickets",
         checkedIn: 0,
@@ -169,50 +177,42 @@ const DashboardScreen = ({ eventInfo }) => {
       }];
     }
 
-    const scanCategories = dashboardStats?.data?.scan_categories;
-    const totalQuantity = scanCategories?.total || 0;
-    const byCategory = scanCategories?.by_category;
-    const ticketWise = scanCategories?.ticket_wise;
+    const availableTickets = dashboardStats?.data?.available_tickets;
+    const byCategory = availableTickets;
     let typeRows = [];
 
     if (byCategory) {
       const types = Object.keys(byCategory || {});
       typeRows = types.map(type => {
-        const categoryTotal = byCategory[type] || 0;
+        const categoryData = byCategory[type];
+        const available = categoryData?.available_tickets || 0;
+        const total = categoryData?.total_tickets || 0;
 
         // Create subItems from the ticket_wise data
         const subItems = [];
+        const ticketWise = categoryData;
         if (ticketWise) {
-          // Map the category names to ticket_wise keys
-          let ticketWiseKey = type;
-          if (type === 'early_bird') {
-            ticketWiseKey = 'early bird';
-          } else if (type === 'member') {
-            ticketWiseKey = 'members';
-          } else if (type === 'standard') {
-            ticketWiseKey = 'standard';
-          }
-
-          if (ticketWise[ticketWiseKey]) {
-            const ticketData = ticketWise[ticketWiseKey];
-            Object.keys(ticketData).forEach(ticketName => {
-              const ticketInfo = ticketData[ticketName];
+          Object.keys(ticketWise).forEach(ticketName => {
+            if (ticketName !== 'total_tickets' && ticketName !== 'available_tickets') {
+              const ticketInfo = ticketWise[ticketName];
+              const ticketAvailable = ticketInfo.available || 0;
+              const ticketTotal = ticketInfo.total || 0;
               subItems.push({
                 label: ticketName,
-                checkedIn: ticketInfo.sold || 0,
-                total: ticketInfo.total || 0,
-                percentage: ticketInfo.total > 0 ? Math.round((ticketInfo.sold / ticketInfo.total) * 100) : 0,
+                checkedIn: ticketAvailable,
+                total: ticketTotal,
+                percentage: ticketTotal > 0 ? Math.round((ticketAvailable / ticketTotal) * 100) : 0,
                 subItems: []
               });
-            });
-          }
+            }
+          });
         }
 
         return {
-          label: type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' '), // Capitalize and replace underscore
-          checkedIn: categoryTotal,
-          total: categoryTotal,
-          percentage: totalQuantity > 0 ? Math.round((categoryTotal / totalQuantity) * 100) : 0,
+          label: type,
+          checkedIn: available,
+          total: total,
+          percentage: total > 0 ? Math.round((available / total) * 100) : 0,
           subItems: subItems
         };
       });
@@ -342,6 +342,7 @@ const DashboardScreen = ({ eventInfo }) => {
             dataType="checked in"
           />
           <ScanCategories stats={dashboardStats} />
+          <ScanCategoriesDetails stats={dashboardStats} />
           <ScanListComponent eventInfo={eventInfo} />
         </>
       );
@@ -450,7 +451,7 @@ const DashboardScreen = ({ eventInfo }) => {
           <Body1 style={styles.time}>{eventInfo?.time || '7:00 PM'}</Body1>
         </View>
       </SafeAreaView>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
         <View style={styles.wrapper}>
           {/* <Heading5 style={styles.labelDashboard}>Dashboard</Heading5> */}
           {loading ? (

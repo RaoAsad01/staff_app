@@ -10,37 +10,48 @@ const ScanCategories = ({ stats }) => {
     const total = scanCategoriesData?.total || 0;
     const byCategory = scanCategoriesData?.by_category || {};
 
-    // Map categories to colors
-    const categoryColors = {
-        "Standard": "#AE6F28",
-        "VIP": "#87807C",
-        "Member": "#EDB58A",
-        "Early Bird": "#CEBCA0"
+    // Default colors for known categories
+    const defaultCategoryColors = {
+        "Early Bird": "#AE6F28",
+        "VIP Ticket": "#87807C",
+        "Members": "#EDB58A"
+    };
+
+    // Generate colors for any new categories
+    const generateColorForCategory = (categoryName, index) => {
+        if (defaultCategoryColors[categoryName]) {
+            return defaultCategoryColors[categoryName];
+        }
+        
+        // Generate a color for new categories
+        const colors = ["#CEBCA0", "#D4A574", "#B8860B", "#CD853F", "#D2691E", "#8B4513"];
+        return colors[index % colors.length];
     };
 
     // Transform the data into the required format
-    const values = Object.entries(byCategory).map(([label, value]) => {
+    const values = Object.entries(byCategory).map(([label, value], index) => {
         // Handle cases where value might be an object
         const numericValue = typeof value === 'object' ? (value.total || value.amount || 0) : (value || 0);
 
         return {
-            label: label === "standard" ? "Standard" :
-                label === "vip" ? "VIP" :
-                    label === "member" ? "Member" :
-                        label === "early_bird" ? "Early Bird" : label,
+            label: label,
             value: numericValue,
-            color: categoryColors[label === "standard" ? "Standard" :
-                label === "vip" ? "VIP" :
-                    label === "member" ? "Member" :
-                        label === "early_bird" ? "Early Bird" : label] || "#AE6F28"
+            color: generateColorForCategory(label, index)
         };
     });
 
-    // Sort values in the order: Standard, VIP, Member, Early Bird
-    const categoryOrder = ["Standard", "VIP", "Member", "Early Bird"];
-    const sortedValues = categoryOrder
-        .map(type => values.find(v => v.label === type))
-        .filter(Boolean);
+    // Sort values: known categories first, then any new categories alphabetically
+    const knownCategories = ["Early Bird", "VIP Ticket", "Members"];
+    const sortedValues = [
+        // First, include known categories in their preferred order
+        ...knownCategories
+            .map(type => values.find(v => v.label === type))
+            .filter(Boolean),
+        // Then, include any new categories alphabetically
+        ...values
+            .filter(v => !knownCategories.includes(v.label))
+            .sort((a, b) => a.label.localeCompare(b.label))
+    ];
 
     const radius = 50;
     const strokeWidth = 10;
@@ -215,7 +226,7 @@ const styles = StyleSheet.create({
     paymentText: {
         fontSize: 14,
         fontWeight: "500",
-        color: color.plaeholderTxt_24282C,
+        color: color.placeholderTxt_24282C,
     },
     paymentValue: {
         fontSize: 14,

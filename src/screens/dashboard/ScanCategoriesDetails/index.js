@@ -50,9 +50,9 @@ const CircularProgress = ({ value, total, percentage }) => {
   );
 };
 
-const AvailableTicketsCard = ({ data }) => {
+const ScanCategoriesDetails = ({ stats }) => {
   const [expanded, setExpanded] = useState({});
-  const listData = data && data.length > 0 ? data : [];
+  const scanCategoriesData = stats?.data?.scan_categories?.ticket_wise || {};
 
   const toggle = (label) => {
     setExpanded((prev) => ({
@@ -75,11 +75,11 @@ const AvailableTicketsCard = ({ data }) => {
           activeOpacity={hasSubItems ? 0.7 : 1}
           onPress={() => hasSubItems && toggle(item.label)}
         >
-          <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
+          <CircularProgress value={item.scanned} total={item.total} percentage={item.percentage} />
           <View style={styles.textContainer}>
             <Text style={styles.label}>{item.label}</Text>
             <Text style={styles.value}>
-              {item.total}
+              {item.scanned} / {item.total}
             </Text>
           </View>
           {hasSubItems && (
@@ -105,6 +105,44 @@ const AvailableTicketsCard = ({ data }) => {
     );
   };
 
+  // Transform the data into the required format
+  const transformData = () => {
+    const categories = Object.keys(scanCategoriesData);
+    return categories.map(category => {
+      const categoryData = scanCategoriesData[category];
+      const totalTickets = categoryData.total_tickets || 0;
+      const scannedTickets = categoryData.scanned_tickets || 0;
+      
+      // Create subItems from the ticket types
+      const subItems = [];
+      Object.keys(categoryData).forEach(key => {
+        if (key !== 'total_tickets' && key !== 'scanned_tickets') {
+          const ticketData = categoryData[key];
+          const total = ticketData.total || 0;
+          const scanned = ticketData.scanned || 0;
+          
+          subItems.push({
+            label: key,
+            scanned: scanned,
+            total: total,
+            percentage: total > 0 ? Math.round((scanned / total) * 100) : 0,
+            subItems: []
+          });
+        }
+      });
+
+      return {
+        label: category,
+        scanned: scannedTickets,
+        total: totalTickets,
+        percentage: totalTickets > 0 ? Math.round((scannedTickets / totalTickets) * 100) : 0,
+        subItems: subItems
+      };
+    });
+  };
+
+  const listData = transformData();
+
   return (
     <View style={styles.card}>
       {listData.map((item, idx) => renderItem(item, idx))}
@@ -119,6 +157,12 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     marginHorizontal: 10,
   },
+  title: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: color.black_2F251D,
+    marginBottom: 10,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -127,7 +171,6 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   subRow: {
-    // No extra margin on right, just indent
     marginLeft: 0,
     backgroundColor: "transparent",
   },
@@ -167,4 +210,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default AvailableTicketsCard;
+export default ScanCategoriesDetails; 

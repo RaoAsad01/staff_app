@@ -15,7 +15,7 @@ const OverallStatistics = ({ stats,
     const scanAnalytics = stats?.data?.scan_analytics || {};
 
     const totalTicketsRaw = terminalStats?.total_tickets || 0;
-    const totalScannedRaw = scanAnalytics?.total_scanned || 0;
+    const totalScannedRaw = terminalStats?.total_scanned || 0;
     const totalUnscannedRaw = terminalStats?.total_tickets ? (terminalStats.total_tickets - scanAnalytics.total_scanned) : 0;
     const availableTicketsRaw = terminalStats?.available_tickets || 0;
 
