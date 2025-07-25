@@ -4,42 +4,41 @@ import { Svg, Circle } from "react-native-svg";
 import { color } from "../../../color/color";
 import { formatValue } from "../../../constants/formatValue";
 
-const BoxOfficeSales = ({ stats }) => {
-    // Extract box office sales data with default values
-    const boxOfficeData = stats?.data?.box_office_sales || {};
-    const paymentWise = boxOfficeData?.payment_wise || {};
-    const total = paymentWise?.total || 0;
-    const byMethods = paymentWise?.by_methods || {};
+const ScanCategories = ({ stats }) => {
+    // Extract scan categories data with default values
+    const scanCategoriesData = stats?.data?.scan_categories || {};
+    const total = scanCategoriesData?.total || 0;
+    const byCategory = scanCategoriesData?.by_category || {};
 
-    // Map payment methods to colors
-    const paymentMethodColors = {
-        "Cash": "#AE6F28",
-        "Card": "#87807C",
-        "Mobile Money": "#EDB58A",
-        "P.O.S.": "#CEBCA0"
+    // Map categories to colors
+    const categoryColors = {
+        "Standard": "#AE6F28",
+        "VIP": "#87807C",
+        "Member": "#EDB58A",
+        "Early Bird": "#CEBCA0"
     };
 
     // Transform the data into the required format
-    const values = Object.entries(byMethods).map(([label, value]) => {
+    const values = Object.entries(byCategory).map(([label, value]) => {
         // Handle cases where value might be an object
         const numericValue = typeof value === 'object' ? (value.total || value.amount || 0) : (value || 0);
 
         return {
-            label: label === "cash" ? "Cash" :
-                label === "card" ? "Card" :
-                    label === "mobile_money" ? "Mobile Money" :
-                        label === "pos" ? "P.O.S." : label,
+            label: label === "standard" ? "Standard" :
+                label === "vip" ? "VIP" :
+                    label === "member" ? "Member" :
+                        label === "early_bird" ? "Early Bird" : label,
             value: numericValue,
-            color: paymentMethodColors[label === "cash" ? "Cash" :
-                label === "card" ? "Card" :
-                    label === "mobile_money" ? "Mobile Money" :
-                        label === "pos" ? "P.O.S." : label] || "#AE6F28"
+            color: categoryColors[label === "standard" ? "Standard" :
+                label === "vip" ? "VIP" :
+                    label === "member" ? "Member" :
+                        label === "early_bird" ? "Early Bird" : label] || "#AE6F28"
         };
     });
 
-    // Sort values in the order: Cash, Card, Mobile Money, Pos
-    const paymentOrder = ["Cash", "Card", "Mobile Money", "P.O.S."];
-    const sortedValues = paymentOrder
+    // Sort values in the order: Standard, VIP, Member, Early Bird
+    const categoryOrder = ["Standard", "VIP", "Member", "Early Bird"];
+    const sortedValues = categoryOrder
         .map(type => values.find(v => v.label === type))
         .filter(Boolean);
 
@@ -71,7 +70,7 @@ const BoxOfficeSales = ({ stats }) => {
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
-                <Text style={styles.title}>Box Office Sales</Text>
+                <Text style={styles.title}>Scan Categories</Text>
                 <View style={styles.row}>
                     <View style={styles.chartContainer}>
                         <Svg height="140" width="140" viewBox="0 0 120 120">
@@ -216,7 +215,7 @@ const styles = StyleSheet.create({
     paymentText: {
         fontSize: 14,
         fontWeight: "500",
-        color: color.placeholderTxt_24282C,
+        color: color.plaeholderTxt_24282C,
     },
     paymentValue: {
         fontSize: 14,
@@ -232,4 +231,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default BoxOfficeSales;
+export default ScanCategories;

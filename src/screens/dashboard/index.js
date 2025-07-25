@@ -8,13 +8,19 @@ import SvgIcons from '../../../components/SvgIcons';
 import { dashboardstatuslist } from '../../constants/dashboardstatuslist';
 import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './AttendeesComponent';
+import { dashboardsalesscantab } from '../../constants/dashboardsalesscantab';
 import AnalyticsChart from './AnalyticsChart';
 import { ticketService } from '../../api/apiService';
 import Typography, { Heading5, Body1, Label } from '../../components/Typography';
+import AvailableTicketsCard from './AvailableTicketsCard';
+import ScanAnalytics from './ScanAnalytics';
+import ScanCategories from './ScanCategories';
+import ScanListComponent from './ScanListComponent';
 
 const DashboardScreen = ({ eventInfo }) => {
   const navigation = useNavigation();
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
+  const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,27 +48,31 @@ const DashboardScreen = ({ eventInfo }) => {
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
   };
-// Add navigation handlers for statistics
-const handleTotalTicketsPress = () => {
-  navigation.navigate('Tickets', { initialTab: 'All', eventInfo });
-};
+  // Add navigation handlers for statistics
+  const handleTotalTicketsPress = () => {
+    navigation.navigate('Tickets', { initialTab: 'All', eventInfo });
+  };
 
-const handleTotalScannedPress = () => {
-  navigation.navigate('Tickets', { initialTab: 'Scanned', eventInfo });
-};
+  const handleTotalScannedPress = () => {
+    navigation.navigate('Tickets', { initialTab: 'Scanned', eventInfo });
+  };
 
-const handleTotalUnscannedPress = () => {
-  navigation.navigate('Tickets', { initialTab: 'Unscanned', eventInfo });
-};
+  const handleTotalUnscannedPress = () => {
+    navigation.navigate('Tickets', { initialTab: 'Unscanned', eventInfo });
+  };
 
-const handleAvailableTicketsPress = () => {
-  setSelectedTab('Available Tickets');
-};
+  const handleAvailableTicketsPress = () => {
+    setSelectedTab('Available Tickets');
+  };
+
+  const handleSaleScanTabPress = (tab) => {
+    setSelectedSaleScanTab(tab);
+  };
 
   const getCheckInData = () => {
     if (
-      !dashboardStats?.data?.checked_in?.total?.checked_in ||
-      !dashboardStats?.data?.checked_in?.total?.total_quantity
+      !dashboardStats?.data?.check_ins?.total_checkins ||
+      !dashboardStats?.data?.check_ins?.total_tickets
     ) {
       return [{
         label: "Total Checked In",
@@ -72,21 +82,25 @@ const handleAvailableTicketsPress = () => {
       }];
     }
 
-    const totalCheckedIn = dashboardStats?.data?.checked_in?.total?.checked_in;
-    const totalTickets = dashboardStats?.data?.checked_in?.total?.total_quantity
+    const totalCheckedIn = dashboardStats?.data?.check_ins?.total_checkins;
+    const totalTickets = dashboardStats?.data?.check_ins?.total_tickets;
 
-    const byType = dashboardStats?.data?.checked_in?.by_type;
+    const byCategory = dashboardStats?.data?.check_ins?.by_category;
     let typeRows = [];
-    if (byType) {
-      const types = Object.keys(byType.total_quantity || {});
-      typeRows = types.map(type => ({
-        label: type,
-        checkedIn: byType.checked_in?.[type] || 0,
-        total: byType.total_quantity?.[type] || 0,
-        percentage: byType.total_quantity?.[type]
-          ? Math.round((byType.checked_in?.[type] || 0) / byType.total_quantity[type] * 100)
-          : 0
-      }));
+    if (byCategory) {
+      const types = Object.keys(byCategory || {});
+      typeRows = types.map(type => {
+        const categoryData = byCategory[type];
+        const checkedIn = categoryData?.checkedins || 0;
+        const total = categoryData?.total || 0;
+
+        return {
+          label: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize first letter
+          checkedIn: checkedIn,
+          total: total,
+          percentage: total ? Math.round((checkedIn / total) * 100) : 0
+        };
+      });
     }
 
     return [
@@ -102,8 +116,8 @@ const handleAvailableTicketsPress = () => {
 
   const getSoldTicketsData = () => {
     if (
-      !dashboardStats?.data?.sold_tickets?.total?.total_quantity ||
-      !dashboardStats?.data?.sold_tickets?.total?.sold
+      !dashboardStats?.data?.box_office_sales?.ticket_wise?.total_tickets ||
+      !dashboardStats?.data?.box_office_sales?.ticket_wise?.sold_tickets
     ) {
       return [{
         label: "Total Sold",
@@ -112,21 +126,25 @@ const handleAvailableTicketsPress = () => {
         percentage: 0
       }];
     }
-    const totalSold = dashboardStats?.data?.sold_tickets?.total?.sold || 0;
-    const totalTickets = dashboardStats?.data?.sold_tickets?.total?.total_quantity || 0;
+    const totalSold = dashboardStats?.data?.box_office_sales?.ticket_wise?.sold_tickets || 0;
+    const totalTickets = dashboardStats?.data?.box_office_sales?.ticket_wise?.total_tickets || 0;
 
-    const byType = dashboardStats?.data?.sold_tickets?.by_type;
+    const byCategory = dashboardStats?.data?.box_office_sales?.ticket_wise?.by_category;
     let typeRows = [];
-    if (byType) {
-      const types = Object.keys(byType.total_quantity || {});
-      typeRows = types.map(type => ({
-        label: type,
-        checkedIn: byType.sold?.[type] || 0,
-        total: byType.total_quantity?.[type] || 0,
-        percentage: byType.total_quantity?.[type]
-          ? Math.round((byType.sold?.[type] || 0) / byType.total_quantity[type] * 100)
-          : 0
-      }));
+    if (byCategory) {
+      const types = Object.keys(byCategory || {});
+      typeRows = types.map(type => {
+        const categoryData = byCategory[type];
+        const sold = categoryData?.sold || 0;
+        const total = categoryData?.total || 0;
+
+        return {
+          label: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize first letter
+          checkedIn: sold,
+          total: total,
+          percentage: total ? Math.round((sold / total) * 100) : 0
+        };
+      });
     }
 
     return [
@@ -140,41 +158,70 @@ const handleAvailableTicketsPress = () => {
     ];
   };
 
- // Add function to get available tickets data
- const getAvailableTicketsData = () => {
-  if (!dashboardStats?.data?.available_tickets) {
-    return [{
-      label: "Available Tickets",
-      checkedIn: 0,
-      total: 0,
-      percentage: 0
-    }];
-  }
+  // Add function to get available tickets data
+  const getAvailableTicketsData = () => {
+    if (!dashboardStats?.data?.scan_categories) {
+      return [{
+        label: "Available Tickets",
+        checkedIn: 0,
+        total: 0,
+        percentage: 0
+      }];
+    }
 
-  const availableTickets = dashboardStats?.data?.available_tickets;
-  const byType = availableTickets?.by_type;
-  let typeRows = [];
-  
-  if (byType) {
-    const types = Object.keys(byType || {});
-    typeRows = types.map(type => ({
-      label: type,
-      checkedIn: byType[type] || 0,
-      total: byType[type] || 0,
-      percentage: 100
-    }));
-  }
+    const scanCategories = dashboardStats?.data?.scan_categories;
+    const totalQuantity = scanCategories?.total || 0;
+    const byCategory = scanCategories?.by_category;
+    const ticketWise = scanCategories?.ticket_wise;
+    let typeRows = [];
 
-  return [
-    {
-      label: "Available Tickets",
-      checkedIn: availableTickets?.total || 0,
-      total: availableTickets?.total || 0,
-      percentage: 100
-    },
-    ...typeRows
-  ];
-};
+    if (byCategory) {
+      const types = Object.keys(byCategory || {});
+      typeRows = types.map(type => {
+        const categoryTotal = byCategory[type] || 0;
+
+        // Create subItems from the ticket_wise data
+        const subItems = [];
+        if (ticketWise) {
+          // Map the category names to ticket_wise keys
+          let ticketWiseKey = type;
+          if (type === 'early_bird') {
+            ticketWiseKey = 'early bird';
+          } else if (type === 'member') {
+            ticketWiseKey = 'members';
+          } else if (type === 'standard') {
+            ticketWiseKey = 'standard';
+          }
+
+          if (ticketWise[ticketWiseKey]) {
+            const ticketData = ticketWise[ticketWiseKey];
+            Object.keys(ticketData).forEach(ticketName => {
+              const ticketInfo = ticketData[ticketName];
+              subItems.push({
+                label: ticketName,
+                checkedIn: ticketInfo.sold || 0,
+                total: ticketInfo.total || 0,
+                percentage: ticketInfo.total > 0 ? Math.round((ticketInfo.sold / ticketInfo.total) * 100) : 0,
+                subItems: []
+              });
+            });
+          }
+        }
+
+        return {
+          label: type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' '), // Capitalize and replace underscore
+          checkedIn: categoryTotal,
+          total: categoryTotal,
+          percentage: totalQuantity > 0 ? Math.round((categoryTotal / totalQuantity) * 100) : 0,
+          subItems: subItems
+        };
+      });
+    }
+
+    return [
+      ...typeRows
+    ];
+  };
 
   function formatHourLabel(hourStr) {
     const [hour, minutePart] = hourStr.split(":");
@@ -215,12 +262,97 @@ const handleAvailableTicketsPress = () => {
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
 
+    if (selectedSaleScanTab === "Sales") {
+      const soldTicketsData = getSoldTicketsData();
+      const remainingTicketsData = soldTicketsData.filter(
+        (item) => item.label !== "Total Sold"
+      );
+      const soldTicketsChartData = mapSoldTicketsAnalytics(
+        dashboardStats?.data?.sold_tickets_analytics?.data
+      );
+
+      return (
+        <>
+          <BoxOfficeSales stats={dashboardStats} />
+          <CheckInSoldTicketsCard
+            title="Sold Tickets"
+            data={soldTicketsData}
+            remainingTicketsData={remainingTicketsData}
+            showRemaining={true}
+          />
+          <AnalyticsChart
+            title="Sold Tickets"
+            data={soldTicketsChartData}
+            dataType="sold"
+          />
+          <View style={styles.tabContainer}>
+            <View style={styles.tabRow}>
+              {dashboardstatuslist.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.tabButton,
+                    selectedTab === item && styles.selectedTabButton,
+                  ]}
+                  onPress={() => handleTabPress(item)}
+                >
+                  <Typography
+                    variant={selectedTab === item ? "tabActive" : "tab"}
+                    style={[
+                      styles.tabButtonText,
+                      selectedTab === item && styles.selectedTabButtonText,
+                    ]}
+                  >
+                    {item}
+                  </Typography>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          {selectedTab === "Checked In" && (
+            <>
+              <CheckInSoldTicketsCard
+                title="Checked In"
+                data={getCheckInData()}
+                remainingTicketsData={[]}
+                showRemaining={false}
+              />
+              <AnalyticsChart
+                title="Checked In"
+                data={getCheckinAnalyticsChartData(
+                  dashboardStats?.data?.checkin_analytics,
+                  highlightHour
+                )}
+                dataType="checked in"
+              />
+            </>
+          )}
+          {selectedTab === "Available Tickets" && (
+            <AvailableTicketsCard data={getAvailableTicketsData()} />
+          )}
+        </>
+      );
+    } else if (selectedSaleScanTab === "Scans") {
+      // Show ScanAnalytics view in the Scans tab
+      return (
+        <>
+          <ScanAnalytics
+            title="Scans"
+            data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
+            dataType="checked in"
+          />
+          <ScanCategories stats={dashboardStats} />
+          <ScanListComponent eventInfo={eventInfo} />
+        </>
+      );
+    }
+
     if (selectedTab === "Attendees") {
       return <AttendeesComponent eventInfo={eventInfo} />;
     } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets" || selectedTab === "Available Tickets") {
-      const data = selectedTab === "Checked In" ? getCheckInData() : 
-                   selectedTab === "Sold Tickets" ? getSoldTicketsData() : 
-                   getAvailableTicketsData();
+      const data = selectedTab === "Checked In" ? getCheckInData() :
+        selectedTab === "Sold Tickets" ? getSoldTicketsData() :
+          getAvailableTicketsData();
 
       const remainingTicketsData = selectedTab === "Sold Tickets"
         ? data.filter(item => item.label !== "Total Sold")
@@ -282,6 +414,25 @@ const handleAvailableTicketsPress = () => {
     </TouchableOpacity>
   );
 
+  const renderSaleScanTab = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.saleScanTabButton,
+        selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
+      ]}
+      onPress={() => handleSaleScanTabPress(item)}
+    >
+      <Typography
+        variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
+        style={[
+          styles.saleScanTabButtonText,
+          selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
+        ]}
+      >
+        {item}
+      </Typography>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.mainContainer}>
@@ -301,30 +452,74 @@ const handleAvailableTicketsPress = () => {
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
-          <Heading5 style={styles.labelDashboard}>Dashboard</Heading5>
+          {/* <Heading5 style={styles.labelDashboard}>Dashboard</Heading5> */}
           {loading ? (
             <Body1 style={styles.loadingText}>Loading dashboard stats...</Body1>
           ) : error ? (
             <Body1 style={styles.errorText}>{error}</Body1>
           ) : (
             <>
-              <OverallStatistics 
-                stats={dashboardStats} 
+              <OverallStatistics
+                stats={dashboardStats}
                 onTotalTicketsPress={handleTotalTicketsPress}
                 onTotalScannedPress={handleTotalScannedPress}
                 onTotalUnscannedPress={handleTotalUnscannedPress}
                 onAvailableTicketsPress={handleAvailableTicketsPress}
               />
-              <BoxOfficeSales stats={dashboardStats} />
-              <View style={styles.tabContainer}>
-                <FlatList
-                  horizontal
-                  data={dashboardstatuslist}
-                  renderItem={renderTab}
-                  keyExtractor={(item) => item}
-                  showsHorizontalScrollIndicator={false}
-                />
+              <View style={styles.saleScanTabContainer}>
+                <View style={styles.saleScanTabRow}>
+                  {dashboardsalesscantab.map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.saleScanTabButton,
+                        selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
+                      ]}
+                      onPress={() => handleSaleScanTabPress(item)}
+                    >
+                      <Typography
+                        variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
+                        style={[
+                          styles.saleScanTabButtonText,
+                          selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
+                        ]}
+                      >
+                        {item}
+                      </Typography>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
+
+              {selectedSaleScanTab !== "Sales" && selectedSaleScanTab !== "Scans" && (
+                <>
+                  <BoxOfficeSales stats={dashboardStats} />
+                  <View style={styles.tabContainer}>
+                    <View style={styles.tabRow}>
+                      {dashboardstatuslist.map((item) => (
+                        <TouchableOpacity
+                          key={item}
+                          style={[
+                            styles.tabButton,
+                            selectedTab === item && styles.selectedTabButton,
+                          ]}
+                          onPress={() => handleTabPress(item)}
+                        >
+                          <Typography
+                            variant={selectedTab === item ? "tabActive" : "tab"}
+                            style={[
+                              styles.tabButtonText,
+                              selectedTab === item && styles.selectedTabButtonText,
+                            ]}
+                          >
+                            {item}
+                          </Typography>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
               {renderContent()}
             </>
           )}
@@ -379,17 +574,27 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tabContainer: {
-    margin: 10,
+    marginVertical: 10,
+    marginHorizontal: 10
+  },
+  tabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
   },
   tabButton: {
     padding: 10,
-    marginHorizontal: 5,
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+    marginTop: 6,
   },
   tabButtonText: {
     color: color.black_544B45,
   },
   selectedTabButton: {
-    width: 105,
+    width: '50%',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -397,7 +602,6 @@ const styles = StyleSheet.create({
     borderColor: color.white_FFFFFF,
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
-    marginRight: 10,
   },
   selectedTabButtonText: {
     color: color.brown_3C200A,
@@ -415,6 +619,38 @@ const styles = StyleSheet.create({
   separator: {
     color: color.white_FFFFFF,
     marginHorizontal: 4,
+  },
+  saleScanTabContainer: {
+    margin: 10,
+  },
+  saleScanTabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  saleScanTabButton: {
+    padding: 10,
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+  },
+  saleScanTabButtonText: {
+    color: color.black_544B45,
+  },
+  selectedSaleScanTabButton: {
+    width: '50%',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: color.white_FFFFFF,
+    borderRadius: 7,
+    backgroundColor: color.white_FFFFFF,
+  },
+  selectedSaleScanTabButtonText: {
+    color: color.placeholderTxt_24282C,
+    fontWeight: '500'
   },
 });
 

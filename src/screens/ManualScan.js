@@ -40,9 +40,11 @@ const ManualScan = ({ eventInfo }) => {
       }
     };
 
-    if (eventInfo) {
-      fetchOrders();
+    if (!eventInfo) {
+      setLoading(false); // Immediately stop loading if eventInfo is missing
+      return;
     }
+    fetchOrders();
   }, [eventInfo]);
 
   const filterTickets = () => {
@@ -63,6 +65,22 @@ const ManualScan = ({ eventInfo }) => {
   };
 
   const filteredTickets = filterTickets();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+      </View>
+    );
+  }
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -90,22 +108,6 @@ const ManualScan = ({ eventInfo }) => {
       </View>
     </TouchableOpacity>
   );
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.mainContainer}>

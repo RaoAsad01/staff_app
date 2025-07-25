@@ -16,7 +16,7 @@ function getYAxisLabels(yAxisMax) {
     );
 }
 
-const AnalyticsChart = ({ title, data, dataType }) => {
+const ScanAnalytics = ({ title, data, dataType }) => {
     const [selectedBar, setSelectedBar] = useState(null);
     const totalValue = data.reduce((sum, item) => sum + item.value, 0);
     let yAxisMax = Math.max(...data.map(d => d.value), 0);
@@ -271,4 +271,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AnalyticsChart;
+export default ScanAnalytics;

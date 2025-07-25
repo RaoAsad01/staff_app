@@ -4,15 +4,19 @@ import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import { useNavigation } from "@react-navigation/native";
 
-const CircularProgress = ({ value, total }) => {
+const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
-  const strokeWidth = 2;
+  const strokeWidth = 4;
   const circumference = 2 * Math.PI * radius;
-  const percentage = total > 0 ? (value / total) * 100 : 0;
-  const progress = (percentage / 100) * circumference;
+  const progressPercentage = percentage !== undefined ? percentage : (total > 0 ? (value / total) * 100 : 0);
+  const progress = (progressPercentage / 100) * circumference;
+
+  // Adjust font size and position based on percentage value
+  const fontSize = progressPercentage >= 50 ? 9 : 11;
+  const textY = progressPercentage >= 50 ? 27 : 28;
 
   return (
-    <Svg width={50} height={50} viewBox="0 0 50 50">
+    <Svg width={60} height={60} viewBox="0 0 50 50">
       <Circle
         cx="25"
         cy="25"
@@ -34,13 +38,13 @@ const CircularProgress = ({ value, total }) => {
       />
       <SvgText
         x="25"
-        y="28"
+        y={textY}
         textAnchor="middle"
-        fontSize="12"
-        fill={color.brown_3C200A}
+        fontSize={fontSize}
+        fill={color.placeholderTxt_24282C}
         fontWeight="500"
       >
-        {Math.round(percentage)}%
+        {Math.round(progressPercentage)}%
       </SvgText>
     </Svg>
   );
@@ -56,10 +60,10 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
   return (
     <View>
       <View style={styles.card}>
-        <Text style={styles.title}>{title}</Text>
+        {/* <Text style={styles.title}>{title}</Text> */}
         {data.map((item, index) => (
           <View key={index} style={styles.row}>
-            <CircularProgress value={item.checkedIn} total={item.total} />
+            <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
             <View style={styles.textContainer}>
               <Text style={styles.label}>{item.label}</Text>
               <Text style={styles.value}>
@@ -72,7 +76,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
         ))}
       </View>
 
-      {showRemaining && remainingTicketsData && remainingTicketsData.length > 0 && (
+      {/* {showRemaining && remainingTicketsData && remainingTicketsData.length > 0 && (
         <TouchableOpacity 
           style={styles.remainingContainer}
           onPress={handleRemainingPress}
@@ -92,7 +96,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
             );
           })}
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 };
@@ -102,23 +106,23 @@ const styles = StyleSheet.create({
     backgroundColor: color.white_FFFFFF,
     padding: 15,
     borderRadius: 12,
-    marginVertical: 10,
+    marginVertical: 16,
     marginHorizontal: 10,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: color.black_2F251D,
-    marginLeft: 5,
-    marginBottom: 10,
-  },
+  // title: {
+  //   fontSize: 16,
+  //   fontWeight: "500",
+  //   color: color.black_2F251D,
+  //   marginLeft: 5,
+  //   marginBottom: 10,
+  // },
   row: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 8,
   },
   textContainer: {
-    marginLeft: 10,
+    marginLeft: 20,
   },
   label: {
     fontSize: 14,
