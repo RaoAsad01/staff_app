@@ -44,7 +44,7 @@ const CircularProgress = ({ value, total, percentage }) => {
         fill={color.placeholderTxt_24282C}
         fontWeight="500"
       >
-        {Math.round(progressPercentage)}%
+        {`${Math.round(progressPercentage)}%`}
       </SvgText>
     </Svg>
   );

@@ -44,6 +44,7 @@ const ScanListComponent = ({ eventInfo }) => {
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
                     currency: ticket.currency || 'N/A',
+                    userfirstname: ticket.user_first_name
                 };
             });
 
@@ -67,7 +68,8 @@ const ScanListComponent = ({ eventInfo }) => {
                 (ticket) =>
                     ticket.id.toLowerCase().includes(searchText.toLowerCase()) ||
                     ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase())
+                    ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase()) ||
+                    ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase())
             );
         }
 
@@ -153,7 +155,7 @@ const ScanListComponent = ({ eventInfo }) => {
                         <View style={styles.cardContent}>
                             <View>
                                 <Text style={styles.label}>Name</Text>
-                                <Text style={styles.value}>{item.ticketHolder}</Text>
+                                <Text style={styles.value}>{item.userfirstname}</Text>
                                 <Text style={styles.label}>Ticket ID</Text>
                                 <Text style={styles.value}>#{item.id}</Text>
                                 <Text style={styles.label}>{item.type}</Text>
