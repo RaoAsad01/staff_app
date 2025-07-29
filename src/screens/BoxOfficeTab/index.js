@@ -9,7 +9,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
 
-const BoxOfficeTab = ({ eventInfo }) => {
+const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   // const route = useRoute();
   // const eventUuid = route.params?.eventUuid;
@@ -203,7 +203,8 @@ const BoxOfficeTab = ({ eventInfo }) => {
         transactionNumber: transactionId,
         orderData: response,
         eventInfo: eventInfo,
-        orderNumber: orderNumber // Add order number to navigation params
+        orderNumber: orderNumber, // Add order number to navigation params
+        onScanCountUpdate: onScanCountUpdate // Pass the callback
       });
     } catch (error) {
       alert(error.message || 'Failed to process tickets. Please try again.');
@@ -252,7 +253,8 @@ const BoxOfficeTab = ({ eventInfo }) => {
         transactionNumber,
         orderData: response,
         eventInfo: eventInfo,
-        orderNumber: orderNumber // Add order number to navigation params
+        orderNumber: orderNumber, // Add order number to navigation params
+        onScanCountUpdate: onScanCountUpdate // Pass the callback
       });
     } catch (error) {
       alert(error.message || 'Failed to process tickets. Please try again.');

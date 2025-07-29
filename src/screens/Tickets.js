@@ -6,7 +6,7 @@ import BoxOfficeTab from '../screens/BoxOfficeTab';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 
-const SettingsScreen = ({ route, eventInfo, navigation }) => {
+const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => {
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
   const { initialTab, eventInfo: routeEventInfo } = route.params || {};
@@ -147,7 +147,7 @@ const SettingsScreen = ({ route, eventInfo, navigation }) => {
         </View>
 
         {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} key={tabKey} eventInfo={finalEventInfo} initialTab={initialTab} />}
-        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo}/>}
+        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo} onScanCountUpdate={onScanCountUpdate}/>}
       </View>
     </View>
   );

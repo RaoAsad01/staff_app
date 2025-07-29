@@ -11,7 +11,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
 const { width, height } = Dimensions.get('window');
 
-const HomeScreen = ({ eventInfo }) => {
+const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions()
@@ -115,6 +115,10 @@ const HomeScreen = ({ eventInfo }) => {
         };
       } else {
         console.log('Ticket scanned successfully');
+        // Update scan count when ticket is successfully scanned
+        if (onScanCountUpdate) {
+          onScanCountUpdate();
+        }
       }
 
       setScanResult(scanData);

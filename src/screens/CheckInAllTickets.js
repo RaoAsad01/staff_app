@@ -29,13 +29,23 @@ const CheckInAllTickets = ({ route }) => {
             setError(null);
             try {
                 const response = await ticketService.manualDetailCheckin(eventUuid, code);
+                console.log('Single Ticket Check-in Response:', response);
+
                 if (response?.data?.status === 'SCANNED') {
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
+                    // Update the ticket status
+                    setTickets([{ ...tickets[0], checkin_status: 'SCANNED', status: 'SCANNED' }]);
+                    
+                    // Update scan count when ticket is successfully checked in
+                    if (route.params?.onScanCountUpdate) {
+                        route.params.onScanCountUpdate();
+                    }
                 } else {
                     Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
                 }
             } catch (err) {
+                console.error('Single Ticket Check-in Error:', err);
                 setError(err.message || 'Failed to check in ticket.');
                 Alert.alert('Error', err.message || 'Something went wrong during check-in.');
             } finally {
@@ -62,6 +72,11 @@ const CheckInAllTickets = ({ route }) => {
                         status: 'SCANNED'
                     }));
                     setTickets(updatedTickets);
+                    
+                    // Update scan count when tickets are successfully checked in
+                    if (route.params?.onScanCountUpdate) {
+                        route.params.onScanCountUpdate();
+                    }
                 } else {
                     Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in all tickets.');
                 }
@@ -91,7 +106,7 @@ const CheckInAllTickets = ({ route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="white" />
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
@@ -138,6 +153,7 @@ const CheckInAllTickets = ({ route }) => {
                                 ticket_number: ticket.ticket_number
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
+                            onScanCountUpdate={route.params?.onScanCountUpdate}
                         />
                     </View>
                 )}

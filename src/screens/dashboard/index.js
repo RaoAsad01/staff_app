@@ -18,7 +18,7 @@ import ScanCategories from './ScanCategories';
 import ScanCategoriesDetails from './ScanCategoriesDetails';
 import ScanListComponent from './ScanListComponent';
 
-const DashboardScreen = ({ eventInfo }) => {
+const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const scrollViewRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
@@ -343,13 +343,13 @@ const DashboardScreen = ({ eventInfo }) => {
           />
           <ScanCategories stats={dashboardStats} />
           <ScanCategoriesDetails stats={dashboardStats} />
-          <ScanListComponent eventInfo={eventInfo} />
+          <ScanListComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />
         </>
       );
     }
 
     if (selectedTab === "Attendees") {
-      return <AttendeesComponent eventInfo={eventInfo} />;
+      return <AttendeesComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />;
     } else if (selectedTab === "Checked In" || selectedTab === "Sold Tickets" || selectedTab === "Available Tickets") {
       const data = selectedTab === "Checked In" ? getCheckInData() :
         selectedTab === "Sold Tickets" ? getSoldTicketsData() :
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   },
   statusBarPlaceholder: {
     height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    backgroundColor: color.white_FFFFFF,
+    backgroundColor: 'transparent',
   },
   headerColumn: {
     paddingTop: Platform.OS === 'android' ? 15 : 0,

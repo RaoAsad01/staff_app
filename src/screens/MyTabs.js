@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import HomeScreen from './CheckIn';
@@ -9,12 +9,36 @@ import SvgIcons from '../../components/SvgIcons';
 import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
+import { fetchUpdatedScanCount, updateEventInfoScanCount } from '../utils/scanCountUpdater';
 
 const Tab = createBottomTabNavigator();
 
 function MyTabs() {
   const route = useRoute();
-  const eventInformation = route?.params?.eventInfo;
+  const initialEventInfo = route?.params?.eventInfo;
+  const [eventInformation, setEventInformation] = useState(initialEventInfo);
+
+  // Update eventInfo when route params change
+  useEffect(() => {
+    if (route?.params?.eventInfo) {
+      setEventInformation(route.params.eventInfo);
+    }
+  }, [route?.params?.eventInfo]);
+
+  // Function to update scan count
+  const updateScanCount = async () => {
+    if (!eventInformation?.eventUuid) return;
+
+    try {
+      const newScanCount = await fetchUpdatedScanCount(eventInformation.eventUuid);
+      if (newScanCount !== null) {
+        const updatedEventInfo = updateEventInfoScanCount(eventInformation, newScanCount);
+        setEventInformation(updatedEventInfo);
+      }
+    } catch (error) {
+      console.error('Error updating scan count:', error);
+    }
+  };
 
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     return (
@@ -128,7 +152,7 @@ function MyTabs() {
         name="Dashboard"
         options={{ headerShown: false, unmountOnBlur: true }}
       >
-        {() => <DashboardScreen eventInfo={eventInformation} />}
+        {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -149,7 +173,7 @@ function MyTabs() {
           },
         })}
       >
-        {(props) => <Tickets {...props} eventInfo={eventInformation} />}
+        {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -159,14 +183,14 @@ function MyTabs() {
           unmountOnBlur: true,
         }}
       >
-        {() => <HomeScreen eventInfo={eventInformation} />}
+        {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
       </Tab.Screen>
 
       <Tab.Screen
         name="Manual Scan"
         options={{ headerShown: false, unmountOnBlur: true }}
       >
-        {() => <ManualScan eventInfo={eventInformation} />}
+        {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
       </Tab.Screen>
 
       <Tab.Screen

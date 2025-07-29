@@ -9,7 +9,8 @@ import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct
 import SuccessPopup from '../constants/SuccessPopup';
 
 const ManualCheckInAllTickets = () => {
-    const { orderNumber, eventUuid, total, eventInfo } = useRoute().params;
+    const route = useRoute();
+    const { orderNumber, eventUuid, total, eventInfo } = route.params;
     const navigation = useNavigation();
     const [ticketDetails, setTicketDetails] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -81,6 +82,11 @@ const ManualCheckInAllTickets = () => {
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
                     setTicketDetails([{ ...ticket, checkin_status: 'Scanned' }]);
+                    
+                    // Update scan count when ticket is successfully checked in
+                    if (route.params?.onScanCountUpdate) {
+                        route.params.onScanCountUpdate();
+                    }
                 } else {
                     console.log('Check-in failed according to response. Status:', response?.data?.status);
                     Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
@@ -196,6 +202,7 @@ const ManualCheckInAllTickets = () => {
                                 ticket_number: ticket.ticket_number,
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
+                            onScanCountUpdate={route.params?.onScanCountUpdate}
                         />
                     </View>
                 )}

@@ -8,7 +8,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import NoResults from '../../../components/NoResults';
 
-const AttendeesComponent = ({ eventInfo }) => {
+const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('All');

@@ -7,7 +7,7 @@ import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import NoResults from '../components/NoResults';
 
-const ManualScan = ({ eventInfo }) => {
+const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [ticketOrders, setTicketOrders] = useState([]);
@@ -90,7 +90,8 @@ const ManualScan = ({ eventInfo }) => {
         total: item.ticket_count,
         orderNumber: item.order_number, // Pass order number
         eventUuid: eventInfo?.eventUuid, // Pass event UUID
-        eventInfo: eventInfo
+        eventInfo: eventInfo,
+        onScanCountUpdate: onScanCountUpdate // Pass the callback
       })}
     >
       <View style={styles.ticketRow}>

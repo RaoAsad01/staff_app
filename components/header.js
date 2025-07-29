@@ -6,10 +6,11 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-const Header = ({ eventInfo }) => {
+const Header = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const route = useRoute();
   const [tabKey, setTabKey] = useState(0);
+  const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -17,6 +18,13 @@ const Header = ({ eventInfo }) => {
       StatusBar.setTranslucent(true);
     }
   }, []);
+
+  // Update scan count when eventInfo changes
+  useEffect(() => {
+    if (eventInfo?.scanCount !== undefined) {
+      setCurrentScanCount(eventInfo.scanCount);
+    }
+  }, [eventInfo?.scanCount]);
 
   const formatStaffName = (fullName) => {
     if (!fullName) return 'A Moeez';
@@ -85,7 +93,7 @@ const Header = ({ eventInfo }) => {
               <TouchableOpacity
                 style={styles.count}
                 onPress={handleCountPress}>
-                <Text style={styles.countColor}>{eventInfo?.scanCount || '0'}</Text>
+                <Text style={styles.countColor}>{currentScanCount}</Text>
               </TouchableOpacity>
             </View>
           </View>

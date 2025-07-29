@@ -5,7 +5,7 @@ import { ticketService } from '../api/apiService';
 import SuccessPopup from './SuccessPopup';
 import { useState } from 'react';
 
-const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
+const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate }) => {
     const { eventInfo } = useRoute().params;
     const navigation = useNavigation();
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -22,6 +22,12 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange }) => {
                 if (onTicketStatusChange) {
                     onTicketStatusChange(ticketToCheckIn.uuid, 'SCANNED');
                 }
+                
+                // Update scan count when ticket is successfully checked in
+                if (onScanCountUpdate) {
+                    onScanCountUpdate();
+                }
+                
                 setShowSuccessPopup(true);
             } else {
                 Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
