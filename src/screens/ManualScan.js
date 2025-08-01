@@ -10,6 +10,7 @@ import NoResults from '../components/NoResults';
 const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [ticketOrders, setTicketOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,7 +115,10 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
     <View style={styles.mainContainer}>
       <Header eventInfo={eventInfo} />
       <View style={styles.contentContainer}>
-        <View style={styles.searchContainer}>
+        <View style={[
+            styles.searchContainer,
+            isSearchFocused && styles.searchContainerFocused
+        ]}>
           <TextInput
             style={styles.searchBar}
             placeholder="Order Number or User Name"
@@ -122,6 +126,8 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
             onChangeText={(text) => setSearchText(text)}
             value={searchText}
             selectionColor={color.selectField_CEBCA0}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
           />
           <TouchableOpacity>
             <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
@@ -159,11 +165,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    marginTop: 20,
+    marginTop: 10,
     borderColor: color.borderBrown_CEBCA0,
     borderWidth: 1,
     height: 45,
     marginHorizontal: 16,
+  },
+  searchContainerFocused: {
+    borderColor: color.placeholderTxt_24282C,
   },
   searchBar: {
     flex: 1,

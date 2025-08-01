@@ -141,18 +141,19 @@ const ScanAnalytics = ({ title, data, dataType }) => {
 
 const styles = StyleSheet.create({
     wrapper: {
-        backgroundColor: "#fff",
+        backgroundColor: "#ffffff",
         borderRadius: 16,
         margin: 0,
         padding: 0,
         paddingTop: 18,
         paddingBottom: 10,
-        paddingHorizontal: 18,
-        shadowColor: '#000',
-        shadowOpacity: 0.03,
-        shadowRadius: 2,
-        shadowOffset: { width: 0, height: 1 },
-        marginHorizontal: 8,
+        paddingHorizontal: 16,
+        // shadowColor: '#000',
+        // shadowOpacity: 0.03,
+        // shadowRadius: 2,
+        // shadowOffset: { width: 0, height: 1 },
+        marginHorizontal: 16,
+        marginVertical: 8,
     },
     title: {
         fontSize: 16,

@@ -19,6 +19,7 @@ import { authService, eventService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography, { Body1, Caption } from '../components/Typography';
+import MiddleSection from '../components/MiddleSection';
 
 // Helper function to format seconds as mm:ss
 function formatTime(seconds) {
@@ -212,7 +213,7 @@ const OtpLoginScreen = ({ route }) => {
 
             <View style={styles.container}>
               <Typography
-                weight="500"
+                weight="700"
                 size={20}
                 color={color.grey_DEDCDC}
                 style={styles.appName}
@@ -262,7 +263,7 @@ const OtpLoginScreen = ({ route }) => {
                   <>
                     <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
                       <Typography
-                        weight="600"
+                        weight="700"
                         size={16}
                         color={color.grey_DEDCDC}
                       >
@@ -271,7 +272,7 @@ const OtpLoginScreen = ({ route }) => {
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
                       <Typography
-                        weight="600"
+                        weight="700"
                         size={16}
                         color={color.grey_DEDCDC}
                       >
@@ -295,31 +296,7 @@ const OtpLoginScreen = ({ route }) => {
             </View>
 
             {!isKeyboardVisible && (
-              <>
-                <View style={styles.middleSection}>
-                  <View style={styles.logoContainer}>
-                    <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
-                    <Typography
-                      weight="700"
-                      size={20}
-                      color={color.grey_DEDCDC}
-                    >
-                      Hexallo
-                    </Typography>
-                  </View>
-                  <Typography
-                    weight="500"
-                    size={16}
-                    color={color.grey_DEDCDC}
-                    style={styles.subtitle}
-                  >
-                    Fast . Secure . Seamless
-                  </Typography>
-                </View>
-                <View style={styles.bottomtextbg}>
-                  <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
-                </View>
-              </>
+              <MiddleSection showGetStartedButton={false} />
             )}
           </View>
         </TouchableWithoutFeedback>
@@ -371,14 +348,14 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '80%',
     marginBottom: 20,
   },
   otpInput: {
-    width: 40,
-    height: 40,
+    width: 43,
+    height: 43,
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: color.borderBrown_CEBCA0,
     textAlign: 'center',
     fontSize: 18,
@@ -395,7 +372,7 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   changeDetailsButton: {
-    marginTop: 10,
+    marginTop: 3,
     padding: 10,
     borderWidth: 1,
     borderColor: color.borderBrown_CEBCA0,
@@ -403,6 +380,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '47%',
+    height: 48,
 
   },
   resendText: {
@@ -412,7 +390,7 @@ const styles = StyleSheet.create({
   rowContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '80%',
     marginBottom: 10,
   },
   timerRow: {
@@ -438,20 +416,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
   },
-  middleSection: {
-    alignItems: 'center',
-    marginTop: 150,
-    width: '100%',
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 24, // Add space between logo and tagline
-  },
-  subtitle: {
-    marginBottom: 10, // Add space between tagline and bottomtextbg
-  },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,7 +424,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     marginTop: 10,
-    width: '100%',
+    width: '80%',
     alignSelf: 'center',
     borderWidth: 2,
     gap: 10,

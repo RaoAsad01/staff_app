@@ -13,6 +13,7 @@ import SvgIcons from '../../components/SvgIcons';
 import { authService } from '../api/apiService';
 import Typography, { Body1, Caption } from '../components/Typography';
 import { fontSize, fontWeight } from '../constants/typography';
+import MiddleSection from '../components/MiddleSection';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -120,31 +121,7 @@ const LoginScreen = () => {
             </View>
           </View>
           {!isKeyboardVisible && (
-            <>
-              <View style={styles.middleSection}>
-                <View style={styles.logoContainer}>
-                  <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
-                  <Typography 
-                    weight="700"
-                    size={20}
-                    color={color.grey_DEDCDC}
-                  >
-                    Hexallo
-                  </Typography>
-                </View>
-                <Typography 
-                  weight="500"
-                  size={16}
-                  color={color.grey_DEDCDC}
-                  style={styles.subtitle}
-                >
-                  Fast . Secure . Seamless
-                </Typography>
-              </View>
-              <View style={styles.bottomtextbg}>
-                <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
-              </View>
-            </>
+            <MiddleSection showGetStartedButton={false} />
           )}
         </View>
       </TouchableWithoutFeedback>
@@ -157,12 +134,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100, // Remove marginTop to allow true vertical centering
-    width: '100%', // Ensure it takes full width for centering
+ 
+    width: '100%',
   },
   logoSection: {
     alignItems: 'center',
-    marginTop: 60, // Less top margin for better vertical balance
+    marginTop: 60,
     marginBottom: 40,
     width: '100%',
   },
@@ -181,7 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
     backgroundColor: 'transparent',
-    marginBottom: 10,
+    marginBottom: 100,
     height: 54,
     width: 320,
     alignSelf: 'center', // Center the input row
@@ -210,33 +187,7 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 2,
     marginLeft: 40,
-    marginBottom: 8,
-  },
-  bottomtextbg: {
-    width: 'auto',
-    paddingHorizontal: 20,
-    height: 32,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20, // More space from the bottom
-    alignSelf: 'center',
-    // Removed position: 'absolute', bottom, left, right
-  },
-  middleSection: {
-    alignItems: 'center',
-    marginTop: 0,
-    marginBottom: 120,
-    width: '100%',
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 24, // Add space between logo and tagline
-  },
-  subtitle: {
-    marginBottom: 10, // Add space between tagline and bottomtextbg
+    bottom: 89,
   },
 });
 

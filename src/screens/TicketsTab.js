@@ -13,6 +13,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const [searchText, setSearchText] = useState('');
     const [selectedTab, setSelectedTab] = useState(initialTab || 'All');
     const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
     const isFocused = useIsFocused();
     const [fetchedTickets, setFetchedTickets] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -63,6 +64,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
                     currency: ticket.currency || 'N/A',
+                    email: ticket.user_first_name || 'N/A'
                 };
             });
 
@@ -145,15 +147,17 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity onPress={() => handleTicketPress(item)} style={styles.ticketContainer}>
             <View>
-                <Text style={styles.ticketheading}>Ticket ID</Text>
-                <Text style={styles.ticketId}>#{item.id}</Text>
-                <Text style={styles.ticketType}>{item.type}</Text>
-                <View style={styles.priceContainer}>
+                <Text style={styles.label}>Email</Text>
+                <Text style={styles.value}>{item.email}</Text>
+                <Text style={styles.label}>Ticket ID</Text>
+                <Text style={styles.value}>{item.id}</Text>
+                {/* <Text style={styles.ticketType}>{item.type}</Text> */}
+                {/* <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>GHS</Text>
                     <Text style={styles.ticketPrice}>{item.price}</Text>
-                </View>
-                <Text style={styles.ticketDateheading}>Date</Text>
-                <Text style={styles.ticketDate}>{item.date}</Text>
+                </View> */}
+                <Text style={styles.label}>Date</Text>
+                <Text style={styles.value}>{item.date}</Text>
             </View>
             <View style={styles.statusBtn} >
                 <TouchableOpacity
@@ -215,7 +219,10 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.searchContainer}>
+            <View style={[
+                styles.searchContainer,
+                isSearchFocused && styles.searchContainerFocused
+            ]}>
                 <View style={styles.searchBarContainer}>
                     <TextInput
                         style={styles.searchBar}
@@ -224,6 +231,8 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                         onChangeText={handleSearchChange}
                         value={searchText}
                         selectionColor={color.selectField_CEBCA0}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setIsSearchFocused(false)}
                     />
                 </View>
 
@@ -309,6 +318,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         paddingHorizontal: 16,
         paddingVertical: 10,
+        marginVertical: 4
         // margin: 2,
         // shadowColor: '#000',
         // shadowOffset: { width: 0, height: 4 },
@@ -344,6 +354,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
     },
+    label: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D,
+        marginBottom: 10,
+    },
+    value: {
+        fontSize: 12,
+        fontWeight: '400',
+        color: color.black_544B45,
+        marginBottom: 8,
+    },
     ticketDate: {
         fontSize: 14,
         color: color.black_544B45,
@@ -363,11 +385,11 @@ const styles = StyleSheet.create({
     },
     statusButton: {
         paddingHorizontal: 15,
-        paddingVertical: 8,
+        paddingVertical: 4,
         borderRadius: 5,
         justifyContent: 'center',
         alignItems: 'center',
-        width: 110,
+        width: 90,
     },
     scannedButton: {
         backgroundColor: color.brown_FFE8BB,
@@ -381,9 +403,13 @@ const styles = StyleSheet.create({
     },
     scannedButtonText: {
         color: color.brown_D58E00,
+        fontSize: 10,
+        fontWeight: 500
     },
     unscannedButtonText: {
         color: color.black_544B45,
+        fontSize: 10,
+        fontWeight: 500
     },
     statusBtn: {
         position: 'absolute',
@@ -397,8 +423,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 10,
-        marginTop: Platform.OS === 'ios' ? -25 : -25,
+        marginBottom: 5,
+        marginTop: Platform.OS === 'ios' ? -45 : -45,
         borderColor: color.borderBrown_CEBCA0,
         borderWidth: 1,
         height: 45,
@@ -412,11 +438,13 @@ const styles = StyleSheet.create({
         fontWeight: '400',
         fontSize: 13,
     },
+    searchContainerFocused: {
+        borderColor: '#24282C',
+    },
     imageContainer: {
         width: 100,
         height: 100,
-        marginRight: 5,
-        marginTop: 70
+        marginTop: 50
     },
     tabContainer: {
         flexDirection: 'row',

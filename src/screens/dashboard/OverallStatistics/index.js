@@ -79,10 +79,10 @@ const OverallStatistics = ({ stats,
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 10
+        marginHorizontal: 16,
     },
     wrapper: {
-        marginTop: 20,
+        marginVertical: 16,
         padding: 16,
         paddingHorizontal: 15,
         backgroundColor: color.white_FFFFFF,

@@ -575,8 +575,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tabContainer: {
-    marginVertical: 10,
-    marginHorizontal: 10
+    marginVertical: 8,
+    marginHorizontal: 16
   },
   tabRow: {
     flexDirection: 'row',
@@ -622,7 +622,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   saleScanTabContainer: {
-    margin: 10,
+    marginHorizontal: 16,
+    marginVertical: 8
   },
   saleScanTabRow: {
     flexDirection: 'row',

@@ -11,6 +11,7 @@ import NoResults from '../../../components/NoResults';
 const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
     const navigation = useNavigation();
     const [searchText, setSearchText] = useState('');
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [fetchedTickets, setFetchedTickets] = useState([]);
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
@@ -130,7 +131,10 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
         >
             <View><Text style={styles.title}>Scans</Text></View>
             <View style={styles.searchFilterContainer}>
-                <View style={styles.searchBar}>
+                <View style={[
+                    styles.searchBar,
+                    isSearchFocused && styles.searchBarFocused
+                ]}>
                     <TextInput
                         style={styles.searchInput}
                         placeholder="John Doe"
@@ -138,6 +142,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
                         onChangeText={handleSearchChange}
                         value={searchText}
                         selectionColor={color.selectField_CEBCA0}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setIsSearchFocused(false)}
                     />
                     <TouchableOpacity onPress={() => handleSearchChange(searchText)}>
                         <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
@@ -154,10 +160,10 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
                     >
                         <View style={styles.cardContent}>
                             <View>
-                                <Text style={styles.label}>Name</Text>
+                                <Text style={styles.label}>Email</Text>
                                 <Text style={styles.value}>{item.userfirstname || 'N/A'}</Text>
                                 <Text style={styles.label}>Ticket ID</Text>
-                                <Text style={styles.value}>#{item.id}</Text>
+                                <Text style={styles.value}>{item.id}</Text>
                                 <Text style={styles.label}>{item.type}</Text>
                                 <Text style={styles.value}>{item.currency} {item.price}</Text>
                             </View>
@@ -211,7 +217,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 15,
+        marginHorizontal: 16,
+        marginVertical: 8
     },
     searchFilterContainer: {
         flexDirection: 'row',
@@ -225,11 +232,13 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         borderRadius: 10,
         paddingHorizontal: 15,
-        marginBottom: 10,
         borderColor: color.borderBrown_CEBCA0,
         borderWidth: 1,
         height: 45,
         marginRight: 10,
+    },
+    searchBarFocused: {
+        borderColor: color.placeholderTxt_24282C,
     },
     searchInput: {
         flex: 1,
@@ -241,7 +250,7 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: 'white',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 15,
         marginBottom: 15,
         position: 'relative',
@@ -271,7 +280,7 @@ const styles = StyleSheet.create({
     badge: {
         position: 'absolute',
         top: 10,
-        right: 12,
+        right: 18,
         borderRadius: 5,
         paddingHorizontal: 8,
         paddingVertical: 2,

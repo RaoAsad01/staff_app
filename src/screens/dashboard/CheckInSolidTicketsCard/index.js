@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: color.white_FFFFFF,
     padding: 15,
-    borderRadius: 12,
-    marginVertical: 16,
-    marginHorizontal: 10,
+    borderRadius: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
   // title: {
   //   fontSize: 16,

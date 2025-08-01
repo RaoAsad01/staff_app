@@ -427,7 +427,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
       />
 
       <View style={styles.footer}>
-        <View style={styles.lineView}></View>
+        {/* <View style={styles.lineView}></View> */}
         <View style={styles.totalamount}>
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>Total Tickets</Text>
@@ -439,7 +439,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
           </View>
         </View>
 
-        <View style={styles.lineView2}></View>
+        {/* <View style={styles.lineView2}></View> */}
         <Formik
           initialValues={{ email: '' }}
           validationSchema={validationSchema}
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    marginTop: 30,
+    marginTop: 14,
     gap: 10
   },
   totalContainer: {

@@ -145,7 +145,7 @@ const ScanCategoriesDetails = ({ stats }) => {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Scan Categories Details</Text>
+      {/* <Text style={styles.title}>Scan Categories Details</Text> */}
       {listData.map((item, idx) => renderItem(item, idx))}
     </View>
   );
@@ -154,9 +154,9 @@ const ScanCategoriesDetails = ({ stats }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: color.white_FFFFFF,
-    borderRadius: 12,
-    marginVertical: 16,
-    marginHorizontal: 10,
+    borderRadius: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
   title: {
     fontSize: 16,

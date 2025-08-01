@@ -135,8 +135,8 @@ const BoxOfficeSales = ({ stats }) => {
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 10,
-        marginTop: 6
+        marginHorizontal: 16,
+        marginVertical: 8
     },
     wrapper: {
         backgroundColor: color.white_FFFFFF,

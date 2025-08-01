@@ -57,27 +57,27 @@ function MyTabs() {
 
     if (route.name === 'Dashboard') {
       if (isCheckInActive && !focused) {
-        IconComponent = SvgIcons.dashboardInactiveIconWhite;
+        IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
       } else {
         IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
       }
     } else if (route.name === 'Tickets') {
       if (isCheckInActive && !focused) {
-        IconComponent = SvgIcons.ticketInactiveTabSvgWhite;
+        IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
       } else {
         IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
       }
     } else if (route.name === 'Check In') {
       IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.checkinInActiveTabSVG;
-    } else if (route.name === 'Manual Scan') {
+    } else if (route.name === 'Manual') {
       if (isCheckInActive && !focused) {
-        IconComponent = SvgIcons.manualInActiveTabSVGWhite;
+        IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
       } else {
         IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
       }
     } else if (route.name === 'Profile') {
       if (isCheckInActive && !focused) {
-        IconComponent = SvgIcons.profileMenuIconWhite;
+        IconComponent = focused ? SvgIcons.profileIconActive : SvgIcons.profileIconInActive;
       } else {
         IconComponent = focused ? SvgIcons.profileIconActive : SvgIcons.profileIconInActive;
       }
@@ -113,7 +113,7 @@ function MyTabs() {
                     color: focused
                       ? '#AE6F28'
                       : isCheckInActive
-                        ? '#FFFFFF'
+                        ? '#766F6A'
                         : color.brown_766F6A,
                     fontWeight: focused ? 'bold' : 'normal',
                   },
@@ -138,7 +138,7 @@ function MyTabs() {
 
           tabBarStyle: {
             height: 66,
-            backgroundColor: isCheckInActive ? '#AE6F28' : '#F5F5F5',
+            backgroundColor: isCheckInActive ? '#f3f3f3' : '#f3f3f3',
           },
           tabBarShowLabel: false,
           tabBarButton: (props) => (
@@ -187,7 +187,7 @@ function MyTabs() {
       </Tab.Screen>
 
       <Tab.Screen
-        name="Manual Scan"
+        name="Manual"
         options={{ headerShown: false, unmountOnBlur: true }}
       >
         {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}

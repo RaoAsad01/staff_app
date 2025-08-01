@@ -425,7 +425,8 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    marginHorizontal: 16,
+    marginVertical: 8
   },
   tabContainer: {
     flexDirection: 'row',

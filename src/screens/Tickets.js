@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    paddingVertical: 10,
+    paddingVertical: 14,
     paddingHorizontal: 10,
   },
   button: {

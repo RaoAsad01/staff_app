@@ -4,6 +4,7 @@ import Header from '../../components/header';
 import SvgIcons from '../../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
 import { getFormattedDate } from '../constants/dateAndTime';
+import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
 
 const TicketScanned = ({ route }) => {
     const { scanResponse, eventInfo, note, status } = route.params;
@@ -21,6 +22,14 @@ const TicketScanned = ({ route }) => {
             <View style={styles.wrapper}>
 
                 <View style={styles.popUp}>
+                    {/* <Typography
+                        style={styles.labeltickets}
+                        weight="600"
+                        size={20}
+                        color={color.placeholderTxt_24282C}
+                    >
+                        {scanResponse?.message || 'N/A'}
+                    </Typography> */}
                     <Text style={styles.labeltickets}>
                         {scanResponse?.message || 'N/A'}
                     </Text>
@@ -34,19 +43,27 @@ const TicketScanned = ({ route }) => {
                         <View style={styles.row}>
                             <View style={styles.leftColumnContent}>
                                 <Text style={styles.values}>{scanResponse?.ticket || 'N/A'}</Text>
-                                <Text style={[styles.value, styles.marginTop10]}>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
                                     {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'N/A'}
-                                </Text>
+                                </Typography>
+                                {/* <Text style={[styles.value, styles.marginTop10]}>
+                                    {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'N/A'}
+                                </Text> */}
                                 <View style={styles.spacer} />
-                                <Text style={[styles.label, styles.marginTop20]}>Last Scanned On</Text>
-                                <Text style={[styles.value, styles.marginTop10]}>{getFormattedDate(scanResponse?.last_scan) || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop20]}>Last Scanned On</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{getFormattedDate(scanResponse?.last_scan) || 'N/A'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
-                                <Text style={styles.label}>Scanned By</Text>
-                                <Text style={[styles.value, styles.marginTop10]}>{scanResponse?.scanned_by || 'N/A'}</Text>
-                                <Text style={[styles.ticketNumber, styles.marginTop15]}>#{scanResponse?.ticket_number || 'N/A'}</Text>
-                                <Text style={[styles.label, styles.marginTop3]}>Scan Count</Text>
-                                <Text style={[styles.value, styles.marginTop9]}>{scanResponse?.scan_count || 'N/A'}</Text>
+                                <Text style={styles.values}>Scanned By</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{scanResponse?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop15]}>{scanResponse?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop3]}>Scan Count</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{scanResponse?.scan_count || 'N/A'}</Text>
                             </View>
                         </View>
                     </View>
@@ -81,19 +98,19 @@ const styles = StyleSheet.create({
     },
 
     labeltickets: {
-        color: color.black_2F251D,
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
+        fontSize: 20,
+        color: color.black_2F251D
     },
     ticketHolder: {
-        color: color.brown_3C200A,
+        color: color.placeholderTxt_24282C,
         fontSize: 14,
         marginTop: 20,
+        fontWeight: 'bold',
     },
     userName: {
         color: color.brown_3C200A,
         fontSize: 16,
-        fontWeight: 'bold',
         marginTop: 10,
     },
     successImageIcon: {
@@ -130,18 +147,21 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: color.black_2F251D,
     },
-    value: {
-        fontSize: 16,
+    valueScanCount: {
+        fontSize: 14,
         fontWeight: '400',
-        color: color.brown_5A2F0E,
+        color: color.black_544B45,
+    },
+    value: {
+        color: color.placeholderTxt_24282C,
     },
     values: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '500',
-        color: color.black_2F251D,
+        color: color.black_2F251D
     },
     ticketNumber: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '400',
         color: color.black_544B45,
         marginBottom: 15,
