@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { ticketService } from '../api/apiService'; // Import your ticket service
 import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct import path
 import SuccessPopup from '../constants/SuccessPopup';
+import ErrorPopup from '../constants/ErrorPopup';
 
 const ManualCheckInAllTickets = () => {
     const route = useRoute();
@@ -19,7 +20,7 @@ const ManualCheckInAllTickets = () => {
     const [isCheckingIn, setIsCheckingIn] = useState(false); // State for loading during check-in
     const [checkInSuccess, setCheckInSuccess] = useState(false); // State to show success
     const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State to control success popup
-
+    const [showErrorPopup, setShowErrorPopup] = useState(false); // State to control error popup
     useEffect(() => {
         const fetchTicketDetails = async () => {
             setLoading(true);
@@ -41,16 +42,19 @@ const ManualCheckInAllTickets = () => {
                         fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
                     });
                 } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
-                    setError('No tickets found for this order.');
+                    //setError('No tickets found for this order.');
                     setTicketDetails([]);
                     setUserDetails(null);
+                    setShowErrorPopup(true);
                 } else {
-                    setError('Invalid ticket details response.');
+                    //setError('Invalid ticket details response.');
                     setTicketDetails(null);
                     setUserDetails(null);
+                    setShowErrorPopup(true);
                 }
             } catch (err) {
-                setError(err.message || 'Failed to fetch ticket details.');
+                //setError(err.message || 'Failed to fetch ticket details.');
+                setShowErrorPopup(true);
                 console.error('Error fetching ticket details:', err);
             } finally {
                 setLoading(false);
@@ -60,8 +64,9 @@ const ManualCheckInAllTickets = () => {
         if (orderNumber && eventUuid) {
             fetchTicketDetails();
         } else {
-            setError('Order Number or Event UUID not provided.');
+            //setError('Order Number or Event UUID not provided.');
             setLoading(false);
+            setShowErrorPopup(true);
         }
     }, [orderNumber, eventUuid]); // You can add checkInSuccess as a dependency if you want to control state updates
 
@@ -82,19 +87,19 @@ const ManualCheckInAllTickets = () => {
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
                     setTicketDetails([{ ...ticket, checkin_status: 'Scanned' }]);
-                    
+
                     // Update scan count when ticket is successfully checked in
                     if (route.params?.onScanCountUpdate) {
                         route.params.onScanCountUpdate();
                     }
                 } else {
                     console.log('Check-in failed according to response. Status:', response?.data?.status);
-                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
+                    setShowErrorPopup(true);
                 }
             } catch (err) {
                 console.error('Single Ticket Check-in Error:', err);
-                setError(err.message || 'Failed to check in ticket.');
-                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+                //setError(err.message || 'Failed to check in ticket.');
+                setShowErrorPopup(true);
             } finally {
                 setIsCheckingIn(false);
             }
@@ -114,6 +119,10 @@ const ManualCheckInAllTickets = () => {
 
     const handleCloseSuccessPopup = () => {
         setShowSuccessPopup(false);
+    };
+
+    const handleCloseErrorPopup = () => {
+        setShowErrorPopup(false);
     };
 
     if (loading) {
@@ -207,6 +216,19 @@ const ManualCheckInAllTickets = () => {
                     </View>
                 )}
             </View>
+            <SuccessPopup
+                visible={showSuccessPopup}
+                onClose={handleCloseSuccessPopup}
+                title="Check-In Successful"
+                subtitle={total === 1 ? "Ticket checked in successfully" : "Tickets checked in successfully"}
+            />
+            <ErrorPopup
+                visible={showErrorPopup}
+                onClose={handleCloseErrorPopup}
+                title="Check-In Failed"
+                subtitle="We couldn’t check in this ticket. Please try again
+or contact support."
+            />
         </SafeAreaView>
     );
 };

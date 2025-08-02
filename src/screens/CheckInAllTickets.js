@@ -7,6 +7,7 @@ import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import { useNavigation } from '@react-navigation/native';
 import SuccessPopup from '../constants/SuccessPopup';
+import ErrorPopup from '../constants/ErrorPopup';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo } = route.params;
@@ -17,6 +18,7 @@ const CheckInAllTickets = ({ route }) => {
     const navigation = useNavigation();
     const [error, setError] = useState(null);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
     const extractResponse = tickets[0];
     const code = extractResponse?.code;
     const eventUuid = extractResponse?.event;
@@ -36,18 +38,18 @@ const CheckInAllTickets = ({ route }) => {
                     setShowSuccessPopup(true);
                     // Update the ticket status
                     setTickets([{ ...tickets[0], checkin_status: 'SCANNED', status: 'SCANNED' }]);
-                    
+
                     // Update scan count when ticket is successfully checked in
                     if (route.params?.onScanCountUpdate) {
                         route.params.onScanCountUpdate();
                     }
                 } else {
-                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in ticket.');
+                    setShowErrorPopup(true);
                 }
             } catch (err) {
                 console.error('Single Ticket Check-in Error:', err);
                 setError(err.message || 'Failed to check in ticket.');
-                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+                setShowErrorPopup(true);
             } finally {
                 setIsCheckingIn(false);
             }
@@ -72,18 +74,18 @@ const CheckInAllTickets = ({ route }) => {
                         status: 'SCANNED'
                     }));
                     setTickets(updatedTickets);
-                    
+
                     // Update scan count when tickets are successfully checked in
                     if (route.params?.onScanCountUpdate) {
                         route.params.onScanCountUpdate();
                     }
                 } else {
-                    Alert.alert('Check-in Failed', response?.data?.message || 'Unable to check in all tickets.');
+                    setShowErrorPopup(true);
                 }
             } catch (err) {
                 console.error('Check-in All Error:', err);
                 setError(err.message || 'Failed to check in all tickets.');
-                Alert.alert('Error', err.message || 'Something went wrong during check-in.');
+                setShowErrorPopup(true);
             } finally {
                 setIsCheckingIn(false);
             }
@@ -102,6 +104,10 @@ const CheckInAllTickets = ({ route }) => {
 
     const handleCloseSuccessPopup = () => {
         setShowSuccessPopup(false);
+    };
+
+    const handleCloseErrorPopup = () => {
+        setShowErrorPopup(false);
     };
 
     return (
@@ -158,12 +164,19 @@ const CheckInAllTickets = ({ route }) => {
                     </View>
                 )}
             </View>
-            
-            <SuccessPopup 
+
+            <SuccessPopup
                 visible={showSuccessPopup}
                 onClose={handleCloseSuccessPopup}
                 title="Check-In Successful"
                 subtitle={totalTickets === 1 ? "Ticket checked in successfully" : "Tickets checked in successfully"}
+            />
+            <ErrorPopup
+                visible={showErrorPopup}
+                onClose={handleCloseErrorPopup}
+                title="Check-In Failed"
+                subtitle="We couldn’t check in this ticket. Please try again
+or contact support."
             />
         </SafeAreaView>
     );

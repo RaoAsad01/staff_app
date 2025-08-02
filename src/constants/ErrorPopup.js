@@ -4,7 +4,7 @@ import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import Typography, { Body1, Caption } from '../components/Typography';
 
-const SuccessPopup = ({ visible, onClose, title = "", subtitle = "" }) => {
+const ErrorPopup = ({ visible, onClose, title = "", subtitle = "" }) => {
     return (
         <Modal
             animationType="fade"
@@ -19,7 +19,7 @@ const SuccessPopup = ({ visible, onClose, title = "", subtitle = "" }) => {
                     </TouchableOpacity>
 
                     <View style={styles.iconContainer}>
-                        <SvgIcons.successBrownSVG width={48} height={48} />
+                        <SvgIcons.errorRedCircleIcon width={48} height={48} />
                     </View>
                     <Typography style={styles.title}
                         weight="500"
@@ -84,4 +84,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SuccessPopup; 
+export default ErrorPopup; 

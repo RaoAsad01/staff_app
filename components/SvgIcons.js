@@ -43,6 +43,7 @@ import NoResultsIcon from '../assets/svgs/no-results-icon.svg';
 import CrossIconBrownbg from '../assets/svgs/cross_icon_brown_bg.svg';
 import DownArrow from '../assets/svgs/downArrow.svg';
 import UpArrow from '../assets/svgs/upArrow.svg';
+import ErrorRedCircleIcon from '../assets/svgs/crossRedCircleIcon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -90,4 +91,5 @@ export default {
     CrossIconBrownbg: CrossIconBrownbg,
     downArrow: DownArrow,
     upArrow: UpArrow,
+    errorRedCircleIcon: ErrorRedCircleIcon
 };

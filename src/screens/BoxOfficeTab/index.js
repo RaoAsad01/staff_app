@@ -191,7 +191,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
         paymentOption.toUpperCase(),
         transactionId
       );
-
+console.log('Boxoffice Response:', response)
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
       const ticketNumber = response?.data?.ticket_number;

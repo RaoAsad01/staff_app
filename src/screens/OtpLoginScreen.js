@@ -20,6 +20,8 @@ import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography, { Body1, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
+import SuccessPopup from '../constants/SuccessPopup';
+import ErrorPopup from '../constants/ErrorPopup';
 
 // Helper function to format seconds as mm:ss
 function formatTime(seconds) {
@@ -39,7 +41,8 @@ const OtpLoginScreen = ({ route }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   // useEffect(() => {
   //   const checkLoggedIn = async () => {
   //     const token = await SecureStore.getItemAsync('accessToken');
@@ -153,13 +156,21 @@ const OtpLoginScreen = ({ route }) => {
         // Update the UUID with the new one from response
         setOtp(['', '', '', '', '']); // Clear the OTP fields
         setOtpResendTime(120); // Reset timer to 2 minutes
-        Alert.alert('Success', 'OTP resent successfully');
+        setShowSuccessPopup(true);
       } else {
-        Alert.alert('Error', response?.message || 'Failed to get new verification code');
+        setShowErrorPopup(true);
       }
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to resend OTP');
+      setShowErrorPopup(true);
     }
+  };
+
+  const handleCloseSuccessPopup = () => {
+    setShowSuccessPopup(false);
+  };
+
+  const handleCloseErrorPopup = () => {
+    setShowErrorPopup(false);
   };
 
   useEffect(() => {
@@ -193,6 +204,11 @@ const OtpLoginScreen = ({ route }) => {
       inputRefs.current[index - 1]?.focus();
     }
   };
+
+  const dismissError = () => {
+    setShowError(false);
+    setErrorMessage('');
+  };
   return (
     <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -224,7 +240,10 @@ const OtpLoginScreen = ({ route }) => {
                 {otp.map((digit, index) => (
                   <TextInput
                     key={index}
-                    style={styles.otpInput}
+                    style={[
+                      styles.otpInput,
+                      showError ? styles.otpInputError : null
+                    ]}
                     value={digit}
                     placeholder="-"
                     placeholderTextColor={color.white_FFFFFF}
@@ -240,7 +259,18 @@ const OtpLoginScreen = ({ route }) => {
               </View>
 
               {/* Remove the 'Didn't receive OTP?' label for a cleaner look */}
-
+              <SuccessPopup
+                visible={showSuccessPopup}
+                onClose={handleCloseSuccessPopup}
+                title="Success"
+                subtitle="OTP Sent Successfully"
+              />
+              <ErrorPopup
+                visible={showErrorPopup}
+                onClose={handleCloseErrorPopup}
+                title="Error"
+                subtitle="Failed to get new verification code"
+              />
               <View style={styles.rowContainer}>
                 {otpResendTime > 0 ? (
                   <View style={styles.timerRow}>
@@ -285,9 +315,9 @@ const OtpLoginScreen = ({ route }) => {
 
               {showError && (
                 <View style={styles.errorContainer}>
-                  <View >
+                  <TouchableOpacity onPress={dismissError}>
                     <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
-                  </View>
+                  </TouchableOpacity>
                   <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorText}>
                     {errorMessage}
                   </Typography>
@@ -334,7 +364,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 180
+    marginTop: 230
   },
   appName: {
     marginBottom: 20,
@@ -360,6 +390,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     color: color.white_FFFFFF,
+  },
+  otpInputError: {
+    borderColor: color.red_FF3B30,
+    borderWidth: 2,
   },
   button: {
     backgroundColor: color.btnBrown_AE6F28,

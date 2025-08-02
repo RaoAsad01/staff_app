@@ -28,7 +28,7 @@ const SplashScreenComponent = () => {
     <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
        <StatusBar
             style="dark"
-            backgroundColor="#000000"
+            backgroundColor="transparent"
             translucent
           />
       <SafeAreaView style={styles.container}>

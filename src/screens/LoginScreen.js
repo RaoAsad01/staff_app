@@ -18,6 +18,8 @@ import MiddleSection from '../components/MiddleSection';
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -57,15 +59,23 @@ const LoginScreen = () => {
           user_identifier: values.user_identifier.trim()
         });
       } else {
-        alert('Invalid Email or Phone Number');
+        setShowError(false);
+        setErrorMessage('');
       }
     } catch (error) {
       if (error.response?.data?.message) {
-        alert('Invalid Email or Phone Number');
+        setErrorMessage('Invalid email or phone number');
+        setShowError(true);
       } else {
-        alert('Failed to request OTP. Please try again.');
+        setErrorMessage('Failed to request OTP. Please try again.');
+        setShowError(true);
       }
     }
+  };
+
+  const dismissError = () => {
+    setShowError(false);
+    setErrorMessage('');
   };
 
   return (
@@ -89,7 +99,10 @@ const LoginScreen = () => {
               >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
                   <View style={{ width: '100%' }}>
-                    <View style={styles.inputRow}>
+                    <View style={[
+                      styles.inputRow,
+                      (touched.user_identifier && errors.user_identifier) || showError ? styles.inputError : null
+                    ]}>
                       <TextInput
                         style={[
                           styles.inputField,
@@ -118,6 +131,16 @@ const LoginScreen = () => {
                   </View>
                 )}
               </Formik>
+              {showError && (
+              <View style={styles.errorContainer}>
+                <TouchableOpacity onPress={dismissError}>
+                  <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                </TouchableOpacity>
+                <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorTextCross}>
+                  {errorMessage}
+                </Typography>
+              </View>
+            )}
             </View>
           </View>
           {!isKeyboardVisible && (
@@ -134,7 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
- 
+
     width: '100%',
   },
   logoSection: {
@@ -188,6 +211,32 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginLeft: 40,
     bottom: 89,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: color.white_FFFFFF,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginTop: 10,
+    width: '80%',
+    alignSelf: 'center',
+    borderWidth: 2,
+    gap: 10,
+    bottom: 89,
+  },
+  errorIconCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: color.red_FF3B30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  errorTextCross: {
+    flex: 1,
   },
 });
 
