@@ -34,8 +34,10 @@ const TicketScanned = ({ route }) => {
                         {scanResponse?.message || 'N/A'}
                     </Text>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
-                    <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.userName}>{scanResponse?.ticket_holder || 'N/A'}</Text>
+                    {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
+                    <Text style={styles.userName}>{scanResponse?.name || 'N/A'}</Text>
+                    <Text style={styles.userEmail}>{scanResponse?.user_email || 'N/A'}</Text>
+                    <Text style={styles.userPurchaseDate}>Purchase Date: {scanResponse?.date || 'N/A'}</Text>
                 </View>
 
                 <View style={styles.ticketContainer}>
@@ -109,9 +111,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     userName: {
-        color: color.brown_3C200A,
+        color: color.placeholderTxt_24282C,
         fontSize: 16,
         marginTop: 10,
+        fontWeight: '500'
+    },
+    userEmail: {
+        color: color.placeholderTxt_24282C,
+        fontSize: 14,
+        marginTop: 10,
+        fontWeight: '400'
+    },
+    userPurchaseDate: {
+        color: color.black_544B45,
+        fontSize: 14,
+        marginTop: 10,
+        fontWeight: '400'
     },
     successImageIcon: {
         marginTop: 20,
@@ -263,7 +278,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.brown_F7E4B6,
         paddingHorizontal: 16,
         paddingVertical: 5,
-        marginTop: 15,
+        marginTop: 10,
         marginBottom: 10,
         width: '100%',
     },

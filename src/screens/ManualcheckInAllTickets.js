@@ -36,6 +36,8 @@ const ManualCheckInAllTickets = () => {
                     setCheckInSuccess(isScanned);
 
                     setUserDetails({
+                        purchaseDate: response.data[0]?.formatted_date,
+                        name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
                         email: response.data[0]?.user_email || 'N/A',
                         firstName: response.data[0]?.user_first_name || '',
                         lastName: response.data[0]?.user_last_name || '',
@@ -168,9 +170,10 @@ const ManualCheckInAllTickets = () => {
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
-                    <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.userEmail}>{userDetails?.email}</Text>
-
+                    <Text style={styles.userName}>{userDetails?.name}</Text>
+                    {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
+                    <Text style={styles.ticketHolder}>{userDetails?.email}</Text>
+                    <Text style={styles.ticketPurchaseDate}>Purchase Date: {userDetails?.purchaseDate}</Text>
                     {total === 1 && (
                         <TouchableOpacity
                             style={styles.button}
@@ -195,7 +198,7 @@ const ManualCheckInAllTickets = () => {
                                 order_number: ticket.ticket_number,
                                 type: ticket.ticket_type,
                                 price: ticket.ticket_price,
-                                date: ticket.date,
+                                date: ticket.formatted_date,
                                 status: ticket.checkin_status,
                                 code: ticket.code,
                                 note: ticket.note,
@@ -209,9 +212,11 @@ const ManualCheckInAllTickets = () => {
                                 currency: ticket.currency,
                                 eventInfo: eventInfo,
                                 ticket_number: ticket.ticket_number,
+                                name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}
+                            userEmail={userDetails?.email}
                         />
                     </View>
                 )}
@@ -267,17 +272,23 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     ticketHolder: {
-        color: color.brown_3C200A,
+        color: color.placeholderTxt_24282C,
         fontSize: 14,
-        marginTop: 20,
+        marginTop: 10,
+        fontWeight: '400'
+    },
+    ticketPurchaseDate: {
+        color: color.black_544B45,
+        fontSize: 14,
+        marginTop: 10,
         fontWeight: '400'
     },
     ticketsList: {
         marginTop: 20,
         flex: 1,
     },
-    userEmail: {
-        color: color.brown_3C200A,
+    userName: {
+        color: color.placeholderTxt_24282C,
         fontSize: 16,
         marginTop: 10,
         fontWeight: '500'

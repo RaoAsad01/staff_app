@@ -53,7 +53,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                     id: ticket.ticket_number || 'N/A',
                     type: ticket.ticket_type || 'N/A',
                     price: ticket.ticket_price || 'N/A',
-                    date: ticket.date || 'N/A',
+                    date: ticket.formatted_date || 'N/A',
                     status: ticket.checkin_status === 'SCANNED' ? 'Scanned' : 'Unscanned',
                     note: ticket.note || 'No note added',
                     imageUrl: null,
@@ -64,7 +64,8 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
                     currency: ticket.currency || 'N/A',
-                    email: ticket.user_first_name || 'N/A'
+                    email: ticket.user_email || 'N/A',
+                    name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
                 };
             });
 
@@ -130,6 +131,9 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             scan_count: ticket.scanCount || 0,
             note: ticket.note || 'No note added',
             qrCodeUrl: ticket.qrCodeUrl,
+            name: ticket.name || 'N/A',
+            date: ticket.date || 'N/A',
+            user_email: ticket.email || 'N/A',
         };
 
         navigation.navigate('TicketScanned', {

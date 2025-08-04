@@ -99,7 +99,7 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
         {/* Left Column */}
         <View style={styles.leftColumn}>
           <Text style={styles.name}>{item.user_full_name || 'N/A'}</Text>
-          <Text style={styles.id}>{`#${item.order_number || 'N/A'}`}</Text>
+          <Text style={styles.id}>{`${item.order_number || 'N/A'}`}</Text>
         </View>
 
         {/* Right Column */}

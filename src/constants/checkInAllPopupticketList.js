@@ -4,8 +4,9 @@ import { color } from '../color/color';
 import { ticketService } from '../api/apiService';
 import SuccessPopup from './SuccessPopup';
 import { useState } from 'react';
+import { date } from 'yup';
 
-const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate }) => {
+const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate, userEmail }) => {
     const { eventInfo } = useRoute().params;
     const navigation = useNavigation();
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -22,12 +23,12 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate 
                 if (onTicketStatusChange) {
                     onTicketStatusChange(ticketToCheckIn.uuid, 'SCANNED');
                 }
-                
+
                 // Update scan count when ticket is successfully checked in
                 if (onScanCountUpdate) {
                     onScanCountUpdate();
                 }
-                
+
                 setShowSuccessPopup(true);
             } else {
                 Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
@@ -58,7 +59,10 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate 
             event_uuid: item.event_uuid || item.eventUuid,
             scanned_by_email: item.scanned_by_email || 'N/A',
             ticket_holder_email: item.ticket_holder_email || 'N/A',
-            status: item.status || 'UNSCANNED'
+            status: item.status || 'UNSCANNED',
+            name: item.name,
+            date: item.date,
+            user_email: userEmail
         };
 
         navigation.navigate('TicketScanned', {
@@ -74,7 +78,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate 
         >
             <View>
                 <Text style={styles.ticketheading}>Ticket ID</Text>
-                <Text style={styles.ticketId}>#{item.ticket_number}</Text>
+                <Text style={styles.ticketId}>{item.ticket_number}</Text>
                 <Text style={styles.ticketType}>{item.type}</Text>
                 <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>{item.currency} </Text>
@@ -120,8 +124,8 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate 
                 renderItem={renderItem}
                 keyExtractor={(item) => item.uuid}
             />
-            
-            <SuccessPopup 
+
+            <SuccessPopup
                 visible={showSuccessPopup}
                 onClose={handleCloseSuccessPopup}
                 title="Check-In Successful"

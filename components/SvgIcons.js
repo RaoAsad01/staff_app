@@ -25,7 +25,7 @@ import HomeDrawerIcon from '../assets/svgs/home-drawer-icon.svg';
 import FilterIcon from '../assets/svgs/filter-icon.svg';
 import TickIcon from '../assets/svgs/tick-icon.svg';
 import DashboardInactiveIcon from '../assets/svgs/dashboard_inactive_icon.svg';
-import DashboardActiveIcon from '../assets/svgs/dashboard_active_icon.svg'; 
+import DashboardActiveIcon from '../assets/svgs/dashboard_active_icon.svg';
 import ProfileIconInActive from '../assets/svgs/profile_icon_inactive.svg';
 import BackArrow from '../assets/svgs/back_arrow.svg';
 import RemoveIcon from '../assets/svgs/remove_icon.svg';

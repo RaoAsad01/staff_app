@@ -168,15 +168,15 @@ const ProfileScreen = () => {
         </View>
       </ScrollView>
       {hasChanges && (
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={handleSave}
-        disabled={!profileImage}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={!profileImage}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };

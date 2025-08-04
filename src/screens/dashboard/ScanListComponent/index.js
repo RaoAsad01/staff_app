@@ -33,7 +33,7 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
                     id: ticket.ticket_number || 'N/A',
                     type: ticket.ticket_type || 'N/A',
                     price: ticket.ticket_price || 'N/A',
-                    date: ticket.date || 'N/A',
+                    date: ticket.formatted_date || 'N/A',
                     status: ticket.checkin_status,
                     note: ticket.note || 'N/A',
                     imageUrl: null,
@@ -45,7 +45,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
                     lastScannedOn: ticket.last_scanned_on || 'N/A',
                     qrCodeUrl: qrCodeUrl,
                     currency: ticket.currency || 'N/A',
-                    userfirstname: ticket.user_first_name
+                    userfirstname: ticket.user_first_name,
+                    name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
+                    user_email: ticket.user_email || 'N/A',
                 };
             });
 
@@ -90,6 +92,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
             scan_count: ticket.scanCount || 0,
             note: ticket.note || 'No note added',
             qrCodeUrl: ticket.qrCodeUrl,
+            name: ticket.name,
+            date: ticket.date,
+            user_email: ticket.user_email,
         };
 
         navigation.navigate('TicketScanned', {
@@ -160,8 +165,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
                     >
                         <View style={styles.cardContent}>
                             <View>
-                                <Text style={styles.label}>Email</Text>
-                                <Text style={styles.value}>{item.userfirstname || 'N/A'}</Text>
+                                <Text style={styles.label}>Name</Text>
+                                <Text style={styles.value}>{item.name || 'N/A'}</Text>
                                 <Text style={styles.label}>Ticket ID</Text>
                                 <Text style={styles.value}>{item.id}</Text>
                                 <Text style={styles.label}>{item.type}</Text>

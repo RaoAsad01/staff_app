@@ -26,6 +26,7 @@ const SplashScreenComponent = () => {
 
   return (
     <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+       <View style={{ flex: 1 }}>
        <StatusBar
             style="dark"
             backgroundColor="transparent"
@@ -41,6 +42,7 @@ const SplashScreenComponent = () => {
           onGetStartedPress={handleGetStarted}
         />
       </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 };

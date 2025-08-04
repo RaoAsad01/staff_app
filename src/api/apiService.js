@@ -418,14 +418,15 @@ export const ticketService = {
     }
   },
 
-  fetchBoxOfficeGetTicket: async (eventUuid, items, userIdentifier, paymentMethod, transactionId = null) => {
+  fetchBoxOfficeGetTicket: async (eventUuid, items, userIdentifier, paymentMethod, transactionId = null, name = null) => {
     try {
       const requestBody = {
         event: eventUuid,
         items: items,
         user_identifier: userIdentifier,
         payment_method: paymentMethod,
-        transaction_id: transactionId
+        transaction_id: transactionId,
+        name: name
       };
 
       console.log('BoxOffice get ticket request body:', requestBody);

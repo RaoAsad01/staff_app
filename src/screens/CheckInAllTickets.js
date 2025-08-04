@@ -10,7 +10,7 @@ import SuccessPopup from '../constants/SuccessPopup';
 import ErrorPopup from '../constants/ErrorPopup';
 
 const CheckInAllTickets = ({ route }) => {
-    const { totalTickets, email, orderData, eventInfo } = route.params;
+    const { totalTickets, email, orderData, eventInfo, name } = route.params;
     const initialTickets = orderData?.data?.data || [];
     const [tickets, setTickets] = useState(initialTickets);
     const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -118,9 +118,12 @@ const CheckInAllTickets = ({ route }) => {
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
-                    <Text style={styles.ticketHolder}>Ticket Holder</Text>
-                    <Text style={styles.ticketHolder}>#{orderNumber}</Text>
-                    <Text style={styles.userEmail}>{email}</Text>
+                    {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
+                    <Text style={styles.userEmail}>{name}</Text>
+                    <Text style={styles.ticketHolder}>{email}</Text>
+                    <Text style={styles.ticketHolder}>{orderNumber}</Text>
+                    <Text style={styles.ticketHolder}>Purchase Date: {tickets[0]?.formatted_date}</Text>
+
 
                     <TouchableOpacity
                         style={[styles.button, checkInSuccess && styles.button]}
@@ -142,7 +145,7 @@ const CheckInAllTickets = ({ route }) => {
                                 order_number: ticket.order_number,
                                 type: ticket.ticket_type,
                                 price: ticket.ticket_price,
-                                date: ticket.date,
+                                date: ticket.formatted_date,
                                 status: ticket.status || ticket.checkin_status,
                                 code: ticket.code,
                                 note: ticket.note,
@@ -221,9 +224,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     ticketHolder: {
-        color: color.brown_3C200A,
+        color: color.placeholderTxt_24282C,
         fontSize: 14,
-        marginTop: 20,
+        marginTop: 10,
     },
     ticketsList: {
         marginTop: 20,

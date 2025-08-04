@@ -14,6 +14,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
   // const route = useRoute();
   // const eventUuid = route.params?.eventUuid;
   const [selectedTab, setSelectedTab] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [purchaseCode, setPurchaseCode] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
@@ -27,6 +28,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
 
   const resetData = () => {
     setSelectedTab('');
+    setName('');
     setEmail('');
     setPurchaseCode('');
     setPaymentOption('');
@@ -158,6 +160,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
   };
 
   const navigateToCheckInAllTicketsScreen = async () => {
+    if (!name.trim()) {
+      alert('Please enter a valid name.');
+      return;
+    }
+
     if (!email) {
       alert('Please enter a valid email or phone number.');
       return;
@@ -189,15 +196,17 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
         items,
         email,
         paymentOption.toUpperCase(),
-        transactionId
+        transactionId,
+        name.trim()
       );
-console.log('Boxoffice Response:', response)
+      console.log('Boxoffice Response:', response)
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
       const ticketNumber = response?.data?.ticket_number;
       navigation.navigate('CheckInAllTickets', {
         ticketNumber: ticketNumber,
         totalTickets: totalQuantity,
+        name: name.trim(),
         email,
         paymentOption,
         transactionNumber: transactionId,
@@ -212,6 +221,11 @@ console.log('Boxoffice Response:', response)
   };
 
   const handlePOSPayment = async () => {
+    if (!name.trim()) {
+      alert('Please enter a valid name.');
+      return;
+    }
+
     if (!transactionNumber.trim()) {
       alert('Please enter a valid transaction number.');
       return;
@@ -239,7 +253,8 @@ console.log('Boxoffice Response:', response)
         items,
         email,
         'POS',
-        transactionNumber.trim()
+        transactionNumber.trim(),
+        name.trim()
       );
 
       // Extract order number from response
@@ -248,6 +263,7 @@ console.log('Boxoffice Response:', response)
       setPOSModalVisible(false);
       navigation.navigate('CheckInAllTickets', {
         totalTickets: totalQuantity,
+        name: name.trim(),
         email,
         paymentOption: 'POS',
         transactionNumber,
@@ -307,6 +323,8 @@ console.log('Boxoffice Response:', response)
   };
 
   const validationSchema = Yup.object().shape({
+    name: Yup.string()
+      .required('Name is required'),
     email: Yup.string()
       .test('emailOrPhone', 'Invalid email or phone number', (value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || /^[0-9]{10,15}$/.test(value)
@@ -441,11 +459,29 @@ console.log('Boxoffice Response:', response)
 
         {/* <View style={styles.lineView2}></View> */}
         <Formik
-          initialValues={{ email: '' }}
+          initialValues={{ name: '', email: '' }}
           validationSchema={validationSchema}
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={{ width: '100%' }}>
+              {/* <Text style={styles.inputHeading}>Name</Text> */}
+              <TextInput
+                style={[styles.input, touched.name && errors.name ? styles.inputError : null]}
+                placeholder="Enter your name"
+                placeholderTextColor={color.brown_766F6A}
+                onChangeText={(text) => {
+                  handleChange('name')(text);
+                  setName(text);
+                }}
+                onBlur={handleBlur('name')}
+                value={values.name}
+                keyboardType="default"
+                selectionColor={color.selectField_CEBCA0}
+              />
+              {touched.name && errors.name && (
+                <Text style={styles.errorText}>{errors.name}</Text>
+              )}
+
               {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
               <TextInput
                 style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
