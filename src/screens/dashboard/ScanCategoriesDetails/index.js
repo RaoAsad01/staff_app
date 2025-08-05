@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import SvgIcons from "../../../../components/SvgIcons";
+import { useNavigation } from '@react-navigation/native';
 
 const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
@@ -53,12 +54,66 @@ const CircularProgress = ({ value, total, percentage }) => {
 const ScanCategoriesDetails = ({ stats }) => {
   const [expanded, setExpanded] = useState({});
   const scanCategoriesData = stats?.data?.scan_categories?.ticket_wise || {};
+  const navigation = useNavigation();
 
   const toggle = (label) => {
     setExpanded((prev) => ({
       ...prev,
       [label]: !prev[label]
     }));
+  };
+
+  const handleSubItemPress = (subItemLabel) => {
+    console.log('ScanCategoriesDetails - Subitem clicked:', subItemLabel);
+
+    // Map subitem labels to their parent tab names in BoxOfficeTab
+    const tabMapping = {
+      // Early Bird subitems
+      'Early Bird': 'Early Bird',
+      'Early Bird New': 'Early Bird',
+      'early bird': 'Early Bird',
+      'early bird new': 'Early Bird',
+
+      // VIP Ticket subitems  
+      'Critical': 'VIP Ticket',
+      'High': 'VIP Ticket',
+      'critical': 'VIP Ticket',
+      'high': 'VIP Ticket',
+
+      // Members subitems
+      'VIP Ticket': 'Members',
+      'VIP Ticket New': 'Members',
+      'vip ticket': 'Members',
+      'vip ticket new': 'Members',
+
+      // Fallback mappings
+      'Standard': 'Standard',
+      'Premium': 'Premium',
+    };
+
+    const selectedTab = tabMapping[subItemLabel];
+    console.log('ScanCategoriesDetails - Mapped tab:', selectedTab);
+
+    if (selectedTab) {
+      navigation.navigate('Tickets', {
+        screen: 'BoxOfficeTab',
+        selectedTab: selectedTab
+      });
+    } else {
+      console.warn('ScanCategoriesDetails - No tab mapping found for:', subItemLabel);
+      // Fallback: try to find a partial match
+      const partialMatch = Object.keys(tabMapping).find(key =>
+        subItemLabel.toLowerCase().includes(key.toLowerCase()) ||
+        key.toLowerCase().includes(subItemLabel.toLowerCase())
+      );
+      if (partialMatch) {
+        console.log('ScanCategoriesDetails - Found partial match:', partialMatch, '->', tabMapping[partialMatch]);
+        navigation.navigate('Tickets', {
+          screen: 'BoxOfficeTab',
+          selectedTab: tabMapping[partialMatch]
+        });
+      }
+    }
   };
 
   const renderItem = (item, index, isSubItem = false) => {
@@ -73,7 +128,14 @@ const ScanCategoriesDetails = ({ stats }) => {
             isSubItem && styles.subRow
           ]}
           activeOpacity={hasSubItems ? 0.7 : 1}
-          onPress={() => hasSubItems && toggle(item.label)}
+          onPress={() => {
+            if (isSubItem) {
+              // Navigate to BoxOfficeTab for subitems
+              handleSubItemPress(item.label);
+            } else if (hasSubItems) {
+              toggle(item.label);
+            }
+          }}
         >
           <CircularProgress value={item.scanned} total={item.total} percentage={item.percentage} />
           <View style={styles.textContainer}>
@@ -112,7 +174,7 @@ const ScanCategoriesDetails = ({ stats }) => {
       const categoryData = scanCategoriesData[category];
       const totalTickets = categoryData.total_tickets || 0;
       const scannedTickets = categoryData.scanned_tickets || 0;
-      
+
       // Create subItems from the ticket types
       const subItems = [];
       Object.keys(categoryData).forEach(key => {
@@ -120,7 +182,7 @@ const ScanCategoriesDetails = ({ stats }) => {
           const ticketData = categoryData[key];
           const total = ticketData.total || 0;
           const scanned = ticketData.scanned || 0;
-          
+
           subItems.push({
             label: key,
             scanned: scanned,
@@ -176,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   subRowBg: {
-    backgroundColor: color.background_FAF9F6,
+    backgroundColor: color.brown_F7E4B6,
     borderRadius: 8,
     marginLeft: 0,
     marginRight: 0,

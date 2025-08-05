@@ -9,11 +9,11 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
 
-const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
+const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigation = useNavigation();
   // const route = useRoute();
   // const eventUuid = route.params?.eventUuid;
-  const [selectedTab, setSelectedTab] = useState('');
+  const [selectedTabState, setSelectedTabState] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [purchaseCode, setPurchaseCode] = useState('');
@@ -27,7 +27,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
   const { width } = Dimensions.get('window');
 
   const resetData = () => {
-    setSelectedTab('');
+    setSelectedTabState('');
     setName('');
     setEmail('');
     setPurchaseCode('');
@@ -52,8 +52,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
       if (pricingStatsResponse?.data) {
         const categories = pricingStatsResponse.data.map(item => item.alias);
         setPricingCategories(categories);
-        if (categories.length > 0) {
-          setSelectedTab(categories[0]);
+
+        // Set initial selected tab based on selectedTab prop or first category
+        if (selectedTab && categories.includes(selectedTab)) {
+          setSelectedTabState(selectedTab);
+        } else if (categories.length > 0) {
+          setSelectedTabState(categories[0]);
         }
       }
 
@@ -99,10 +103,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
 
       setTicketPricing(categories);
 
-      // Set initial selected tickets based on the first category
-      if (categories.length > 0) {
-        console.log('BoxOfficeTab: Processing first category:', categories[0]);
-        const initialTickets = categories[0].tickets.map(ticket => ({
+      // Set initial selected tickets based on the selected tab
+      const targetCategory = selectedTab ? categories.find(cat => cat.title === selectedTab) : categories[0];
+      if (targetCategory) {
+        console.log('BoxOfficeTab: Processing category:', targetCategory);
+        const initialTickets = targetCategory.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
           price: ticket.price,
@@ -130,6 +135,28 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
     }, [eventInfo?.eventUuid])
   );
 
+  // Handle selectedTab prop changes
+  useEffect(() => {
+    if (selectedTab && pricingCategories.includes(selectedTab)) {
+      setSelectedTabState(selectedTab);
+      // Update selected tickets for the new tab
+      const category = ticketPricing.find(cat => cat.title === selectedTab);
+      if (category) {
+        const updatedTickets = category.tickets.map(ticket => ({
+          type: ticket.name,
+          uuid: ticket.uuid,
+          price: ticket.price,
+          discountPrice: ticket.discount_price,
+          quantity: 0,
+          remaining: ticket.remaining,
+          purchase_limit: ticket.purchase_limit,
+          currency: ticket.currency
+        }));
+        setSelectedTickets(updatedTickets);
+      }
+    }
+  }, [selectedTab, pricingCategories, ticketPricing]);
+
   // Initial data fetch
   useEffect(() => {
     fetchData();
@@ -139,7 +166,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
 
   const handleTabPress = (tab) => {
     console.log('BoxOfficeTab: Tab pressed:', tab);
-    setSelectedTab(tab);
+    setSelectedTabState(tab);
     const category = ticketPricing.find(cat => cat.title === tab);
     console.log('BoxOfficeTab: Found category:', category);
 
@@ -306,14 +333,14 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
       <TouchableOpacity
         style={[
           styles.tabButton,
-          selectedTab === item && styles.selectedTabButton,
+          selectedTabState === item && styles.selectedTabButton,
         ]}
         onPress={() => handleTabPress(item)}
       >
         <Text
           style={[
             styles.tabButtonText,
-            selectedTab === item && styles.selectedTabButtonText,
+            selectedTabState === item && styles.selectedTabButtonText,
           ]}
         >
           {item}
@@ -500,7 +527,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate }) => {
                 <Text style={styles.errorText}>{errors.email}</Text>
               )}
 
-              {selectedTab === 'Members' && (
+              {selectedTabState === 'Members' && (
                 <TextInput
                   style={styles.input}
                   placeholder="Enter Purchase Code"

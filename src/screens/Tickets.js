@@ -9,7 +9,7 @@ import SvgIcons from '../../components/SvgIcons';
 const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => {
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
-  const { initialTab, eventInfo: routeEventInfo } = route.params || {};
+  const { initialTab, eventInfo: routeEventInfo, selectedTab } = route.params || {};
   
   // Use eventInfo from route params if available, otherwise use the prop
   const finalEventInfo = routeEventInfo || eventInfo;
@@ -147,7 +147,7 @@ const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => 
         </View>
 
         {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} key={tabKey} eventInfo={finalEventInfo} initialTab={initialTab} />}
-        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo} onScanCountUpdate={onScanCountUpdate}/>}
+        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo} onScanCountUpdate={onScanCountUpdate} selectedTab={selectedTab}/>}
       </View>
     </View>
   );

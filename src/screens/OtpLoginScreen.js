@@ -20,8 +20,8 @@ import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import Typography, { Body1, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
-import SuccessPopup from '../constants/SuccessPopup';
-import ErrorPopup from '../constants/ErrorPopup';
+import OtpSuccessPopup from '../constants/OtpSuccessPopup';
+import OtpErrorPopup from '../constants/OtpErrorPopup';
 
 // Helper function to format seconds as mm:ss
 function formatTime(seconds) {
@@ -148,6 +148,7 @@ const OtpLoginScreen = ({ route }) => {
   const handleResendOtp = async () => {
     setShowError(false);
     setErrorMessage('');
+    setShowErrorPopup(false); // Clear any existing error popup
     try {
       const response = await authService.requestOtp({
         user_identifier: userIdentifier
@@ -161,6 +162,7 @@ const OtpLoginScreen = ({ route }) => {
         setShowErrorPopup(true);
       }
     } catch (error) {
+      console.error('Resend OTP Error:', error);
       setShowErrorPopup(true);
     }
   };
@@ -259,17 +261,19 @@ const OtpLoginScreen = ({ route }) => {
               </View>
 
               {/* Remove the 'Didn't receive OTP?' label for a cleaner look */}
-              <SuccessPopup
+              <OtpSuccessPopup
                 visible={showSuccessPopup}
                 onClose={handleCloseSuccessPopup}
-                title="Success"
-                subtitle="OTP Sent Successfully"
+                title="OTP Sent Successfully"
+                subtitle="We've sent a one-time password to your email"
               />
-              <ErrorPopup
+              <OtpErrorPopup
                 visible={showErrorPopup}
                 onClose={handleCloseErrorPopup}
-                title="Error"
-                subtitle="Failed to get new verification code"
+                title="Failed to Send OTP"
+                subtitle="We couldn't send the OTP. Please try again shortly."
+                showResendButton={true}
+                onResend={handleResendOtp}
               />
               <View style={styles.rowContainer}>
                 {otpResendTime > 0 ? (

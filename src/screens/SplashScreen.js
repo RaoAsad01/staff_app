@@ -25,7 +25,7 @@ const SplashScreenComponent = () => {
   };
 
   return (
-    <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+   
        <View style={{ flex: 1 }}>
        <StatusBar
             style="dark"
@@ -36,21 +36,22 @@ const SplashScreenComponent = () => {
         <View style={styles.topSection}>
           <SvgIcons.splashQrImg width={172} height={163} fill="transparent" />
         </View>
-
+        <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
         <MiddleSection 
           showGetStartedButton={true}
           onGetStartedPress={handleGetStarted}
         />
+         </LinearGradient>
       </SafeAreaView>
       </View>
-    </LinearGradient>
+   
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'black',
   },
   topSection: {
     alignItems: 'center',

@@ -132,15 +132,15 @@ const LoginScreen = () => {
                 )}
               </Formik>
               {showError && (
-              <View style={styles.errorContainer}>
-                <TouchableOpacity onPress={dismissError}>
-                  <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
-                </TouchableOpacity>
-                <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorTextCross}>
-                  {errorMessage}
-                </Typography>
-              </View>
-            )}
+                <View style={styles.errorContainer}>
+                  <TouchableOpacity onPress={dismissError}>
+                    <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                  </TouchableOpacity>
+                  <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorTextCross}>
+                    {errorMessage}
+                  </Typography>
+                </View>
+              )}
             </View>
           </View>
           {!isKeyboardVisible && (
