@@ -15,7 +15,7 @@ const BoxOfficeSales = ({ stats }) => {
     const paymentMethodColors = {
         "Cash": "#AE6F28",
         "Card": "#87807C",
-        "Mobile Money": "#EDB58A",
+        "MoMo": "#EDB58A",
         "P.O.S.": "#CEBCA0"
     };
 
@@ -27,18 +27,18 @@ const BoxOfficeSales = ({ stats }) => {
         return {
             label: label === "cash" ? "Cash" :
                 label === "card" ? "Card" :
-                    label === "mobile_money" ? "Mobile Money" :
+                    label === "mobile_money" ? "MoMo" :
                         label === "pos" ? "P.O.S." : label,
             value: numericValue,
             color: paymentMethodColors[label === "cash" ? "Cash" :
                 label === "card" ? "Card" :
-                    label === "mobile_money" ? "Mobile Money" :
+                    label === "mobile_money" ? "MoMo" :
                         label === "pos" ? "P.O.S." : label] || "#AE6F28"
         };
     });
 
     // Sort values in the order: Cash, Card, Mobile Money, Pos
-    const paymentOrder = ["Cash", "Card", "Mobile Money", "P.O.S."];
+    const paymentOrder = ["Cash", "Card", "MoMo", "P.O.S."];
     const sortedValues = paymentOrder
         .map(type => values.find(v => v.label === type))
         .filter(Boolean);

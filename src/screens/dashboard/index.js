@@ -336,13 +336,13 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
       // Show ScanAnalytics view in the Scans tab
       return (
         <>
+        <ScanCategories stats={dashboardStats} />
+        <ScanCategoriesDetails stats={dashboardStats} />
           <ScanAnalytics
             title="Scans"
             data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
             dataType="checked in"
           />
-          <ScanCategories stats={dashboardStats} />
-          <ScanCategoriesDetails stats={dashboardStats} />
           <ScanListComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />
         </>
       );
