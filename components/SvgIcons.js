@@ -44,6 +44,9 @@ import CrossIconBrownbg from '../assets/svgs/cross_icon_brown_bg.svg';
 import DownArrow from '../assets/svgs/downArrow.svg';
 import UpArrow from '../assets/svgs/upArrow.svg';
 import ErrorRedCircleIcon from '../assets/svgs/crossRedCircleIcon.svg';
+import WhatsappIcon from '../assets/svgs/icon_whatsapp.svg';
+import SmsIcon from '../assets/svgs/icon_chat_message.svg';
+import EmailIcon from '../assets/svgs/icon_email.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -91,5 +94,8 @@ export default {
     CrossIconBrownbg: CrossIconBrownbg,
     downArrow: DownArrow,
     upArrow: UpArrow,
-    errorRedCircleIcon: ErrorRedCircleIcon
+    errorRedCircleIcon: ErrorRedCircleIcon,
+    whatsappIcon: WhatsappIcon,
+    smsIcon: SmsIcon,
+    emailIcon: EmailIcon,
 };

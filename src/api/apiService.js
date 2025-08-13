@@ -500,7 +500,33 @@ export const eventService = {
     try {
       const response = await apiClient.get(endpoints.staffEvents);
       console.log('Fetch Staff Events Response:', response.data);
-      return response.data;
+      
+      // Handle the new response structure
+      if (response.data?.success && response.data?.data && response.data.data.length > 0) {
+        // Extract events from the first staff member's events array
+        const staffData = response.data.data[0];
+        if (staffData?.events && staffData.events.length > 0) {
+          // Transform the events to match the expected format
+          const transformedEvents = staffData.events.map(event => ({
+            id: event.uuid,
+            event_title: event.title,
+            uuid: event.uuid,
+            // Add other required fields with default values
+            cityName: 'Accra', // Default location
+            date: '28-12-2024', // Default date
+            time: '7:00 PM', // Default time
+            eventUuid: event.uuid
+          }));
+          
+          // Return in the expected format
+          return {
+            data: transformedEvents
+          };
+        }
+      }
+      
+      // Return empty array if no events found
+      return { data: [] };
     } catch (error) {
       console.error('Fetch Staff Events Error:', error);
       throw error;

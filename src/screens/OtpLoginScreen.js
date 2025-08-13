@@ -8,7 +8,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Platform,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
 import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -30,6 +31,12 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
+// Helper function to detect if user identifier is email or phone
+function isEmail(identifier) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(identifier);
+}
+
 const OtpLoginScreen = ({ route }) => {
   const navigation = useNavigation();
   const [otpResendTime, setOtpResendTime] = useState(120); // 2 minutes
@@ -43,6 +50,8 @@ const OtpLoginScreen = ({ route }) => {
   const [loading, setLoading] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [showOtpSourceModal, setShowOtpSourceModal] = useState(false);
+  const [selectedOtpSource, setSelectedOtpSource] = useState('WHATSAPP');
   // useEffect(() => {
   //   const checkLoggedIn = async () => {
   //     const token = await SecureStore.getItemAsync('accessToken');
@@ -101,9 +110,9 @@ const OtpLoginScreen = ({ route }) => {
           await SecureStore.setItemAsync('accessToken', response.data.access_token);
           // Fetch staff events
           const staffEventsData = await eventService.fetchStaffEvents();
-          const eventsList = staffEventsData?.data?.[0]?.event;
+          const eventsList = staffEventsData?.data;
           if (eventsList && eventsList.length > 0) {
-            const eventUuid = eventsList[0];
+            const eventUuid = eventsList[0].uuid || eventsList[0].eventUuid;
             // Fetch event info
             const eventInfoData = await eventService.fetchEventInfo(eventUuid);
             navigation.reset({
@@ -149,10 +158,21 @@ const OtpLoginScreen = ({ route }) => {
     setShowError(false);
     setErrorMessage('');
     setShowErrorPopup(false); // Clear any existing error popup
+    setShowOtpSourceModal(true); // Show OTP source selection modal
+  };
+
+  const handleOtpSourceSelect = async (otpSource) => {
+    setSelectedOtpSource(otpSource);
+    setShowOtpSourceModal(false);
+    
     try {
-      const response = await authService.requestOtp({
-        user_identifier: userIdentifier
-      });
+      const payload = {
+        user_identifier: userIdentifier,
+        resend_otp: true,
+        otp_source: otpSource
+      };
+      
+      const response = await authService.requestOtp(payload);
       if (response && response.success) {
         // Update the UUID with the new one from response
         setOtp(['', '', '', '', '']); // Clear the OTP fields
@@ -275,6 +295,93 @@ const OtpLoginScreen = ({ route }) => {
                 showResendButton={true}
                 onResend={handleResendOtp}
               />
+
+              {/* OTP Source Selection Modal */}
+              <Modal
+                visible={showOtpSourceModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowOtpSourceModal(false)}
+              >
+                <TouchableOpacity
+                  style={styles.modalOverlay}
+                  activeOpacity={1}
+                  onPress={() => setShowOtpSourceModal(false)}
+                >
+                  <View style={styles.modalContainer}>
+                    {/* Close Button */}
+                    <TouchableOpacity
+                      style={styles.closeButton}
+                      onPress={() => setShowOtpSourceModal(false)}
+                    >
+                      <SvgIcons.CrossIconBrownbg width={24} height={24} />
+                    </TouchableOpacity>
+
+                    <Typography
+                      weight="500"
+                      size={18}
+                      color={color.grey_DEDCDC}
+                      style={styles.modalTitle}
+                    >
+                      Get another Code
+                    </Typography>
+                    
+                    <TouchableOpacity
+                      style={styles.modalOption}
+                      onPress={() => handleOtpSourceSelect('WHATSAPP')}
+                    >
+                      <View style={styles.optionContent}>
+                        <SvgIcons.whatsappIcon width={24} height={24} />
+                        <Typography
+                          weight="400"
+                          size={14}
+                          color={color.grey_DEDCDC}
+                          style={styles.optionText}
+                        >
+                          Send code by whatsapp
+                        </Typography>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.modalOption}
+                      onPress={() => handleOtpSourceSelect('SMS')}
+                    >
+                      <View style={styles.optionContent}>
+                        <SvgIcons.smsIcon width={24} height={24}  />
+                        <Typography
+                          weight="400"
+                          size={14}
+                          color={color.grey_DEDCDC}
+                          style={styles.optionText}
+                        >
+                          Send code by text message (sms)
+                        </Typography>
+                      </View>
+                    </TouchableOpacity>
+
+                    {/* Show "Send code by email" option only for phone numbers */}
+                    {!isEmail(userIdentifier) && (
+                      <TouchableOpacity
+                        style={styles.modalOption}
+                        onPress={() => handleOtpSourceSelect('EMAIL')}
+                      >
+                        <View style={styles.optionContent}>
+                          <SvgIcons.emailIcon width={24} height={24} />
+                          <Typography
+                            weight="400"
+                            size={14}
+                            color={color.grey_DEDCDC}
+                            style={styles.optionText}
+                          >
+                            Send code by email
+                          </Typography>
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </Modal>
               <View style={styles.rowContainer}>
                 {otpResendTime > 0 ? (
                   <View style={styles.timerRow}>
@@ -478,6 +585,55 @@ const styles = StyleSheet.create({
   },
   errorText: {
     flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: "#131314",
+    borderRadius: 15,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    position: 'relative',
+  },
+  modalTitle: {
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  modalOption: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 8,
+    width: '100%',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    zIndex: 1,
+    padding: 5,
+  },
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+  },
+  optionText: {
+    marginLeft: 15,
+    textAlign: 'left',
   },
 });
 

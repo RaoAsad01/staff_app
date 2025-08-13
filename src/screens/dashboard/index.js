@@ -589,7 +589,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: 40,
-    marginTop: 6,
   },
   tabButtonText: {
     color: color.black_544B45,
