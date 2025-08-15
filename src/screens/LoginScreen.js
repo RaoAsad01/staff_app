@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, TextInput, TouchableOpacity, Platform, Keyboard,
-  TouchableWithoutFeedback,
+  TouchableWithoutFeedback, Text
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -14,12 +14,17 @@ import { authService } from '../api/apiService';
 import Typography, { Body1, Caption } from '../components/Typography';
 import { fontSize, fontWeight } from '../constants/typography';
 import MiddleSection from '../components/MiddleSection';
+import CountryCodePicker from '../components/CountryCodePicker';
+import { defaultCountryCode } from '../constants/countryCodes';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(defaultCountryCode);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [inputType, setInputType] = useState('email'); // 'email' or 'phone'
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -43,20 +48,27 @@ const LoginScreen = () => {
       .test('emailOrPhone', 'Invalid email or phone number', (value) => {
         if (!value) return false;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{10,15}$/;
+        const phoneRegex = /^[0-9]{7,15}$/; // Updated to handle phone numbers without country code
         return emailRegex.test(value) || phoneRegex.test(value);
       }),
   });
 
   const handleSignIn = async (values) => {
     try {
+      let userIdentifier = values.user_identifier.trim();
+
+      // If it's a phone number (not email), add the country code
+      if (inputType === 'phone' && !userIdentifier.includes('@')) {
+        userIdentifier = selectedCountry.dialCode + userIdentifier;
+      }
+
       const response = await authService.requestOtp({
-        user_identifier: values.user_identifier.trim(),
+        user_identifier: userIdentifier,
       });
       if (response && response.success) {
         navigation.navigate('OtpLogin', {
           uuid: response.data.uuid,
-          user_identifier: values.user_identifier.trim()
+          user_identifier: userIdentifier
         });
       } else {
         setShowError(false);
@@ -78,11 +90,26 @@ const LoginScreen = () => {
     setErrorMessage('');
   };
 
+  const handleInputChange = (text, setFieldValue) => {
+    // Detect if input is email or phone and update immediately
+    if (text.includes('@')) {
+      setInputType('email');
+    } else if (text.length > 0 && /^[0-9]+$/.test(text)) {
+      // Set as phone if the input contains only numbers
+      setInputType('phone');
+    } else if (text.length === 0) {
+      // Reset to email when input is empty
+      setInputType('email');
+    }
+    setFieldValue('user_identifier', text);
+  };
+
+  const handleCountrySelect = (country) => {
+    setSelectedCountry(country);
+  };
+
   return (
-    <LinearGradient
-      colors={["#000000", "#281c10"]}
-      style={{ flex: 1 }}
-    >
+    <>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1 }}>
           <StatusBar
@@ -97,23 +124,43 @@ const LoginScreen = () => {
                 validationSchema={validationSchema}
                 onSubmit={handleSignIn}
               >
-                {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
                   <View style={{ width: '100%' }}>
                     <View style={[
                       styles.inputRow,
                       (touched.user_identifier && errors.user_identifier) || showError ? styles.inputError : null
                     ]}>
+                      {/* Country Code Picker (only show for phone input) */}
+                      {inputType === 'phone' && (
+                        <TouchableOpacity
+                          style={styles.countryCodeButton}
+                          onPress={() => setShowCountryPicker(true)}
+                        >
+                          <Text style={styles.flagText}>{selectedCountry.flag}</Text>
+                          <Typography
+                            weight="600"
+                            size={14}
+                            color={color.grey_DEDCDC}
+                            style={styles.countryCodeText}
+                          >
+                            {selectedCountry.dialCode}
+                          </Typography>
+                          <SvgIcons.downArrow width={12} height={12} fill={color.grey_87807C} />
+                        </TouchableOpacity>
+                      )}
+
                       <TextInput
                         style={[
                           styles.inputField,
-                          touched.user_identifier && errors.user_identifier ? styles.inputError : null
+                          touched.user_identifier && errors.user_identifier ? styles.inputError : null,
+                          inputType === 'phone' ? styles.inputFieldWithCountryCode : null
                         ]}
-                        placeholder="Email or Phone Number"
+                        placeholder={inputType === 'phone' ? "Phone Number" : "Email or Phone Number"}
                         placeholderTextColor={color.grey_87807C}
-                        onChangeText={handleChange('user_identifier')}
+                        onChangeText={(text) => handleInputChange(text, setFieldValue)}
                         onBlur={handleBlur('user_identifier')}
                         value={values.user_identifier}
-                        keyboardType="email-address"
+                        keyboardType={inputType === 'phone' ? "numeric" : "email-address"}
                         selectionColor={color.selectField_CEBCA0}
                         autoCapitalize="none"
                       />
@@ -144,11 +191,24 @@ const LoginScreen = () => {
             </View>
           </View>
           {!isKeyboardVisible && (
-            <MiddleSection showGetStartedButton={false} />
+            <LinearGradient
+              colors={["#000000", "#281c10"]}
+              style={{ flex: 1 }}
+            >
+              <MiddleSection showGetStartedButton={false} />
+            </LinearGradient>
           )}
         </View>
       </TouchableWithoutFeedback>
-    </LinearGradient>
+
+      {/* Country Code Picker Modal */}
+      <CountryCodePicker
+        selectedCountry={selectedCountry}
+        onSelectCountry={handleCountrySelect}
+        visible={showCountryPicker}
+        onClose={() => setShowCountryPicker(false)}
+      />
+    </>
   );
 };
 
@@ -157,8 +217,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-
     width: '100%',
+    paddingTop: 370,
+    backgroundColor: "#000000"
   },
   logoSection: {
     alignItems: 'center',
@@ -186,6 +247,22 @@ const styles = StyleSheet.create({
     width: 320,
     alignSelf: 'center', // Center the input row
   },
+  countryCodeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRightWidth: 1,
+    borderRightColor: color.borderBrown_CEBCA0,
+    backgroundColor: 'transparent',
+  },
+  flagText: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  countryCodeText: {
+    marginRight: 4,
+  },
   inputField: {
     flex: 1,
     paddingHorizontal: 20,
@@ -194,6 +271,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     height: '100%',
     backgroundColor: 'transparent',
+  },
+  inputFieldWithCountryCode: {
+    paddingLeft: 15,
   },
   arrowButton: {
     backgroundColor: color.btnBrown_AE6F28,

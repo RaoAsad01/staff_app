@@ -84,8 +84,9 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
                   <SvgIcons.backArrow width={24} height={24} fill={color.brown_3C200A} />
                 </TouchableOpacity>
               ) : (
-                <SvgIcons.userSvg width={28} height={28} fill="transparent" />
+                <View></View>
               )}
+              <SvgIcons.userSvg width={28} height={28} fill="transparent" />
               <Text style={styles.userId}>ID: {formatStaffName(eventInfo?.staff_name)}</Text>
             </View>
             <View style={styles.scanSection}>

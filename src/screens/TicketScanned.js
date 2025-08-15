@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     labeltickets: {
         fontWeight: '600',
         fontSize: 20,
-        color: color.black_2F251D
+        color: color.placeholderTxt_24282C,
     },
     ticketHolder: {
         color: color.placeholderTxt_24282C,

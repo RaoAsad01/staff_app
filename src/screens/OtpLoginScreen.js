@@ -164,14 +164,14 @@ const OtpLoginScreen = ({ route }) => {
   const handleOtpSourceSelect = async (otpSource) => {
     setSelectedOtpSource(otpSource);
     setShowOtpSourceModal(false);
-    
+
     try {
       const payload = {
         user_identifier: userIdentifier,
         resend_otp: true,
         otp_source: otpSource
       };
-      
+
       const response = await authService.requestOtp(payload);
       if (response && response.success) {
         // Update the UUID with the new one from response
@@ -606,14 +606,13 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   modalTitle: {
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: 'center',
   },
   modalOption: {
-    paddingVertical: 15,
+    paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 10,
-    marginBottom: 8,
     width: '100%',
     backgroundColor: 'transparent',
     borderWidth: 0,

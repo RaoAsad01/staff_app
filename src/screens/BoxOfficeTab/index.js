@@ -354,7 +354,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       .required('Name is required'),
     email: Yup.string()
       .test('emailOrPhone', 'Invalid email or phone number', (value) =>
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || /^[0-9]{10,15}$/.test(value)
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || /^[0-9]{7,15}$/.test(value)
       )
       .required('Required'),
   });
