@@ -160,7 +160,7 @@ const CountryCodePicker = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#131314',
+        backgroundColor: 'rgba(19, 19, 20, 0.95)',
     },
     header: {
         flexDirection: 'row',
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     searchInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#1a1a1b',
+        backgroundColor: 'rgba(26, 26, 27, 0.9)',
         borderRadius: 10,
         paddingHorizontal: 15,
         paddingVertical: 12,

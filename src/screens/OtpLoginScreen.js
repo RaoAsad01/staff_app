@@ -267,7 +267,7 @@ const OtpLoginScreen = ({ route }) => {
                       showError ? styles.otpInputError : null
                     ]}
                     value={digit}
-                    placeholder="-"
+                    placeholder=""
                     placeholderTextColor={color.white_FFFFFF}
                     maxLength={1}
                     keyboardType="numeric"
@@ -325,7 +325,7 @@ const OtpLoginScreen = ({ route }) => {
                     >
                       Get another Code
                     </Typography>
-                    
+
                     <TouchableOpacity
                       style={styles.modalOption}
                       onPress={() => handleOtpSourceSelect('WHATSAPP')}
@@ -342,13 +342,13 @@ const OtpLoginScreen = ({ route }) => {
                         </Typography>
                       </View>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity
                       style={styles.modalOption}
                       onPress={() => handleOtpSourceSelect('SMS')}
                     >
                       <View style={styles.optionContent}>
-                        <SvgIcons.smsIcon width={24} height={24}  />
+                        <SvgIcons.smsIcon width={24} height={24} />
                         <Typography
                           weight="400"
                           size={14}
@@ -390,7 +390,7 @@ const OtpLoginScreen = ({ route }) => {
                       size={14}
                       color={color.grey_E0E0E0}
                     >
-                      Request code again in{' '}
+                      Request code again in {' '}
                     </Typography>
                     <Typography
                       weight="400"
