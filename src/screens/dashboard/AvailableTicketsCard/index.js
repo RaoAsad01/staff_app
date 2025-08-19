@@ -51,7 +51,7 @@ const CircularProgress = ({ value, total, percentage }) => {
   );
 };
 
-const AvailableTicketsCard = ({ data }) => {
+const AvailableTicketsCard = ({ data, stats }) => {
   const [expanded, setExpanded] = useState({});
   const listData = data && data.length > 0 ? data : [];
   const navigation = useNavigation();
@@ -63,56 +63,43 @@ const AvailableTicketsCard = ({ data }) => {
     }));
   };
 
-  const handleSubItemPress = (subItemLabel) => {
-    console.log('AvailableTicketsCard - Subitem clicked:', subItemLabel);
+  const handleSubItemPress = (subItemLabel, parentLabel) => {
+    console.log('AvailableTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
 
-    // Map subitem labels to their parent tab names in BoxOfficeTab
-    const tabMapping = {
-      // Early Bird subitems
-      'Early Bird': 'Early Bird',
-      'Early Bird New': 'Early Bird',
-      'early bird': 'Early Bird',
-      'early bird new': 'Early Bird',
+    // Dynamic tab mapping - use the parent label directly
+    // The parent category should be the tab name in BoxOfficeTab
+    let selectedTab = parentLabel;
 
-      // VIP Ticket subitems  
-      'Critical': 'VIP Ticket',
-      'High': 'VIP Ticket',
-      'critical': 'VIP Ticket',
-      'high': 'VIP Ticket',
+    // Handle special cases where parent label might not match tab name exactly
+    if (parentLabel === 'Available Tickets') {
+      // For "Available Tickets", we need to find the actual category from the data
+      if (stats?.data?.available_tickets) {
+        const availableTickets = stats.data.available_tickets;
+        // Find the first category that has this sub-item
+        for (const [categoryName, categoryData] of Object.entries(availableTickets)) {
+          if (categoryData && typeof categoryData === 'object') {
+            // Check if this category contains the sub-item
+            if (categoryData[subItemLabel] || 
+                Object.keys(categoryData).some(key => 
+                  key.toLowerCase() === subItemLabel.toLowerCase()
+                )) {
+              selectedTab = categoryName;
+              break;
+            }
+          }
+        }
+      }
+    }
 
-      // Members subitems
-      'VIP Ticket': 'Members',
-      'VIP Ticket New': 'Members',
-      'vip ticket': 'Members',
-      'vip ticket new': 'Members',
-
-      // Fallback mappings
-      'Standard': 'Standard',
-      'Premium': 'Premium',
-    };
-
-    const selectedTab = tabMapping[subItemLabel];
     console.log('AvailableTicketsCard - Mapped tab:', selectedTab);
 
-    if (selectedTab) {
+    if (selectedTab && selectedTab !== 'Available Tickets') {
       navigation.navigate('Tickets', {
         screen: 'BoxOfficeTab',
         selectedTab: selectedTab
       });
     } else {
-      console.warn('AvailableTicketsCard - No tab mapping found for:', subItemLabel);
-      // Fallback: try to find a partial match
-      const partialMatch = Object.keys(tabMapping).find(key =>
-        subItemLabel.toLowerCase().includes(key.toLowerCase()) ||
-        key.toLowerCase().includes(subItemLabel.toLowerCase())
-      );
-      if (partialMatch) {
-        console.log('AvailableTicketsCard - Found partial match:', partialMatch, '->', tabMapping[partialMatch]);
-        navigation.navigate('Tickets', {
-          screen: 'BoxOfficeTab',
-          selectedTab: tabMapping[partialMatch]
-        });
-      }
+      console.warn('AvailableTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
     }
   };
 
@@ -130,8 +117,8 @@ const AvailableTicketsCard = ({ data }) => {
           activeOpacity={hasSubItems ? 0.7 : 1}
           onPress={() => {
             if (isSubItem) {
-              // Navigate to BoxOfficeTab for subitems
-              handleSubItemPress(item.label);
+              // Navigate to BoxOfficeTab for subitems with dynamic mapping
+              handleSubItemPress(item.label, item.parentLabel || 'Available Tickets');
             } else if (hasSubItems) {
               toggle(item.label);
             }
@@ -158,7 +145,7 @@ const AvailableTicketsCard = ({ data }) => {
           <View style={styles.subitembg}>
             {item.subItems.map((sub, subIdx) =>
               <View key={sub.label + subIdx} style={styles.subRowBg}>
-                {renderItem(sub, subIdx, true)}
+                {renderItem({ ...sub, parentLabel: item.label }, subIdx, true)}
               </View>
             )}
           </View>

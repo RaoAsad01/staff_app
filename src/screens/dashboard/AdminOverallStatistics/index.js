@@ -4,19 +4,19 @@ import { Image as ExpoImage } from 'expo-image';
 import { color } from '../../../color/color';
 import SvgIcons from '../../../../components/SvgIcons';
 
-const OverallStatistics = ({ stats,
+const AdminOverallStatistics = ({ stats,
     onTotalTicketsPress,
     onTotalScannedPress,
     onTotalUnscannedPress,
     onAvailableTicketsPress
 }) => {
     // Extract data from stats with default values
-    const terminalStats = stats?.data?.terminal_statistics || {};
+    const terminalStats = stats?.data?.overall_statistics || {};
     const scanAnalytics = stats?.data?.scan_analytics || {};
 
     const totalTicketsRaw = terminalStats?.total_tickets || 0;
     const totalScannedRaw = terminalStats?.total_scanned || 0;
-    const totalUnscannedRaw = terminalStats?.total_tickets ? (terminalStats.total_tickets - scanAnalytics.total_scanned) : 0;
+    const totalUnscannedRaw = terminalStats?.total_unscanned || 0;
     const availableTicketsRaw = terminalStats?.available_tickets || 0;
 
     // Handle cases where values might be objects
@@ -28,17 +28,18 @@ const OverallStatistics = ({ stats,
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
-                <Text style={styles.heading}>Terminal Statistics</Text>
+                <Text style={styles.heading}>Overall Statistics</Text>
                 <View style={styles.row}>
 
                     <View style={styles.statContainer}>
-                        <TouchableOpacity onPress={onAvailableTicketsPress}>
-                            <View style={styles.statRow}>
-                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                                <Text style={styles.statTitle}>Available Tickets</Text>
-                            </View>
-                            <Text style={styles.statValue}>{availableTickets}</Text>
+                    <TouchableOpacity style={styles.statCard} onPress={onTotalTicketsPress}>
+                        <View style={styles.statRow}>
+                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
+                            <Text style={styles.statTitle}>Total Tickets</Text>
+                        </View>
+                        <Text style={styles.statValue}>{totalTickets}</Text>
                         </TouchableOpacity>
+                      
                     </View>
 
                     <View style={styles.statContainer}>
@@ -51,7 +52,7 @@ const OverallStatistics = ({ stats,
                         </TouchableOpacity>
                     </View>
                 </View>
-                {/* <View style={styles.row}>
+                <View style={styles.row}>
                     <View style={styles.statContainer}>
                     <TouchableOpacity style={styles.statCard} onPress={onTotalUnscannedPress}>
                         <View style={styles.statRow}>
@@ -63,15 +64,15 @@ const OverallStatistics = ({ stats,
                     </View>
 
                     <View style={styles.statContainer}>
-                    <TouchableOpacity style={styles.statCard} onPress={onAvailableTicketsPress}>
-                        <View style={styles.statRow}>
-                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                            <Text style={styles.statTitle}>Total Tickets</Text>
-                        </View>
-                        <Text style={styles.statValue}>{totalTickets}</Text>
+                    <TouchableOpacity onPress={onAvailableTicketsPress}>
+                            <View style={styles.statRow}>
+                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
+                                <Text style={styles.statTitle}>Available Tickets</Text>
+                            </View>
+                            <Text style={styles.statValue}>{availableTickets}</Text>
                         </TouchableOpacity>
                     </View>
-                </View> */}
+                </View>
             </View>
         </View>
     );
@@ -82,7 +83,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
     },
     wrapper: {
-        marginVertical: 16,
         padding: 16,
         paddingHorizontal: 15,
         backgroundColor: color.white_FFFFFF,
@@ -142,4 +142,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default OverallStatistics;
+export default AdminOverallStatistics;

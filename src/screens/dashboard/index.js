@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView, Alert } from 'react-native';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
+import AdminOverallStatistics from './AdminOverallStatistics';
 import BoxOfficeSales from './BoxOfficeSales';
 import { useNavigation } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
@@ -10,30 +11,95 @@ import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './AttendeesComponent';
 import { dashboardsalesscantab } from '../../constants/dashboardsalesscantab';
 import AnalyticsChart from './AnalyticsChart';
-import { ticketService } from '../../api/apiService';
+import { ticketService, userService } from '../../api/apiService';
 import Typography, { Heading5, Body1, Label } from '../../components/Typography';
 import AvailableTicketsCard from './AvailableTicketsCard';
 import ScanAnalytics from './ScanAnalytics';
 import ScanCategories from './ScanCategories';
 import ScanCategoriesDetails from './ScanCategoriesDetails';
 import ScanListComponent from './ScanListComponent';
+import EventsModal from '../../components/EventsModal';
+import TerminalsComponent from './TerminalsComponent';
+import AdminAllSales from './AdminAllSales';
+import AdminOnlineSales from './AdminOnlineSales';
+import AdminBoxOfficeSales from './AdminBoxOfficeSales';
+import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
+import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 
-const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
+const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
   const scrollViewRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState(dashboardstatuslist[0]);
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
+  const [selectedAdminTab, setSelectedAdminTab] = useState(admindashboardterminaltab[0]);
+  const [selectedAdminOnlineBoxOfficeTab, setSelectedAdminOnlineBoxOfficeTab] = useState(adminonlineboxofficetab[0]);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [userProfileLoading, setUserProfileLoading] = useState(true);
+  const [eventsModalVisible, setEventsModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [currentSalesType, setCurrentSalesType] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setUserProfileLoading(true);
+        const profile = await userService.getProfile();
+        console.log('User profile:', profile);
+        console.log('User profile keys:', Object.keys(profile || {}));
+        console.log('User role:', profile?.role);
+        console.log('User role type:', typeof profile?.role);
+
+        // Check for common role field variations
+        console.log('profile?.user_role:', profile?.user_role);
+        console.log('profile?.type:', profile?.type);
+        console.log('profile?.permission:', profile?.permission);
+        console.log('profile?.user_type:', profile?.user_type);
+
+        // Try to find the role from various possible field names
+        const role = profile?.role ||
+          profile?.user_role ||
+          profile?.type ||
+          profile?.permission ||
+          profile?.user_type ||
+          profile?.data?.role ||
+          profile?.user?.role;
+        console.log('Final role value:', role);
+
+        setUserRole(role || null);
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+        setUserRole(null);
+      } finally {
+        setUserProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         if (eventInfo?.eventUuid) {
           setLoading(true);
-          const stats = await ticketService.fetchDashboardStats(eventInfo.eventUuid);
+
+          // Determine sales parameter for ADMIN users
+          let salesParam = null;
+          if (userRole === 'ADMIN') {
+            if (selectedAdminOnlineBoxOfficeTab === 'Online') {
+              salesParam = 'online';
+            } else if (selectedAdminOnlineBoxOfficeTab === 'Box Office') {
+              salesParam = 'box_office';
+            }
+            // For 'All' tab, don't pass sales parameter (get all data)
+          }
+
+          const stats = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam);
           setDashboardStats(stats);
+          setCurrentSalesType(salesParam);
           setError(null);
         }
       } catch (err) {
@@ -45,7 +111,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
     };
 
     fetchStats();
-  }, [eventInfo?.eventUuid]);
+  }, [eventInfo?.eventUuid, userRole, selectedAdminOnlineBoxOfficeTab]);
 
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
@@ -66,7 +132,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
   const handleAvailableTicketsPress = () => {
     setSelectedSaleScanTab('Sales');
     setSelectedTab('Available Tickets');
-    
+
     // Add a small delay to ensure the content is rendered before scrolling
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -75,6 +141,30 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
 
   const handleSaleScanTabPress = (tab) => {
     setSelectedSaleScanTab(tab);
+  };
+
+  const handleAdminTabPress = (tab) => {
+    setSelectedAdminTab(tab);
+  };
+
+  const handleAdminOnlineBoxOfficeTabPress = (tab) => {
+    setSelectedAdminOnlineBoxOfficeTab(tab);
+  };
+
+  const handleEventSelect = (event) => {
+    setSelectedEvent(event);
+    console.log('Selected event:', event);
+
+    // If the selected event is different from the current event
+    if (event.uuid !== eventInfo?.eventUuid) {
+      // Call the callback to update the parent component
+      if (onEventChange) {
+        onEventChange(event);
+      }
+
+      // Close the modal
+      setEventsModalVisible(false);
+    }
   };
 
   const getCheckInData = () => {
@@ -123,9 +213,21 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
   };
 
   const getSoldTicketsData = () => {
+    // For ADMIN users, sold tickets data is in sold_tickets
+    // For non-ADMIN users, sold tickets data is in box_office_sales.ticket_wise
+    let dataSource;
+
+    if (userRole === 'ADMIN') {
+      // Use sold_tickets for ADMIN users
+      dataSource = dashboardStats?.data?.sold_tickets;
+    } else {
+      // Use box_office_sales.ticket_wise for non-ADMIN users
+      dataSource = dashboardStats?.data?.box_office_sales?.ticket_wise;
+    }
+
     if (
-      !dashboardStats?.data?.box_office_sales?.ticket_wise?.total_tickets ||
-      !dashboardStats?.data?.box_office_sales?.ticket_wise?.sold_tickets
+      !dataSource?.total_tickets ||
+      !dataSource?.sold_tickets
     ) {
       return [{
         label: "Total Sold",
@@ -134,17 +236,28 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
         percentage: 0
       }];
     }
-    const totalSold = dashboardStats?.data?.box_office_sales?.ticket_wise?.sold_tickets || 0;
-    const totalTickets = dashboardStats?.data?.box_office_sales?.ticket_wise?.total_tickets || 0;
 
-    const byCategory = dashboardStats?.data?.box_office_sales?.ticket_wise?.by_category;
+    const totalSold = dataSource.sold_tickets || 0;
+    const totalTickets = dataSource.total_tickets || 0;
+
+    const byCategory = dataSource.by_category;
     let typeRows = [];
     if (byCategory) {
       const types = Object.keys(byCategory || {});
       typeRows = types.map(type => {
         const categoryData = byCategory[type];
-        const sold = categoryData?.sold || 0;
-        const total = categoryData?.total || 0;
+        // Handle different data structures for ADMIN vs non-ADMIN
+        let sold, total;
+
+        if (userRole === 'ADMIN') {
+          // ADMIN structure: sold_tickets and total_tickets
+          sold = categoryData?.sold_tickets || 0;
+          total = categoryData?.total_tickets || 0;
+        } else {
+          // Non-ADMIN structure: sold and total
+          sold = categoryData?.sold || 0;
+          total = categoryData?.total || 0;
+        }
 
         return {
           label: type,
@@ -273,12 +386,59 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
 
       return (
         <>
-          <BoxOfficeSales stats={dashboardStats} />
+
+          {/* Admin Online Box Office Tab - Only for ADMIN users in Sales tab */}
+          {userRole === 'ADMIN' && (
+            <View style={styles.adminOnlineBoxOfficeTabContainer}>
+              <View style={styles.adminOnlineBoxOfficeTabRow}>
+                {adminonlineboxofficetab.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.adminOnlineBoxOfficeTabButton,
+                      selectedAdminOnlineBoxOfficeTab === item && styles.selectedAdminOnlineBoxOfficeTabButton,
+                    ]}
+                    onPress={() => handleAdminOnlineBoxOfficeTabPress(item)}
+                  >
+                    <Typography
+                      variant={selectedAdminOnlineBoxOfficeTab === item ? "tabActive" : "tab"}
+                      style={[
+                        styles.adminOnlineBoxOfficeTabButtonText,
+                        selectedAdminOnlineBoxOfficeTab === item && styles.selectedAdminOnlineBoxOfficeTabButtonText,
+                      ]}
+                    >
+                      {item}
+                    </Typography>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Admin Sales Components - Only for ADMIN users in Sales tab */}
+          {userRole === 'ADMIN' && (
+            <>
+              {selectedAdminOnlineBoxOfficeTab === 'All' && (
+                <AdminAllSales stats={dashboardStats} />
+              )}
+              {selectedAdminOnlineBoxOfficeTab === 'Online' && (
+                <AdminOnlineSales stats={dashboardStats} />
+              )}
+              {selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
+                <AdminBoxOfficeSales stats={dashboardStats} />
+              )}
+            </>
+          )}
+
+          {/* Show regular BoxOfficeSales for non-admin users or when admin is not in Sales tab */}
+          {userRole !== 'ADMIN' && <BoxOfficeSales stats={dashboardStats} />}
           <CheckInSoldTicketsCard
             title="Sold Tickets"
             data={soldTicketsData}
             remainingTicketsData={remainingTicketsData}
             showRemaining={true}
+            userRole={userRole}
+            stats={dashboardStats}
           />
           <AnalyticsChart
             title="Sold Tickets"
@@ -328,7 +488,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
             </>
           )}
           {selectedTab === "Available Tickets" && (
-            <AvailableTicketsCard data={getAvailableTicketsData()} />
+            <AvailableTicketsCard data={getAvailableTicketsData()} stats={dashboardStats} />
           )}
         </>
       );
@@ -336,8 +496,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
       // Show ScanAnalytics view in the Scans tab
       return (
         <>
-        <ScanCategories stats={dashboardStats} />
-        <ScanCategoriesDetails stats={dashboardStats} />
+          <ScanCategories stats={dashboardStats} />
+          <ScanCategoriesDetails stats={dashboardStats} />
           <ScanAnalytics
             title="Scans"
             data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
@@ -440,7 +600,17 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>
-          <Body1 style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Body1>
+          <View style={styles.headerLeft}>
+            <Body1 style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Body1>
+            {userRole === 'ADMIN' && (
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={() => setEventsModalVisible(true)}
+              >
+                <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
+              </TouchableOpacity>
+            )}
+          </View>
           <Body1 style={styles.separator}>   </Body1>
           <Body1 style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Body1>
           <Body1 style={styles.separator}>   </Body1>
@@ -451,66 +621,95 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
           <Body1 style={styles.time}>{eventInfo?.time || '7:00 PM'}</Body1>
         </View>
       </SafeAreaView>
+
+      {/* Admin Dashboard Terminal Tab - Only for ADMIN users */}
+      {userRole === 'ADMIN' && (
+        <View style={styles.adminTabContainer}>
+          <View style={styles.adminTabRow}>
+            {admindashboardterminaltab.map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={[
+                  styles.adminTabButton,
+                  selectedAdminTab === item && styles.selectedAdminTabButton,
+                ]}
+                onPress={() => handleAdminTabPress(item)}
+              >
+                <Typography
+                  variant={selectedAdminTab === item ? "tabActive" : "tab"}
+                  style={[
+                    styles.adminTabButtonText,
+                    selectedAdminTab === item && styles.selectedAdminTabButtonText,
+                  ]}
+                >
+                  {item}
+                </Typography>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
         <View style={styles.wrapper}>
           {/* <Heading5 style={styles.labelDashboard}>Dashboard</Heading5> */}
-          {loading ? (
-            <Body1 style={styles.loadingText}>Loading dashboard stats...</Body1>
+          {loading || userProfileLoading ? (
+            <Body1 style={styles.loadingText}>
+              {loading ? 'Loading dashboard stats...' : 'Loading user profile...'}
+            </Body1>
           ) : error ? (
             <Body1 style={styles.errorText}>{error}</Body1>
           ) : (
             <>
-              <OverallStatistics
-                stats={dashboardStats}
-                onTotalTicketsPress={handleTotalTicketsPress}
-                onTotalScannedPress={handleTotalScannedPress}
-                onTotalUnscannedPress={handleTotalUnscannedPress}
-                onAvailableTicketsPress={handleAvailableTicketsPress}
-              />
-              <View style={styles.saleScanTabContainer}>
-                <View style={styles.saleScanTabRow}>
-                  {dashboardsalesscantab.map((item) => (
-                    <TouchableOpacity
-                      key={item}
-                      style={[
-                        styles.saleScanTabButton,
-                        selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
-                      ]}
-                      onPress={() => handleSaleScanTabPress(item)}
-                    >
-                      <Typography
-                        variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
-                        style={[
-                          styles.saleScanTabButtonText,
-                          selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
-                        ]}
-                      >
-                        {item}
-                      </Typography>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {selectedSaleScanTab !== "Sales" && selectedSaleScanTab !== "Scans" && (
+              {userRole === 'ADMIN' ? (
+                // Admin user - show content based on selected admin tab
+                selectedAdminTab === 'Dashboard' ? (
+                  <>
+                    {console.log('Rendering AdminOverallStatistics for role:', userRole)}
+                    <AdminOverallStatistics
+                      stats={dashboardStats}
+                      onTotalTicketsPress={handleTotalTicketsPress}
+                      onTotalScannedPress={handleTotalScannedPress}
+                      onTotalUnscannedPress={handleTotalUnscannedPress}
+                      onAvailableTicketsPress={handleAvailableTicketsPress}
+                    />
+                  </>
+                ) : (
+                  // Terminals tab selected
+                  <TerminalsComponent />
+                )
+              ) : (
                 <>
-                  <BoxOfficeSales stats={dashboardStats} />
-                  <View style={styles.tabContainer}>
-                    <View style={styles.tabRow}>
-                      {dashboardstatuslist.map((item) => (
+                  {console.log('Rendering OverallStatistics for role:', userRole)}
+                  <OverallStatistics
+                    stats={dashboardStats}
+                    onTotalTicketsPress={handleTotalTicketsPress}
+                    onTotalScannedPress={handleTotalScannedPress}
+                    onTotalUnscannedPress={handleTotalUnscannedPress}
+                    onAvailableTicketsPress={handleAvailableTicketsPress}
+                  />
+                </>
+              )}
+
+              {/* Show sales/scan tabs and other content only for Dashboard tab or non-admin users */}
+              {(userRole !== 'ADMIN' || selectedAdminTab === 'Dashboard') && (
+                <>
+                  <View style={styles.saleScanTabContainer}>
+                    <View style={styles.saleScanTabRow}>
+                      {dashboardsalesscantab.map((item) => (
                         <TouchableOpacity
                           key={item}
                           style={[
-                            styles.tabButton,
-                            selectedTab === item && styles.selectedTabButton,
+                            styles.saleScanTabButton,
+                            selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
                           ]}
-                          onPress={() => handleTabPress(item)}
+                          onPress={() => handleSaleScanTabPress(item)}
                         >
                           <Typography
-                            variant={selectedTab === item ? "tabActive" : "tab"}
+                            variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
                             style={[
-                              styles.tabButtonText,
-                              selectedTab === item && styles.selectedTabButtonText,
+                              styles.saleScanTabButtonText,
+                              selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
                             ]}
                           >
                             {item}
@@ -519,13 +718,51 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate }) => {
                       ))}
                     </View>
                   </View>
+
+                  {selectedSaleScanTab !== "Sales" && selectedSaleScanTab !== "Scans" && (
+                    <>
+                      <BoxOfficeSales stats={dashboardStats} />
+                      <View style={styles.tabContainer}>
+                        <View style={styles.tabRow}>
+                          {dashboardstatuslist.map((item) => (
+                            <TouchableOpacity
+                              key={item}
+                              style={[
+                                styles.tabButton,
+                                selectedTab === item && styles.selectedTabButton,
+                              ]}
+                              onPress={() => handleTabPress(item)}
+                            >
+                              <Typography
+                                variant={selectedTab === item ? "tabActive" : "tab"}
+                                style={[
+                                  styles.tabButtonText,
+                                  selectedTab === item && styles.selectedTabButtonText,
+                                ]}
+                              >
+                                {item}
+                              </Typography>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    </>
+                  )}
+                  {renderContent()}
                 </>
               )}
-              {renderContent()}
             </>
           )}
         </View>
       </ScrollView>
+
+      {/* Events Modal for ADMIN users */}
+      <EventsModal
+        visible={eventsModalVisible}
+        onClose={() => setEventsModalVisible(false)}
+        onEventSelect={handleEventSelect}
+        currentEventUuid={eventInfo?.eventUuid}
+      />
     </View>
   );
 };
@@ -550,24 +787,41 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'wrap',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  dropdownButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
   eventName: {
     color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '700',
   },
   cityName: {
     color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '400',
   },
   date: {
     color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '400',
   },
   time: {
     color: color.white_FFFFFF,
+    fontSize: 14,
+    fontWeight: '400',
   },
   labelDashboard: {
     color: color.brown_3C200A,
@@ -638,6 +892,76 @@ const styles = StyleSheet.create({
   },
   saleScanTabButtonText: {
     color: color.black_544B45,
+  },
+  adminTabContainer: {
+    marginHorizontal: 16,
+    marginVertical: 12
+  },
+  adminTabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  adminTabButton: {
+    padding: 10,
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+  },
+  adminTabButtonText: {
+    color: color.black_544B45,
+  },
+  selectedAdminTabButton: {
+    width: '50%',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: color.white_FFFFFF,
+    borderRadius: 7,
+    backgroundColor: color.white_FFFFFF,
+  },
+  selectedAdminTabButtonText: {
+    color: color.placeholderTxt_24282C,
+    fontWeight: '500'
+  },
+  adminOnlineBoxOfficeTabContainer: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  adminOnlineBoxOfficeTabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  adminOnlineBoxOfficeTabButton: {
+    padding: 10,
+    width: '32%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+    backgroundColor: color.brown_F7E4B6,
+    borderColor: color.brown_F7E4B6,
+    borderRadius: 7,
+    borderWidth: 1,
+  },
+  adminOnlineBoxOfficeTabButtonText: {
+    color: color.black_544B45,
+  },
+  selectedAdminOnlineBoxOfficeTabButton: {
+    width: '32%',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: color.btnBrown_AE6F28,
+    borderRadius: 7,
+    backgroundColor: color.btnBrown_AE6F28,
+  },
+  selectedAdminOnlineBoxOfficeTabButtonText: {
+    color: color.white_FFFFFF,
+    fontWeight: '500'
   },
   selectedSaleScanTabButton: {
     width: '50%',

@@ -47,6 +47,7 @@ import ErrorRedCircleIcon from '../assets/svgs/crossRedCircleIcon.svg';
 import WhatsappIcon from '../assets/svgs/icon_whatsapp.svg';
 import SmsIcon from '../assets/svgs/icon_chat_message.svg';
 import EmailIcon from '../assets/svgs/icon_email.svg';
+import DownArrowWhite from '../assets/svgs/downarrow_white.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -98,4 +99,5 @@ export default {
     whatsappIcon: WhatsappIcon,
     smsIcon: SmsIcon,
     emailIcon: EmailIcon,
+    downArrowWhite: DownArrowWhite,
 };

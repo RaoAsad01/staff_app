@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import { useNavigation } from "@react-navigation/native";
+import SvgIcons from "../../../../components/SvgIcons";
 
 const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
@@ -50,30 +51,160 @@ const CircularProgress = ({ value, total, percentage }) => {
   );
 };
 
-const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsData }) => {
+const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsData, userRole, stats }) => {
   const navigation = useNavigation();
+  const [expandedItems, setExpandedItems] = useState({});
 
   const handleRemainingPress = () => {
     navigation.navigate('Tickets', { screen: 'BoxOfficeTab' });
+  };
+
+  const toggleExpanded = (itemIndex) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemIndex]: !prev[itemIndex]
+    }));
+  };
+
+  const handleSubItemPress = (subItemLabel, parentLabel) => {
+    console.log('CheckInSoldTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
+
+    // Dynamic tab mapping - use the parent label directly
+    // The parent category should be the tab name in BoxOfficeTab
+    let selectedTab = parentLabel;
+
+    // Handle special cases where parent label might not match tab name exactly
+    if (parentLabel === 'Total Sold') {
+      // For "Total Sold", we need to find the actual category from the data
+      if (stats?.data?.sold_tickets?.by_category) {
+        const byCategory = stats.data.sold_tickets.by_category;
+        // Find the first category that has this sub-item
+        for (const [categoryName, categoryData] of Object.entries(byCategory)) {
+          if (categoryData && typeof categoryData === 'object') {
+            // Check if this category contains the sub-item
+            if (categoryData[subItemLabel] ||
+              Object.keys(categoryData).some(key =>
+                key.toLowerCase() === subItemLabel.toLowerCase()
+              )) {
+              selectedTab = categoryName;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    console.log('CheckInSoldTicketsCard - Mapped tab:', selectedTab);
+
+    if (selectedTab && selectedTab !== 'Total Sold') {
+      navigation.navigate('Tickets', {
+        screen: 'BoxOfficeTab',
+        selectedTab: selectedTab
+      });
+    } else {
+      console.warn('CheckInSoldTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
+    }
+  };
+
+  // Get sub-items for ADMIN users from sold_tickets.by_category
+  const getSubItems = (item, itemIndex) => {
+    if (userRole !== 'ADMIN' || !stats?.data?.sold_tickets?.by_category) {
+      return null;
+    }
+
+    const byCategory = stats.data.sold_tickets.by_category;
+    const categoryData = byCategory[item.label];
+
+    if (!categoryData || Object.keys(categoryData).length === 0) {
+      return null;
+    }
+
+    // Extract sub-items (like "Standard" from VIP Ticket category)
+    const subItems = [];
+    Object.keys(categoryData).forEach(key => {
+      if (key !== 'total_tickets' && key !== 'sold_tickets' && categoryData[key]) {
+        const subData = categoryData[key];
+        if (subData.total && subData.sold) {
+          subItems.push({
+            label: key,
+            checkedIn: subData.sold,
+            total: subData.total,
+            percentage: subData.total > 0 ? Math.round((subData.sold / subData.total) * 100) : 0
+          });
+        }
+      }
+    });
+
+    return subItems.length > 0 ? subItems : null;
   };
 
   return (
     <View>
       <View style={styles.card}>
         {/* <Text style={styles.title}>{title}</Text> */}
-        {data.map((item, index) => (
-          <View key={index} style={styles.row}>
-            <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
-            <View style={styles.textContainer}>
-              <Text style={styles.label}>{item.label}</Text>
-              <Text style={styles.value}>
-                <Text>{item.checkedIn}</Text>
-                <Text> / </Text>
-                <Text>{item.total}</Text>
-              </Text>
+        {data.map((item, index) => {
+          const subItems = getSubItems(item, index);
+          const isExpanded = expandedItems[index];
+          const hasSubItems = subItems && subItems.length > 0;
+
+          return (
+            <View key={index}>
+              <View style={styles.row}>
+                <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
+                <View style={styles.textContainer}>
+                  <Text style={styles.label}>{item.label}</Text>
+                  <Text style={styles.value}>
+                    <Text>{item.checkedIn}</Text>
+                    <Text> / </Text>
+                    <Text>{item.total}</Text>
+                  </Text>
+                </View>
+                {hasSubItems && (
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => toggleExpanded(index)}
+                  >
+                    <View style={styles.chevronContainer}>
+                      {isExpanded ? (
+                        <SvgIcons.upArrow width={10} height={7} fill={color.black_544B45} />
+                      ) : (
+                        <SvgIcons.downArrow width={10} height={7} fill={color.black_544B45} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Sub-items for ADMIN users */}
+              {hasSubItems && isExpanded && (
+                <View style={styles.subItemsContainer}>
+                  {subItems.map((subItem, subIndex) => (
+                    <TouchableOpacity
+                      key={subIndex}
+                      style={styles.subItemRow}
+                      onPress={() => handleSubItemPress(subItem.label, item.label)}
+                      activeOpacity={0.7}
+                    >
+                      <CircularProgress
+                        value={subItem.checkedIn}
+                        total={subItem.total}
+                        percentage={subItem.percentage}
+                      />
+                      <View style={styles.textContainer}>
+                        <Text style={styles.subItemLabel}>{subItem.label}</Text>
+                        <Text style={styles.value}>
+                          <Text>{subItem.checkedIn}</Text>
+                          <Text> / </Text>
+                          <Text>{subItem.total}</Text>
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
 
       {/* {showRemaining && remainingTicketsData && remainingTicketsData.length > 0 && (
@@ -123,6 +254,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     marginLeft: 20,
+    flex: 1,
   },
   label: {
     fontSize: 14,
@@ -134,12 +266,50 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: color.brown_3C200A,
   },
+  dropdownButton: {
+    padding: 8,
+    marginLeft: 10,
+  },
+  dropdownIcon: {
+    transform: [{ rotate: '0deg' }],
+  },
+  dropdownIconRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  subItemsContainer: {
+    backgroundColor: color.brown_F7E4B6,
+    marginTop: 8,
+    marginLeft: -15,
+    marginRight: -15,
+    marginBottom: 0,
+    paddingBottom: 15,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  subItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  subItemLabel: {
+    fontSize: 12,
+    color: color.grey_6B7785,
+    fontWeight: "400",
+  },
   remainingContainer: {
     backgroundColor: "white",
     padding: 15,
     borderRadius: 12,
     marginVertical: 10,
     marginHorizontal: 10,
+  },
+  chevronContainer: {
+    padding: 8,
+    marginRight: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

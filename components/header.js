@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   cityName: {
     color: color.white_FFFFFF,

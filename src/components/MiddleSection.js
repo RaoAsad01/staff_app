@@ -34,6 +34,7 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
                         size={16}
                         color={color.btnTxt_FFF6DF}
                         align="center"
+                        weight="600"
                     >
                         Get Started
                     </ButtonTextDemiBold>

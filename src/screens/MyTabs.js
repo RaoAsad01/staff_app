@@ -40,6 +40,24 @@ function MyTabs() {
     }
   };
 
+  // Function to handle event change from dashboard
+  const handleEventChange = (newEvent) => {
+    console.log('Event changed to:', newEvent);
+    // Transform the event data to match the expected format
+    const transformedEvent = {
+      eventUuid: newEvent.uuid,
+      event_title: newEvent.title,
+      uuid: newEvent.uuid,
+      cityName: eventInformation?.cityName || 'Accra',
+      date: eventInformation?.date || '28-12-2024',
+      time: eventInformation?.time || '7:00 PM',
+    };
+    setEventInformation(transformedEvent);
+    
+    // The dashboard will automatically refresh its data when eventInformation changes
+    // because it depends on eventInfo?.eventUuid in the useEffect
+  };
+
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     return (
       <TouchableOpacity
@@ -152,7 +170,7 @@ function MyTabs() {
         name="Dashboard"
         options={{ headerShown: false, unmountOnBlur: true }}
       >
-        {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+        {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} onEventChange={handleEventChange} />}
       </Tab.Screen>
 
       <Tab.Screen

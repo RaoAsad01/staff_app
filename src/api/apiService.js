@@ -469,9 +469,16 @@ export const ticketService = {
     }
   },
 
-  fetchDashboardStats: async (eventUuid) => {
+  fetchDashboardStats: async (eventUuid, sales = null) => {
     try {
-      const response = await apiClient.get(endpoints.dashboardStats.replace('{event_uuid}', eventUuid));
+      let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
+      
+      // Add sales query parameter for ADMIN users
+      if (sales) {
+        url += `?sales=${sales}`;
+      }
+      
+      const response = await apiClient.get(url);
       console.log('Dashboard Stats Response:', response.data);
       return response.data;
     } catch (error) {
