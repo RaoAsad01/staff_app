@@ -19,10 +19,11 @@ import ScanCategories from './ScanCategories';
 import ScanCategoriesDetails from './ScanCategoriesDetails';
 import ScanListComponent from './ScanListComponent';
 import EventsModal from '../../components/EventsModal';
-import TerminalsComponent from './TerminalsComponent';
+import TerminalsComponent from './TerminalsComponent'
 import AdminAllSales from './AdminAllSales';
 import AdminOnlineSales from './AdminOnlineSales';
 import AdminBoxOfficeSales from './AdminBoxOfficeSales';
+import AdminBoxOfficePaymentChannel from './AdminBoxOfficePaymentChannel';
 import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 
@@ -41,6 +42,9 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const [eventsModalVisible, setEventsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentSalesType, setCurrentSalesType] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsTitle, setAnalyticsTitle] = useState('');
+  const [activeAnalytics, setActiveAnalytics] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -149,6 +153,54 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   const handleAdminOnlineBoxOfficeTabPress = (tab) => {
     setSelectedAdminOnlineBoxOfficeTab(tab);
+  };
+
+  const handleAnalyticsPress = async (ticketType, title) => {
+    if (!eventInfo?.eventUuid || userRole !== 'ADMIN') return;
+
+    const analyticsKey = `${title}-${ticketType}`;
+
+    // If already active, deactivate
+    if (activeAnalytics === analyticsKey) {
+      setActiveAnalytics(null);
+      setAnalyticsData(null);
+      setAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // Determine sales parameter based on title
+      let salesParam = null;
+      if (title === 'Sold Tickets') {
+        salesParam = 'box_office';
+      }
+
+      const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType);
+
+      if (response?.data?.sold_tickets_analytics?.data) {
+        const analytics = response.data.sold_tickets_analytics.data;
+        const chartData = Object.entries(analytics).map(([hour, value]) => {
+          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+          let formattedTime = hour;
+          if (hour.includes(':00 ')) {
+            const [time, period] = hour.split(' ');
+            const [hours] = time.split(':');
+            formattedTime = `${hours}${period.toLowerCase()}`;
+          }
+
+          return {
+            time: formattedTime,
+            value: value || 0
+          };
+        });
+
+        setAnalyticsData(chartData);
+        setAnalyticsTitle(`${ticketType} Sales`);
+        setActiveAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics for', ticketType, error);
+    }
   };
 
   const handleEventSelect = (event) => {
@@ -425,26 +477,52 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 <AdminOnlineSales stats={dashboardStats} />
               )}
               {selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
-                <AdminBoxOfficeSales stats={dashboardStats} />
+                <>
+                  <AdminBoxOfficeSales stats={dashboardStats} />
+                  <AdminBoxOfficePaymentChannel stats={dashboardStats} />
+                  <CheckInSoldTicketsCard
+                    title="Sold Tickets"
+                    data={soldTicketsData}
+                    remainingTicketsData={remainingTicketsData}
+                    showRemaining={true}
+                    userRole={userRole}
+                    stats={dashboardStats}
+                    onAnalyticsPress={handleAnalyticsPress}
+                    activeAnalytics={activeAnalytics}
+                  />
+                </>
               )}
             </>
           )}
 
           {/* Show regular BoxOfficeSales for non-admin users or when admin is not in Sales tab */}
           {userRole !== 'ADMIN' && <BoxOfficeSales stats={dashboardStats} />}
-          <CheckInSoldTicketsCard
-            title="Sold Tickets"
-            data={soldTicketsData}
-            remainingTicketsData={remainingTicketsData}
-            showRemaining={true}
-            userRole={userRole}
-            stats={dashboardStats}
-          />
-          <AnalyticsChart
-            title="Sold Tickets"
-            data={soldTicketsChartData}
-            dataType="sold"
-          />
+          {/* Show CheckInSoldTicketsCard for non-admin users or when admin is not in Box Office tab */}
+          {(userRole !== 'ADMIN' || (userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab !== 'Box Office')) && (
+            <CheckInSoldTicketsCard
+              title="Sold Tickets"
+              data={soldTicketsData}
+              remainingTicketsData={remainingTicketsData}
+              showRemaining={true}
+              userRole={userRole}
+              stats={dashboardStats}
+              onAnalyticsPress={handleAnalyticsPress}
+              activeAnalytics={activeAnalytics}
+            />
+          )}
+          {analyticsData && activeAnalytics ? (
+            <AnalyticsChart
+              title={analyticsTitle}
+              data={analyticsData}
+              dataType="sold"
+            />
+          ) : (
+            <AnalyticsChart
+              title="Sold Tickets"
+              data={soldTicketsChartData}
+              dataType="sold"
+            />
+          )}
           <View style={styles.tabContainer}>
             <View style={styles.tabRow}>
               {dashboardstatuslist.map((item) => (
@@ -476,6 +554,10 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 data={getCheckInData()}
                 remainingTicketsData={[]}
                 showRemaining={false}
+                userRole={userRole}
+                stats={dashboardStats}
+                onAnalyticsPress={handleAnalyticsPress}
+                activeAnalytics={activeAnalytics}
               />
               <AnalyticsChart
                 title="Checked In"
@@ -534,6 +616,10 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             data={data}
             remainingTicketsData={remainingTicketsData}
             showRemaining={selectedTab === "Sold Tickets"}
+            userRole={userRole}
+            stats={dashboardStats}
+            onAnalyticsPress={handleAnalyticsPress}
+            activeAnalytics={activeAnalytics}
           />
           {selectedTab !== "Available Tickets" && (
             <AnalyticsChart

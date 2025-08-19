@@ -48,6 +48,8 @@ import WhatsappIcon from '../assets/svgs/icon_whatsapp.svg';
 import SmsIcon from '../assets/svgs/icon_chat_message.svg';
 import EmailIcon from '../assets/svgs/icon_email.svg';
 import DownArrowWhite from '../assets/svgs/downarrow_white.svg';
+import IconBarsInactive from '../assets/svgs/icon_bars_inactive.svg';
+import IconBarsActive from '../assets/svgs/icon_bars_active.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -100,4 +102,6 @@ export default {
     smsIcon: SmsIcon,
     emailIcon: EmailIcon,
     downArrowWhite: DownArrowWhite,
+    iconBarsInactive: IconBarsInactive,
+    iconBarsActive: IconBarsActive,
 };

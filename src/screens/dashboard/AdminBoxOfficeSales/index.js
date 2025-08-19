@@ -9,7 +9,7 @@ const AdminBoxOfficeSales = ({ stats }) => {
   const boxOfficeSalesData = stats?.data?.box_office_sales || {};
   const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};
   const total = boxOfficeSalesData?.total || 0;
-  
+
   // Map payment methods to colors (same as BoxOfficeSales)
   const paymentMethodColors = {
     "Cash": "#AE6F28",
@@ -21,28 +21,28 @@ const AdminBoxOfficeSales = ({ stats }) => {
     "Free": "#2A9D8F",
     "MoMo": "#EDB58A",
   };
-  
+
   // Transform the data into the required format for pie chart
-  const values = Object.keys(byPaymentMethods).length > 0 
+  const values = Object.keys(byPaymentMethods).length > 0
     ? Object.entries(byPaymentMethods).map(([key, value], index) => {
-        const label = key === 'mobile_money' ? 'MoMo' : 
-                     key === 'bank_transfer' ? 'Bank Transfer' :
-                     key === 'pos' ? 'P.O.S.' :
-                     key.charAt(0).toUpperCase() + key.slice(1); // Capitalize first letter
-        
-        return {
-          label: label,
-          value: parseFloat(value) || 0,
-          color: paymentMethodColors[label] || "#87807C" // Fallback color
-        };
-      })
+      const label = key === 'mobile_money' ? 'MoMo' :
+        key === 'bank_transfer' ? 'Bank Transfer' :
+          key === 'pos' ? 'P.O.S.' :
+            key.charAt(0).toUpperCase() + key.slice(1); // Capitalize first letter
+
+      return {
+        label: label,
+        value: parseFloat(value) || 0,
+        color: paymentMethodColors[label] || "#87807C" // Fallback color
+      };
+    })
     : [
-        {
-          label: "No Data",
-          value: 0,
-          color: "#87807C"
-        }
-      ];
+      {
+        label: "No Data",
+        value: 0,
+        color: "#87807C"
+      }
+    ];
 
   const totalValue = values.reduce((sum, item) => sum + item.value, 0);
   const radius = 50;

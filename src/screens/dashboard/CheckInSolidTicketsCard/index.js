@@ -51,7 +51,7 @@ const CircularProgress = ({ value, total, percentage }) => {
   );
 };
 
-const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsData, userRole, stats }) => {
+const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsData, userRole, stats, onAnalyticsPress, activeAnalytics }) => {
   const navigation = useNavigation();
   const [expandedItems, setExpandedItems] = useState({});
 
@@ -159,12 +159,24 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     <Text>{item.total}</Text>
                   </Text>
                 </View>
-                {hasSubItems && (
+                {hasSubItems && (userRole !== 'ADMIN' || title !== 'Checked In') && (
                   <TouchableOpacity
                     style={styles.dropdownButton}
                     onPress={() => toggleExpanded(index)}
                   >
-                    <View style={styles.chevronContainer}>
+                    <View style={styles.iconsContainer}>
+                      {userRole === 'ADMIN' && title === 'Sold Tickets' && (
+                        <TouchableOpacity
+                          onPress={() => onAnalyticsPress && onAnalyticsPress(item.label, title)}
+                          style={styles.analyticsButton}
+                        >
+                          {activeAnalytics === `${title}-${item.label}` ? (
+                            <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
+                          ) : (
+                            <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />
+                          )}
+                        </TouchableOpacity>
+                      )}
                       {isExpanded ? (
                         <SvgIcons.upArrow width={10} height={7} fill={color.black_544B45} />
                       ) : (
@@ -198,6 +210,18 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                           <Text>{subItem.total}</Text>
                         </Text>
                       </View>
+                      {userRole === 'ADMIN' && title === 'Sold Tickets' && (
+                        <TouchableOpacity
+                          onPress={() => onAnalyticsPress && onAnalyticsPress(subItem.label, title)}
+                          style={styles.analyticsButton}
+                        >
+                          {activeAnalytics === `${title}-${subItem.label}` ? (
+                            <SvgIcons.iconBarsActive width={20} height={20} fill={color.btnBrown_AE6F28} />
+                          ) : (
+                            <SvgIcons.iconBarsInactive width={20} height={20} fill={color.black_544B45} />
+                          )}
+                        </TouchableOpacity>
+                      )}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -310,6 +334,16 @@ const styles = StyleSheet.create({
     marginRight: 5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 8,
+    marginRight: 5,
+  },
+  analyticsButton: {
+    padding: 4,
   },
 });
 

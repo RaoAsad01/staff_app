@@ -469,13 +469,24 @@ export const ticketService = {
     }
   },
 
-  fetchDashboardStats: async (eventUuid, sales = null) => {
+  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null) => {
     try {
       let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
       
+      const params = new URLSearchParams();
+      
       // Add sales query parameter for ADMIN users
       if (sales) {
-        url += `?sales=${sales}`;
+        params.append('sales', sales);
+      }
+      
+      // Add ticket_type query parameter for ADMIN users
+      if (ticketType) {
+        params.append('ticket_type', ticketType);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
       }
       
       const response = await apiClient.get(url);

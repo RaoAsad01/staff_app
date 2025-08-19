@@ -10,7 +10,7 @@ const AdminOnlineSales = ({ stats }) => {
   const paymentWise = onlineSalesData?.payment_wise || {};
   const byTypes = paymentWise?.by_types || {};
   const total = paymentWise?.total || 0;
-  
+
   // Map ticket types to colors
   const ticketTypeColors = {
     "Early Bird": "#945F22",
@@ -19,21 +19,21 @@ const AdminOnlineSales = ({ stats }) => {
     "Standard": "#AE6F28",
     "Premium": "#F4A261"
   };
-  
+
   // Transform the data into the required format for pie chart
-  const values = Object.keys(byTypes).length > 0 
+  const values = Object.keys(byTypes).length > 0
     ? Object.entries(byTypes).map(([key, value], index) => ({
-        label: key,
-        value: parseFloat(value) || 0,
-        color: ticketTypeColors[key] || "#AE6F28" // Fallback color
-      }))
+      label: key,
+      value: parseFloat(value) || 0,
+      color: ticketTypeColors[key] || "#AE6F28" // Fallback color
+    }))
     : [
-        {
-          label: "No Data",
-          value: 0,
-          color: "#AE6F28"
-        }
-      ];
+      {
+        label: "No Data",
+        value: 0,
+        color: "#AE6F28"
+      }
+    ];
 
   const totalValue = values.reduce((sum, item) => sum + item.value, 0);
   const radius = 50;

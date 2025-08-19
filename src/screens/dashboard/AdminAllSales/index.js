@@ -7,7 +7,7 @@ import { formatValue } from '../../../constants/formatValue';
 
 const AdminAllSales = ({ stats }) => {
   const allSalesData = stats?.data?.all_sales || {};
-  
+
   // Transform the data into the required format for pie chart
   const values = [
     {

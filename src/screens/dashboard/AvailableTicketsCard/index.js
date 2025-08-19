@@ -79,10 +79,10 @@ const AvailableTicketsCard = ({ data, stats }) => {
         for (const [categoryName, categoryData] of Object.entries(availableTickets)) {
           if (categoryData && typeof categoryData === 'object') {
             // Check if this category contains the sub-item
-            if (categoryData[subItemLabel] || 
-                Object.keys(categoryData).some(key => 
-                  key.toLowerCase() === subItemLabel.toLowerCase()
-                )) {
+            if (categoryData[subItemLabel] ||
+              Object.keys(categoryData).some(key =>
+                key.toLowerCase() === subItemLabel.toLowerCase()
+              )) {
               selectedTab = categoryName;
               break;
             }

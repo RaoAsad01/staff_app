@@ -32,21 +32,21 @@ const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
       setLoading(true);
       setError(null);
       const response = await eventService.fetchStaffEvents();
-      
+
       if (response?.data && response.data.length > 0) {
         // The response.data is already an array of events
         const eventsData = response.data;
-        
+
         // Transform the events to match the expected format
         const transformedEvents = eventsData.map(event => ({
           uuid: event.uuid || event.id,
           title: event.event_title || event.title
         }));
-        
+
         setEvents(transformedEvents);
-              } else {
-          setEvents([]);
-        }
+      } else {
+        setEvents([]);
+      }
     } catch (err) {
       console.error('Error fetching events:', err);
       setError('Failed to load events');
@@ -87,13 +87,13 @@ const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
         onPress={onClose}
       >
         <View style={styles.modalContainer}>
-          
+
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
@@ -111,14 +111,14 @@ const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
               <Body1 style={styles.emptyText}>No events available</Body1>
             </View>
           ) : (
-                        <ScrollView 
+            <ScrollView
               style={styles.eventsList}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}
             >
               {events.map((item, index) => (
-                <TouchableOpacity 
-                  key={item.uuid || index} 
+                <TouchableOpacity
+                  key={item.uuid || index}
                   style={[
                     styles.eventItem,
                     index === 0 && styles.firstEventItem,
@@ -137,7 +137,7 @@ const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
             </ScrollView>
           )}
         </View>
-        </TouchableOpacity>            
+      </TouchableOpacity>
     </Modal>
   );
 };
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
-    modalContainer: {
+  modalContainer: {
     backgroundColor: color.white_FFFFFF,
     marginTop: 48, // Position below the header
     marginHorizontal: 16,
