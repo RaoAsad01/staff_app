@@ -150,7 +150,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
           return (
             <View key={index}>
               <View style={styles.row}>
-                <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
+                <CircularProgress value={item.checkedœIn} total={item.total} percentage={item.percentage} />
                 <View style={styles.textContainer}>
                   <Text style={styles.label}>{item.label}</Text>
                   <Text style={styles.value}>
@@ -159,7 +159,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     <Text>{item.total}</Text>
                   </Text>
                 </View>
-                {hasSubItems && (userRole !== 'ADMIN' || title !== 'Checked In') && (
+                {hasSubItems && title !== 'Check-Ins' && (
                   <TouchableOpacity
                     style={styles.dropdownButton}
                     onPress={() => toggleExpanded(index)}
@@ -213,12 +213,12 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                       {userRole === 'ADMIN' && title === 'Sold Tickets' && (
                         <TouchableOpacity
                           onPress={() => onAnalyticsPress && onAnalyticsPress(subItem.label, title)}
-                          style={styles.analyticsButton}
+                          style={styles.analyticsButtonSubItem}
                         >
                           {activeAnalytics === `${title}-${subItem.label}` ? (
-                            <SvgIcons.iconBarsActive width={20} height={20} fill={color.btnBrown_AE6F28} />
+                            <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
                           ) : (
-                            <SvgIcons.iconBarsInactive width={20} height={20} fill={color.black_544B45} />
+                            <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />
                           )}
                         </TouchableOpacity>
                       )}
@@ -344,6 +344,10 @@ const styles = StyleSheet.create({
   },
   analyticsButton: {
     padding: 4,
+  },
+  analyticsButtonSubItem: {
+    padding: 4,
+    marginRight: 38
   },
 });
 

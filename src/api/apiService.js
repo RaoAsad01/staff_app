@@ -59,6 +59,7 @@ const endpoints = {
   userProfile: '/api/me/',
   logout: '/api/logout/',
   updateProfile: '/api/profile/',
+  adminDashboardTerminals: '/events/terminals/',
 };
 
 // API services
@@ -218,6 +219,30 @@ export const ticketService = {
       // ... (rest of the updateTicketNote function)
     } catch (error) {
       // ... (error handling)
+    }
+  },
+
+  fetchAdminTerminals: async (event_uuid) => {
+    try {
+      const response = await apiClient.get(`${endpoints.adminDashboardTerminals}?event_uuid=${event_uuid}`); // Include event_uuid as a query parameter
+      console.log('Admin Dashboard Terminals Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Admin Dashboard Terminals Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch Admin Dashboard Terminals.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
   },
 

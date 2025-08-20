@@ -1,1 +1,1 @@
-export const dashboardstatuslist = ["Checked In", "Available Tickets"];
+export const dashboardstatuslist = ["Check-Ins", "Available Tickets"];
