@@ -8,7 +8,8 @@ const OverallStatistics = ({ stats,
     onTotalTicketsPress,
     onTotalScannedPress,
     onTotalUnscannedPress,
-    onAvailableTicketsPress
+    onAvailableTicketsPress,
+    showHeading = true
 }) => {
     // Extract data from stats with default values
     const terminalStats = stats?.data?.terminal_statistics || {};
@@ -28,7 +29,7 @@ const OverallStatistics = ({ stats,
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
-                <Text style={styles.heading}>Terminal Statistics</Text>
+                {showHeading && <Text style={styles.heading}>Terminal Statistics</Text>}
                 <View style={styles.row}>
 
                     <View style={styles.statContainer}>

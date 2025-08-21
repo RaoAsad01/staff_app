@@ -16,7 +16,7 @@ const BoxOfficeSales = ({ stats }) => {
         "Cash": "#AE6F28",
         "Card": "#87807C",
         "MoMo": "#EDB58A",
-        "P.O.S.": "#CEBCA0"
+        "P.O.S.": "#945F22"
     };
 
     // Transform the data into the required format

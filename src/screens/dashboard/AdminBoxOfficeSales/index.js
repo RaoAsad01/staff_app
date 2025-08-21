@@ -17,25 +17,30 @@ const AdminBoxOfficeSales = ({ stats }) => {
     "Mobile Money": "#EDB58A",
     "Bank Transfer": "#CEBCA0",
     "Wallet": "#F4A261",
-    "P.O.S.": "#E76F51",
+    "P.O.S.": "#945F22",
     "Free": "#2A9D8F",
     "MoMo": "#EDB58A",
   };
 
   // Transform the data into the required format for pie chart
   const values = Object.keys(byPaymentMethods).length > 0
-    ? Object.entries(byPaymentMethods).map(([key, value], index) => {
-      const label = key === 'mobile_money' ? 'MoMo' :
-        key === 'bank_transfer' ? 'Bank Transfer' :
+    ? Object.entries(byPaymentMethods)
+      .filter(([key, value]) => {
+        // Filter out unwanted payment methods
+        const lowerKey = key.toLowerCase();
+        return !['wallet', 'bank_transfer', 'free'].includes(lowerKey);
+      })
+      .map(([key, value], index) => {
+        const label = key === 'mobile_money' ? 'MoMo' :
           key === 'pos' ? 'P.O.S.' :
             key.charAt(0).toUpperCase() + key.slice(1); // Capitalize first letter
 
-      return {
-        label: label,
-        value: parseFloat(value) || 0,
-        color: paymentMethodColors[label] || "#87807C" // Fallback color
-      };
-    })
+        return {
+          label: label,
+          value: parseFloat(value) || 0,
+          color: paymentMethodColors[label] || "#87807C" // Fallback color
+        };
+      })
     : [
       {
         label: "No Data",
@@ -44,17 +49,22 @@ const AdminBoxOfficeSales = ({ stats }) => {
       }
     ];
 
+  const paymentOrder = ["Cash", "Card", "MoMo", "P.O.S."];
+  const sortedValues = paymentOrder
+    .map(type => values.find(v => v.label === type))
+    .filter(Boolean);
+
   const totalValue = values.reduce((sum, item) => sum + item.value, 0);
   const radius = 50;
   const strokeWidth = 10;
   const circumference = 2 * Math.PI * radius;
   const gapSize = 15;
-  const totalGap = gapSize * values.length;
+  const totalGap = gapSize * sortedValues.length;
 
   // Calculate segments for the circle with visible gaps and no overlap
   const calculateSegments = () => {
     let currentOffset = 0;
-    return values.map((item) => {
+    return sortedValues.map((item) => {
       const percentage = totalValue > 0 ? item.value / totalValue : 0;
       // Distribute the circumference minus total gap among the arcs
       const dashLength = (circumference - totalGap) * percentage;
@@ -106,7 +116,7 @@ const AdminBoxOfficeSales = ({ stats }) => {
             </View>
           </View>
           <View style={styles.paymentMethod}>
-            {values.map((item, index) => (
+            {sortedValues.map((item, index) => (
               <View style={styles.paymentItem} key={index}>
                 <View style={styles.colorBoxWrapper}>
                   <View style={[styles.colorBox, { backgroundColor: item.color }]} />

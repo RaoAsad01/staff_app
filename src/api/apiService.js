@@ -224,7 +224,7 @@ export const ticketService = {
 
   fetchAdminTerminals: async (event_uuid) => {
     try {
-      const response = await apiClient.get(`${endpoints.adminDashboardTerminals}?event_uuid=${event_uuid}`); // Include event_uuid as a query parameter
+      const response = await apiClient.get(`${endpoints.adminDashboardTerminals}?event=${event_uuid}`); // Include event_uuid as a query parameter
       console.log('Admin Dashboard Terminals Response:', response.data);
       return response.data;
     } catch (error) {
@@ -343,11 +343,16 @@ export const ticketService = {
     }
   },
 
-  ticketStatsListing: async (event_uuid, page = 1) => {
+  ticketStatsListing: async (event_uuid, page = 1, staffUuid = null) => {
     try {
-      const response = await apiClient.get(
-        `${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}&page_size=-1`
-      );
+      let url = `${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}&page_size=-1`;
+      
+      // Add staff_uuid parameter if provided
+      if (staffUuid) {
+        url += `&staff_uuid=${staffUuid}`;
+      }
+      
+      const response = await apiClient.get(url);
       console.log('Ticket Tab listing Response:', response.data);
       return response.data;
     } catch (error) {
@@ -494,7 +499,7 @@ export const ticketService = {
     }
   },
 
-  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null) => {
+  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, staffUuid = null) => {
     try {
       let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
       
@@ -508,6 +513,11 @@ export const ticketService = {
       // Add ticket_type query parameter for ADMIN users
       if (ticketType) {
         params.append('ticket_type', ticketType);
+      }
+      
+      // Add staff_uuid query parameter for staff-specific data
+      if (staffUuid) {
+        params.append('staff_uuid', staffUuid);
       }
       
       if (params.toString()) {

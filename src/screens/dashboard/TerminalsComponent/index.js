@@ -8,7 +8,7 @@ import { ticketService } from '../../../api/apiService';
 import NoResults from '../../../components/NoResults';
 import { formatValue } from '../../../constants/formatValue';
 
-const TerminalsComponent = ({ eventInfo }) => {
+const TerminalsComponent = ({ eventInfo, onEventChange }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -86,8 +86,11 @@ const TerminalsComponent = ({ eventInfo }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.ticketCard}
-      onPress={() => navigation.navigate('Dashboard', {
-        ticket: item.uuid,
+      onPress={() => navigation.navigate('StaffDashboard', {
+        eventInfo: eventInfo,
+        staffUuid: item.uuid,
+        staffName: item.name,
+        onEventChange: onEventChange
       })}
     >
       <View style={styles.ticketRow}>

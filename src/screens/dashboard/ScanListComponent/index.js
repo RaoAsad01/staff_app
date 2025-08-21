@@ -8,7 +8,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import NoResults from '../../../components/NoResults';
 
-const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
+const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
     const navigation = useNavigation();
     const [searchText, setSearchText] = useState('');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -25,7 +25,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate }) => {
     const fetchTicketList = async (eventUuid) => {
         try {
             setIsLoading(true);
-            const res = await ticketService.ticketStatsListing(eventUuid);
+            // If staffUuid is provided, we need to filter tickets for that specific staff
+            const res = await ticketService.ticketStatsListing(eventUuid, staffUuid);
             const list = res?.data || [];
             const mappedTickets = list.map((ticket) => {
                 const qrCodeUrl = `https://dev-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;

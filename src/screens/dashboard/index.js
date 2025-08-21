@@ -767,7 +767,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
       {userRole === 'ADMIN' && selectedAdminTab === 'Terminals' ? (
         // Render TerminalsComponent directly without ScrollView wrapper
-        <TerminalsComponent eventInfo={eventInfo} />
+        <TerminalsComponent eventInfo={eventInfo} onEventChange={onEventChange} />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
           <View style={styles.wrapper}>

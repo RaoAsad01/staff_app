@@ -9,6 +9,7 @@ import CheckInAllTickets from '../screens/CheckInAllTickets';
 import ManualCheckInAllTickets from '../screens/ManualcheckInAllTickets';
 import TicketScanned from '../screens/TicketScanned';
 import SplashScreenComponent from '../screens/SplashScreen';
+import StaffDashboard from '../screens/dashboard/StaffDashboard';
 import * as SecureStore from 'expo-secure-store';
 import { View, Text, ActivityIndicator } from 'react-native';
 
@@ -124,6 +125,14 @@ function Navigation({ route }) {
       <Stack.Screen 
         name="TicketScanned" 
         component={TicketScanned} 
+        options={{ 
+          headerShown: false,
+          unmountOnBlur: true 
+        }} 
+      />
+      <Stack.Screen 
+        name="StaffDashboard" 
+        component={StaffDashboard} 
         options={{ 
           headerShown: false,
           unmountOnBlur: true 
