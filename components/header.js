@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Sta
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { truncateCityName } from '../src/utils/stringUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -69,7 +70,7 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
           <View style={styles.header}>
             <Text style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
             <Text style={styles.separator}>   </Text>
-            <Text style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Text>
+            <Text style={styles.cityName}>{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
             <Text style={styles.separator}>   </Text>
             <Text style={styles.date}>{eventInfo?.date || '28-12-2024'}</Text>
             <Text style={styles.separator}> </Text>

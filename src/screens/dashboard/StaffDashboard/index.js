@@ -15,6 +15,7 @@ import ScanCategoriesDetails from '../ScanCategoriesDetails';
 import ScanListComponent from '../ScanListComponent';
 import OverallStatistics from '../OverallStatistics';
 import EventsModal from '../../../components/EventsModal';
+import { truncateCityName } from '../../../utils/stringUtils';
 
 const StaffDashboard = () => {
   const navigation = useNavigation();
@@ -258,7 +259,7 @@ const StaffDashboard = () => {
             </TouchableOpacity> */}
           </View>
           <Body1 style={styles.separator}>   </Body1>
-          <Body1 style={styles.cityName}>{currentEventInfo?.cityName || 'Accra'}</Body1>
+          <Body1 style={styles.cityName}>{truncateCityName(currentEventInfo?.cityName) || 'Accra'}</Body1>
           <Body1 style={styles.separator}>   </Body1>
           <Body1 style={styles.date}>{currentEventInfo?.date || '28-12-2024'}</Body1>
           <Body1 style={styles.separator}></Body1>

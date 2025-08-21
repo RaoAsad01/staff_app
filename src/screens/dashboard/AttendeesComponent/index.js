@@ -227,7 +227,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
           >
             <View style={styles.cardContent}>
               <View>
-                <Text style={styles.label}>Name</Text>
+                <Text style={styles.label}>Email</Text>
                 <Text style={styles.value}>{item.ticketHolder}</Text>
                 <Text style={styles.label}>Ticket ID</Text>
                 <Text style={styles.value}>#{item.id}</Text>

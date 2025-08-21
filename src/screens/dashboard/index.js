@@ -26,6 +26,7 @@ import AdminBoxOfficeSales from './AdminBoxOfficeSales';
 import AdminBoxOfficePaymentChannel from './AdminBoxOfficePaymentChannel';
 import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
+import { truncateCityName } from '../../utils/stringUtils';
 
 const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
@@ -726,8 +727,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               </TouchableOpacity>
             )}
           </View>
-          <Body1 style={styles.separator}>   </Body1>
-          <Body1 style={styles.cityName}>{eventInfo?.cityName || 'Accra'}</Body1>
+          <Body1 style={styles.separator}></Body1>
+          <Body1 style={styles.cityName}>{truncateCityName(eventInfo?.cityName) || 'Accra'}</Body1>
           <Body1 style={styles.separator}>   </Body1>
           <Body1 style={styles.date}>{eventInfo?.date || '28-12-2024'}</Body1>
           <Body1 style={styles.separator}></Body1>
