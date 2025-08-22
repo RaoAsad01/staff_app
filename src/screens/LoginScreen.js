@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    paddingTop: 370,
+    paddingTop: 350,
     backgroundColor: "#000000"
   },
   logoSection: {
@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   inputRow: {
+    paddingLeft: 10,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
@@ -265,7 +266,6 @@ const styles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
-    paddingHorizontal: 20,
     color: color.grey_DEDCDC,
     fontSize: 14,
     fontWeight: '400',

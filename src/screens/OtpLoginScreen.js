@@ -232,8 +232,8 @@ const OtpLoginScreen = ({ route }) => {
     setErrorMessage('');
   };
   return (
-    <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
+   
+      <View style={{ flex: 1 ,backgroundColor: "#000000"}}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ flex: 1 }}>
             <StatusBar style="dark" backgroundColor="transparent" translucent />
@@ -437,12 +437,14 @@ const OtpLoginScreen = ({ route }) => {
             </View>
 
             {!isKeyboardVisible && (
+               <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
               <MiddleSection showGetStartedButton={false} />
+              </LinearGradient>
             )}
           </View>
         </TouchableWithoutFeedback>
       </View>
-    </LinearGradient>
+   
   );
 
 };
