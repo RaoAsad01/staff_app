@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, ScrollView,Text } from 'react-native';
 import { color } from '../../../color/color';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../../../components/SvgIcons';
 import { dashboardsalesscantab } from '../../../constants/dashboardsalesscantab';
 import AnalyticsChart from '../AnalyticsChart';
 import { ticketService } from '../../../api/apiService';
-import Typography, { Heading5, Body1, Label } from '../../../components/Typography';
 import BoxOfficeSales from '../BoxOfficeSales';
 import CheckInSoldTicketsCard from '../CheckInSolidTicketsCard';
 import ScanAnalytics from '../ScanAnalytics';
@@ -249,23 +248,25 @@ const StaffDashboard = () => {
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Body1 style={styles.eventName}>{currentEventInfo?.event_title || 'OUTMOSPHERE'}</Body1>
-            {/* <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setEventsModalVisible(true)}
-            >
-              <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
-            </TouchableOpacity> */}
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+              {/* <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={() => setEventsModalVisible(true)}
+              >
+                <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
+              </TouchableOpacity> */}
+            </View>
+            <Text style={styles.separator}>   </Text>
+            <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(currentEventInfo?.cityName) || 'Accra'}</Text>
+            <Text style={styles.separator}>   </Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.separator}></Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">at</Text>
+            <Text style={styles.separator}></Text>
+            <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.time || '7:00 PM'}</Text>
           </View>
-          <Body1 style={styles.separator}>   </Body1>
-          <Body1 style={styles.cityName}>{truncateCityName(currentEventInfo?.cityName) || 'Accra'}</Body1>
-          <Body1 style={styles.separator}>   </Body1>
-          <Body1 style={styles.date}>{currentEventInfo?.date || '28-12-2024'}</Body1>
-          <Body1 style={styles.separator}></Body1>
-          <Body1 style={styles.date}>at</Body1>
-          <Body1 style={styles.separator}></Body1>
-          <Body1 style={styles.time}>{currentEventInfo?.time || '7:00 PM'}</Body1>
         </View>
       </SafeAreaView>
 
@@ -274,7 +275,7 @@ const StaffDashboard = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <SvgIcons.backArrow width={24} height={24} fill={color.black_544B45} />
         </TouchableOpacity>
-        <Body1 style={styles.staffName}>{staffName}</Body1>
+        <Text style={styles.staffName}>{staffName}</Text>
       </View>
 
       {/* Overall Statistics */}
@@ -290,9 +291,9 @@ const StaffDashboard = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
           {loading ? (
-            <Body1 style={styles.loadingText}>Loading staff dashboard stats...</Body1>
+            <Text style={styles.loadingText}>Loading staff dashboard stats...</Text>
           ) : error ? (
-            <Body1 style={styles.errorText}>{error}</Body1>
+            <Text style={styles.errorText}>{error}</Text>
           ) : (
             <>
               <View style={styles.saleScanTabContainer}>
@@ -306,15 +307,14 @@ const StaffDashboard = () => {
                       ]}
                       onPress={() => handleSaleScanTabPress(item)}
                     >
-                      <Typography
-                        variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
+                      <Text
                         style={[
                           styles.saleScanTabButtonText,
                           selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
                         ]}
                       >
                         {item}
-                      </Typography>
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -354,12 +354,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'nowrap',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -373,7 +379,7 @@ const styles = StyleSheet.create({
   eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   cityName: {
     color: color.white_FFFFFF,
@@ -405,13 +411,39 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 10,
     zIndex: 1,
-    marginVertical: 5
+    marginVertical: 8
   },
   staffName: {
     color: color.black_544B45,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  saleScanTabButtonText: {
+    color: color.black_544B45,
+    fontSize: 14,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  selectedSaleScanTabButtonText: {
+    color: color.placeholderTxt_24282C,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  loadingText: {
+    textAlign: 'center',
+    padding: 20,
+    color: color.brown_3C200A,
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  errorText: {
+    textAlign: 'center',
+    padding: 20,
+    color: 'red',
+    fontSize: 14,
+    fontWeight: '400',
   },
   saleScanTabContainer: {
     marginHorizontal: 16,
@@ -442,20 +474,6 @@ const styles = StyleSheet.create({
     borderColor: color.white_FFFFFF,
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
-  },
-  selectedSaleScanTabButtonText: {
-    color: color.placeholderTxt_24282C,
-    fontWeight: '700'
-  },
-  loadingText: {
-    textAlign: 'center',
-    padding: 20,
-    color: color.brown_3C200A,
-  },
-  errorText: {
-    textAlign: 'center',
-    padding: 20,
-    color: 'red',
   },
 });
 

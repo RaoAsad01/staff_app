@@ -120,7 +120,10 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
             isSearchFocused && styles.searchContainerFocused
         ]}>
           <TextInput
-            style={styles.searchBar}
+             style={[
+              styles.searchBar,
+              searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
+            ]}
             placeholder="Order Number or User Name"
             placeholderTextColor={color.brown_766F6A}
             onChangeText={(text) => setSearchText(text)}
@@ -173,6 +176,16 @@ const styles = StyleSheet.create({
   },
   searchContainerFocused: {
     borderColor: color.placeholderTxt_24282C,
+  },
+  searchInputPlaceholder: {
+    color: color.brown_766F6A,
+    fontWeight: '200',
+    fontSize: 13,
+  },
+  searchInputWithText: {
+    color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 13,
   },
   searchBar: {
     flex: 1,

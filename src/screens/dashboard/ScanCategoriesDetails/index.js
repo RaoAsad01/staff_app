@@ -51,7 +51,7 @@ const CircularProgress = ({ value, total, percentage }) => {
   );
 };
 
-const ScanCategoriesDetails = ({ stats }) => {
+const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytics }) => {
   const [expanded, setExpanded] = useState({});
   const scanCategoriesData = stats?.data?.scan_categories?.ticket_wise || {};
   const navigation = useNavigation();
@@ -63,60 +63,9 @@ const ScanCategoriesDetails = ({ stats }) => {
     }));
   };
 
-  const handleSubItemPress = (subItemLabel) => {
-    console.log('ScanCategoriesDetails - Subitem clicked:', subItemLabel);
 
-    // Map subitem labels to their parent tab names in BoxOfficeTab
-    const tabMapping = {
-      // Early Bird subitems
-      'Early Bird': 'Early Bird',
-      'Early Bird New': 'Early Bird',
-      'early bird': 'Early Bird',
-      'early bird new': 'Early Bird',
 
-      // VIP Ticket subitems  
-      'Critical': 'VIP Ticket',
-      'High': 'VIP Ticket',
-      'critical': 'VIP Ticket',
-      'high': 'VIP Ticket',
-
-      // Members subitems
-      'VIP Ticket': 'Members',
-      'VIP Ticket New': 'Members',
-      'vip ticket': 'Members',
-      'vip ticket new': 'Members',
-
-      // Fallback mappings
-      'Standard': 'Standard',
-      'Premium': 'Premium',
-    };
-
-    const selectedTab = tabMapping[subItemLabel];
-    console.log('ScanCategoriesDetails - Mapped tab:', selectedTab);
-
-    if (selectedTab) {
-      navigation.navigate('Tickets', {
-        screen: 'BoxOfficeTab',
-        selectedTab: selectedTab
-      });
-    } else {
-      console.warn('ScanCategoriesDetails - No tab mapping found for:', subItemLabel);
-      // Fallback: try to find a partial match
-      const partialMatch = Object.keys(tabMapping).find(key =>
-        subItemLabel.toLowerCase().includes(key.toLowerCase()) ||
-        key.toLowerCase().includes(subItemLabel.toLowerCase())
-      );
-      if (partialMatch) {
-        console.log('ScanCategoriesDetails - Found partial match:', partialMatch, '->', tabMapping[partialMatch]);
-        navigation.navigate('Tickets', {
-          screen: 'BoxOfficeTab',
-          selectedTab: tabMapping[partialMatch]
-        });
-      }
-    }
-  };
-
-  const renderItem = (item, index, isSubItem = false) => {
+  const renderItem = (item, index, isSubItem = false, parentCategory = null) => {
     const hasSubItems = item.subItems && item.subItems.length > 0;
     const isExpanded = expanded[item.label];
 
@@ -130,8 +79,8 @@ const ScanCategoriesDetails = ({ stats }) => {
           activeOpacity={hasSubItems ? 0.7 : 1}
           onPress={() => {
             if (isSubItem) {
-              // Navigate to BoxOfficeTab for subitems
-              handleSubItemPress(item.label);
+              // For subitems, we don't need to do anything on row press since we have analytics button
+              return;
             } else if (hasSubItems) {
               toggle(item.label);
             }
@@ -153,12 +102,24 @@ const ScanCategoriesDetails = ({ stats }) => {
               )}
             </View>
           )}
+          {isSubItem && onScanAnalyticsPress && (
+            <TouchableOpacity
+              onPress={() => onScanAnalyticsPress(item.label, parentCategory)}
+              style={styles.analyticsButton}
+            >
+              {activeScanAnalytics === `Scan-${parentCategory}-${item.label}` ? (
+                <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
+              ) : (
+                <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />
+              )}
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
         {hasSubItems && isExpanded && (
           <View style={styles.subitembg}>
             {item.subItems.map((sub, subIdx) =>
               <View key={sub.label + subIdx} style={styles.subRowBg}>
-                {renderItem(sub, subIdx, true)}
+                {renderItem(sub, subIdx, true, item.label)}
               </View>
             )}
           </View>
@@ -270,7 +231,13 @@ const styles = StyleSheet.create({
   },
   subitembg: {
     backgroundColor: color.brown_F7E4B6,
-  }
+  },
+  analyticsButton: {
+    padding: 8,
+    marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default ScanCategoriesDetails; 

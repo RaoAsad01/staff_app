@@ -67,17 +67,19 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.headerColumn}>
-          <View style={styles.header}>
-            <Text style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+                  <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
             <Text style={styles.separator}>   </Text>
-            <Text style={styles.cityName}>{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
+            <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
             <Text style={styles.separator}>   </Text>
-            <Text style={styles.date}>{eventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.date || '28-12-2024'}</Text>
             <Text style={styles.separator}> </Text>
-            <Text style={styles.date}>at</Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">at</Text>
             <Text style={styles.separator}> </Text>
-            <Text style={styles.time}>{eventInfo?.time || '7:00 PM'}</Text>
+            <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
           </View>
+        </View>
           <View style={styles.profileId}>
             <View style={styles.userSection}>
               {shouldShowBackButton() ? (
@@ -121,18 +123,24 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'wrap',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'nowrap',
+  },
   separator: {
     fontSize: 14,
     fontWeight: '500',
     color: color.white_FFFFFF,
-    marginHorizontal: 4,
+    marginHorizontal: 8,
   },
   profileId: {
     flexDirection: 'row',
@@ -154,7 +162,7 @@ const styles = StyleSheet.create({
   eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   cityName: {
     color: color.white_FFFFFF,

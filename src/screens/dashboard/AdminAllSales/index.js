@@ -143,14 +143,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   amountText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
-    color: color.drak_black_000000,
+    color: color.placeholderTxt_24282C,
   },
   totalText: {
     fontSize: 13,
-    fontWeight: "500",
-    color: color.grey_6B7785,
+    fontWeight: "450",
+    color: color.black_544B45,
     marginTop: 3
   },
   paymentMethod: {

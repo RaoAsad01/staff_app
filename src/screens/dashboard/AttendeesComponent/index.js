@@ -11,6 +11,7 @@ import NoResults from '../../../components/NoResults';
 const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
@@ -199,14 +200,22 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       </View>
 
       <View style={styles.searchFilterContainer}>
-        <View style={styles.searchBar}>
+        <View style={[
+          styles.searchBar,
+          isSearchFocused && styles.searchBarFocused
+        ]}>
           <TextInput
-            style={styles.searchInput}
+            style={[
+              styles.searchInput,
+              searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
+            ]}
             placeholder="John Doe"
             placeholderTextColor={color.brown_766F6A}
             onChangeText={handleSearchChange}
             value={searchText}
             selectionColor={color.selectField_CEBCA0}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
           />
           <TouchableOpacity onPress={() => handleSearchChange(searchText)}>
             <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
@@ -481,6 +490,16 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginLeft: 5,
   },
+  searchInputPlaceholder: {
+    color: color.brown_766F6A,
+    fontWeight: '200',
+    fontSize: 13,
+  },
+  searchInputWithText: {
+    color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 13,
+  },
   searchIcon: {
     marginRight: 5,
   },
@@ -510,23 +529,23 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: color.black_2F251D,
+    color: color.placeholderTxt_24282C,
     marginBottom: 10,
   },
   value: {
     fontSize: 12,
     fontWeight: '400',
     color: color.black_544B45,
-    marginBottom: 5,
+    marginBottom: 10,
   },
   qrCode: {
     width: 100,
     height: 100,
-    marginTop: 50,
+    paddingTop: 30,
   },
   badge: {
     position: 'absolute',
-    top: 10,
+    top: 13,
     right: 12,
     borderRadius: 5,
     paddingHorizontal: 8,
@@ -650,6 +669,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  searchBarFocused: {
+    borderColor: color.placeholderTxt_24282C,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView, Alert, Dimensions, Text } from 'react-native';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
 import AdminOverallStatistics from './AdminOverallStatistics';
@@ -12,7 +12,7 @@ import AttendeesComponent from './AttendeesComponent';
 import { dashboardsalesscantab } from '../../constants/dashboardsalesscantab';
 import AnalyticsChart from './AnalyticsChart';
 import { ticketService, userService } from '../../api/apiService';
-import Typography, { Heading5, Body1, Label } from '../../components/Typography';
+
 import AvailableTicketsCard from './AvailableTicketsCard';
 import ScanAnalytics from './ScanAnalytics';
 import ScanCategories from './ScanCategories';
@@ -46,6 +46,9 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsTitle, setAnalyticsTitle] = useState('');
   const [activeAnalytics, setActiveAnalytics] = useState(null);
+  const [scanAnalyticsData, setScanAnalyticsData] = useState(null);
+  const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
+  const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -146,7 +149,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   const handleAvailableTicketsPress = () => {
     setSelectedSaleScanTab('Sales');
-    setSelectedTab('Available Tickets');
+    setSelectedTab('Available');
 
     // Add a small delay to ensure the content is rendered before scrolling
     setTimeout(() => {
@@ -169,9 +172,9 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   // Function to get tab list based on user role
   const getTabList = () => {
     if (userRole === 'ADMIN') {
-      return ["Attendees", "Check-Ins", "Available Tickets"];
+      return ["Attendees", "Check-Ins", "Available"];
     } else {
-      return ["Check-Ins", "Available Tickets"];
+      return ["Check-Ins", "Available"];
     }
   };
 
@@ -226,6 +229,49 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       }
     } catch (error) {
       console.error('Error fetching analytics for', ticketType, error);
+    }
+  };
+
+  const handleScanAnalyticsPress = async (scanType, parentCategory) => {
+    if (!eventInfo?.eventUuid) return;
+
+    const analyticsKey = `Scan-${parentCategory}-${scanType}`;
+
+    // If already active, deactivate
+    if (activeScanAnalytics === analyticsKey) {
+      setActiveScanAnalytics(null);
+      setScanAnalyticsData(null);
+      setScanAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // For scan analytics, we'll use the scan_analytics data and filter by category
+      if (dashboardStats?.data?.scan_analytics?.data) {
+        const scanAnalytics = dashboardStats.data.scan_analytics.data;
+
+        // Create chart data from scan analytics
+        const chartData = Object.entries(scanAnalytics).map(([hour, value]) => {
+          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+          let formattedTime = hour;
+          if (hour.includes(':00 ')) {
+            const [time, period] = hour.split(' ');
+            const [hours] = time.split(':');
+            formattedTime = `${hours}${period.toLowerCase()}`;
+          }
+
+          return {
+            time: formattedTime,
+            value: value || 0
+          };
+        });
+
+        setScanAnalyticsData(chartData);
+        setScanAnalyticsTitle(`${scanType} Scans`);
+        setActiveScanAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching scan analytics for', scanType, error);
     }
   };
 
@@ -361,7 +407,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const getAvailableTicketsData = () => {
     if (!dashboardStats?.data?.available_tickets) {
       return [{
-        label: "Available Tickets",
+        label: "Available",
         checkedIn: 0,
         total: 0,
         percentage: 0
@@ -478,15 +524,14 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                     ]}
                     onPress={() => handleAdminOnlineBoxOfficeTabPress(item)}
                   >
-                    <Typography
-                      variant={selectedAdminOnlineBoxOfficeTab === item ? "tabActive" : "tab"}
+                    <Text
                       style={[
                         styles.adminOnlineBoxOfficeTabButtonText,
                         selectedAdminOnlineBoxOfficeTab === item && styles.selectedAdminOnlineBoxOfficeTabButtonText,
                       ]}
                     >
                       {item}
-                    </Typography>
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -560,8 +605,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                   ]}
                   onPress={() => handleTabPress(item)}
                 >
-                  <Typography
-                    variant={selectedTab === item ? "tabActive" : "tab"}
+                  <Text
                     style={[
                       styles.tabButtonText,
                       selectedTab === item && styles.selectedTabButtonText,
@@ -569,7 +613,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                     numberOfLines={2}
                   >
                     {item}
-                  </Typography>
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -596,7 +640,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               />
             </>
           )}
-          {selectedTab === "Available Tickets" && (
+          {selectedTab === "Available" && (
             <AvailableTicketsCard data={getAvailableTicketsData()} stats={dashboardStats} />
           )}
           {selectedTab === "Attendees" && (
@@ -609,12 +653,24 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       return (
         <>
           <ScanCategories stats={dashboardStats} />
-          <ScanCategoriesDetails stats={dashboardStats} />
-          <ScanAnalytics
-            title="Scans"
-            data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
-            dataType="checked in"
+          <ScanCategoriesDetails
+            stats={dashboardStats}
+            onScanAnalyticsPress={handleScanAnalyticsPress}
+            activeScanAnalytics={activeScanAnalytics}
           />
+          {scanAnalyticsData && activeScanAnalytics ? (
+            <ScanAnalytics
+              title={scanAnalyticsTitle}
+              data={scanAnalyticsData}
+              dataType="checked in"
+            />
+          ) : (
+            <ScanAnalytics
+              title="Scans"
+              data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
+              dataType="checked in"
+            />
+          )}
           <ScanListComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />
         </>
       );
@@ -622,7 +678,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
     if (selectedTab === "Attendees") {
       return <AttendeesComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />;
-    } else if (selectedTab === "Check-Ins" || selectedTab === "Sold Tickets" || selectedTab === "Available Tickets") {
+    } else if (selectedTab === "Check-Ins" || selectedTab === "Sold Tickets" || selectedTab === "Available") {
       const data = selectedTab === "Check-Ins" ? getCheckInData() :
         selectedTab === "Sold Tickets" ? getSoldTicketsData() :
           getAvailableTicketsData();
@@ -651,7 +707,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             onAnalyticsPress={handleAnalyticsPress}
             activeAnalytics={activeAnalytics}
           />
-          {selectedTab !== "Available Tickets" && (
+          {selectedTab !== "Available" && (
             <AnalyticsChart
               title={selectedTab}
               data={selectedTab === "Check-Ins" ? checkedInChartData : soldTicketsChartData}
@@ -679,15 +735,14 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       ]}
       onPress={() => handleTabPress(item)}
     >
-      <Typography
-        variant={selectedTab === item ? "tabActive" : "tab"}
+      <Text
         style={[
           styles.tabButtonText,
           selectedTab === item && styles.selectedTabButtonText,
         ]}
       >
         {item}
-      </Typography>
+      </Text>
     </TouchableOpacity>
   );
 
@@ -699,15 +754,15 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       ]}
       onPress={() => handleSaleScanTabPress(item)}
     >
-      <Typography
-        variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
+      <Text
+        // variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
         style={[
           styles.saleScanTabButtonText,
           selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
         ]}
       >
         {item}
-      </Typography>
+      </Text>
     </TouchableOpacity>
   );
 
@@ -716,25 +771,27 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Body1 style={styles.eventName}>{eventInfo?.event_title || 'OUTMOSPHERE'}</Body1>
-            {userRole === 'ADMIN' && (
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setEventsModalVisible(true)}
-              >
-                <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
-              </TouchableOpacity>
-            )}
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+              {userRole === 'ADMIN' && (
+                <TouchableOpacity
+                  style={styles.dropdownButton}
+                  onPress={() => setEventsModalVisible(true)}
+                >
+                  <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.separator}></Text>
+            <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
+            <Text style={styles.separator}>   </Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.separator}></Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">at</Text>
+            <Text style={styles.separator}></Text>
+            <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
           </View>
-          <Body1 style={styles.separator}></Body1>
-          <Body1 style={styles.cityName}>{truncateCityName(eventInfo?.cityName) || 'Accra'}</Body1>
-          <Body1 style={styles.separator}>   </Body1>
-          <Body1 style={styles.date}>{eventInfo?.date || '28-12-2024'}</Body1>
-          <Body1 style={styles.separator}></Body1>
-          <Body1 style={styles.date}>at</Body1>
-          <Body1 style={styles.separator}></Body1>
-          <Body1 style={styles.time}>{eventInfo?.time || '7:00 PM'}</Body1>
         </View>
       </SafeAreaView>
 
@@ -751,15 +808,14 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 ]}
                 onPress={() => handleAdminTabPress(item)}
               >
-                <Typography
-                  variant={selectedAdminTab === item ? "tabActive" : "tab"}
+                <Text
                   style={[
                     styles.adminTabButtonText,
                     selectedAdminTab === item && styles.selectedAdminTabButtonText,
                   ]}
                 >
                   {item}
-                </Typography>
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -774,11 +830,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           <View style={styles.wrapper}>
             {/* <Heading5 style={styles.labelDashboard}>Dashboard</Heading5> */}
             {loading || userProfileLoading ? (
-              <Body1 style={styles.loadingText}>
+              <Text style={styles.loadingText}>
                 {loading ? 'Loading dashboard stats...' : 'Loading user profile...'}
-              </Body1>
+              </Text>
             ) : error ? (
-              <Body1 style={styles.errorText}>{error}</Body1>
+              <Text style={styles.errorText}>{error}</Text>
             ) : (
               <>
                 {userRole === 'ADMIN' ? (
@@ -822,15 +878,14 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                             ]}
                             onPress={() => handleSaleScanTabPress(item)}
                           >
-                            <Typography
-                              variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
+                            <Text
                               style={[
                                 styles.saleScanTabButtonText,
                                 selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
                               ]}
                             >
                               {item}
-                            </Typography>
+                            </Text>
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -850,8 +905,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                                 ]}
                                 onPress={() => handleTabPress(item)}
                               >
-                                <Typography
-                                  variant={selectedTab === item ? "tabActive" : "tab"}
+                                <Text
                                   style={[
                                     styles.tabButtonText,
                                     selectedTab === item && styles.selectedTabButtonText,
@@ -859,7 +913,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                                   numberOfLines={2}
                                 >
                                   {item}
-                                </Typography>
+                                </Text>
                               </TouchableOpacity>
                             ))}
                           </View>
@@ -906,12 +960,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 15,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'nowrap',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -925,7 +985,7 @@ const styles = StyleSheet.create({
   eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   cityName: {
     color: color.white_FFFFFF,
@@ -967,7 +1027,8 @@ const styles = StyleSheet.create({
   tabButtonText: {
     color: color.black_544B45,
     textAlign: 'center',
-    fontSize: Math.min(14, Dimensions.get('window').width / 32),
+    fontSize: 14,
+    fontWeight: '400',
     flexWrap: 'wrap',
     numberOfLines: 2,
   },
@@ -985,10 +1046,10 @@ const styles = StyleSheet.create({
   selectedTabButtonText: {
     color: color.placeholderTxt_24282C,
     textAlign: 'center',
-    fontSize: Math.min(14, Dimensions.get('window').width / 32),
+    fontSize: 14,
     flexWrap: 'wrap',
     numberOfLines: 2,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   loadingText: {
     textAlign: 'center',
@@ -1022,6 +1083,8 @@ const styles = StyleSheet.create({
   },
   saleScanTabButtonText: {
     color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 14,
   },
   adminTabContainer: {
     marginHorizontal: 16,
@@ -1041,6 +1104,8 @@ const styles = StyleSheet.create({
   },
   adminTabButtonText: {
     color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 14,
   },
   selectedAdminTabButton: {
     width: '50%',
@@ -1054,7 +1119,8 @@ const styles = StyleSheet.create({
   },
   selectedAdminTabButtonText: {
     color: color.placeholderTxt_24282C,
-    fontWeight: '700'
+    fontWeight: '500',
+    fontSize: 14,
   },
   adminOnlineBoxOfficeTabContainer: {
     marginHorizontal: 16,
@@ -1071,13 +1137,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: 40,
-    backgroundColor: color.brown_F7E4B6,
-    borderColor: color.brown_F7E4B6,
+    backgroundColor: '#F7E4B690',
+    borderColor: '#F7E4B690',
     borderRadius: 7,
     borderWidth: 1,
   },
   adminOnlineBoxOfficeTabButtonText: {
     color: color.black_544B45,
+    fontSize: 14,
+    fontWeight: '400'
   },
   selectedAdminOnlineBoxOfficeTabButton: {
     width: '32%',
@@ -1091,7 +1159,8 @@ const styles = StyleSheet.create({
   },
   selectedAdminOnlineBoxOfficeTabButtonText: {
     color: color.white_FFFFFF,
-    fontWeight: '500'
+    fontWeight: '500',
+    fontSize: 14,
   },
   selectedSaleScanTabButton: {
     width: '50%',
@@ -1105,7 +1174,8 @@ const styles = StyleSheet.create({
   },
   selectedSaleScanTabButtonText: {
     color: color.placeholderTxt_24282C,
-    fontWeight: '700'
+    fontWeight: '500',
+    fontSize: 14,
   },
 });
 

@@ -131,11 +131,11 @@ const styles = StyleSheet.create({
     },
     statTitle: {
         fontSize: 12,
-        color: color.black_544B45,
+        color: color.placeholderTxt_24282C,
         fontWeight: 400
     },
     statValue: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '500',
         marginTop: 6,
         color: color.brown_3C200A,

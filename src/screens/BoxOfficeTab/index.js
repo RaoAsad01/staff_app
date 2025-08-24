@@ -493,7 +493,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             <View style={{ width: '100%' }}>
               {/* <Text style={styles.inputHeading}>Name</Text> */}
               <TextInput
-                style={[styles.input, touched.name && errors.name ? styles.inputError : null]}
+                style={[
+                  styles.input, 
+                  touched.name && errors.name ? styles.inputError : null,
+                  values.name ? styles.inputWithText : styles.inputPlaceholder
+                ]}
                 placeholder="Enter your name"
                 placeholderTextColor={color.brown_766F6A}
                 onChangeText={(text) => {
@@ -511,7 +515,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
               {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
               <TextInput
-                style={[styles.input, touched.email && errors.email ? styles.inputError : null]}
+                style={[
+                  styles.input, 
+                  touched.email && errors.email ? styles.inputError : null,
+                  values.email ? styles.inputWithText : styles.inputPlaceholder
+                ]}
                 placeholder="Email or Phone Number"
                 placeholderTextColor={color.brown_766F6A}
                 onChangeText={(text) => {
@@ -921,6 +929,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     marginBottom: 10,
+  },
+  inputPlaceholder: {
+    color: color.brown_766F6A,
+    fontWeight: '200',
+    fontSize: 13,
+  },
+  inputWithText: {
+    color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 13,
   },
   inputHeading: {
     top: 25,

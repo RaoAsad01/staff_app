@@ -124,7 +124,10 @@ const TerminalsComponent = ({ eventInfo, onEventChange }) => {
           isSearchFocused && styles.searchContainerFocused
         ]}>
           <TextInput
-            style={styles.searchBar}
+              style={[
+                styles.searchBar,
+                searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
+              ]}
             placeholder="John Doe"
             placeholderTextColor={color.brown_766F6A}
             onChangeText={(text) => setSearchText(text)}
@@ -177,6 +180,16 @@ const styles = StyleSheet.create({
   searchContainerFocused: {
     borderColor: color.placeholderTxt_24282C,
   },
+  searchInputPlaceholder: {
+    color: color.brown_766F6A,
+    fontWeight: '200',
+    fontSize: 13,
+  },
+  searchInputWithText: {
+    color: color.black_544B45,
+    fontWeight: '400',
+    fontSize: 13,
+  },
   searchBar: {
     flex: 1,
     paddingVertical: 10,
@@ -184,7 +197,7 @@ const styles = StyleSheet.create({
   ticketCard: {
     backgroundColor: color.white_FFFFFF,
     borderRadius: 10,
-    padding: 15,
+    padding: 20,
     marginBottom: 15,
     marginHorizontal: 16,
   },
@@ -192,20 +205,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    width: '100%',
   },
   column: {
     flex: 1,
     alignItems: 'flex-start',
+    paddingHorizontal: 5,
   },
   columnHeader: {
     fontSize: 14,
-    color: color.black_544B45,
+    color: color.placeholderTxt_24282C,
     fontWeight: '500',
     marginBottom: 8,
   },
   columnData: {
     fontSize: 14,
-    color: color.black_544B45,
+    color: color.placeholderTxt_24282C,
     fontWeight: '400',
   },
   flatListContent: {

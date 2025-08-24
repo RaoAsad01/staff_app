@@ -131,7 +131,7 @@ const LoginScreen = () => {
                       (touched.user_identifier && errors.user_identifier) || showError ? styles.inputError : null
                     ]}>
                       {/* Country Code Picker (only show for phone input) */}
-                      {inputType === 'phone' && (
+                      {/* {inputType === 'phone' && (
                         <TouchableOpacity
                           style={styles.countryCodeButton}
                           onPress={() => setShowCountryPicker(true)}
@@ -147,7 +147,7 @@ const LoginScreen = () => {
                           </Typography>
                           <SvgIcons.downArrow width={12} height={12} fill={color.grey_87807C} />
                         </TouchableOpacity>
-                      )}
+                      )} */}
 
                       <TextInput
                         style={[
@@ -190,6 +190,7 @@ const LoginScreen = () => {
               )}
             </View>
           </View>
+
           {!isKeyboardVisible && (
             <LinearGradient
               colors={["#000000", "#281c10"]}
@@ -215,7 +216,7 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   centeredContent: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     width: '100%',
     paddingTop: 350,
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
     backgroundColor: 'transparent',
-    marginBottom: 100,
+    marginBottom: 20,
     height: 54,
     width: 320,
     alignSelf: 'center', // Center the input row
@@ -288,23 +289,23 @@ const styles = StyleSheet.create({
     borderColor: color.red_FF0000,
   },
   errorText: {
-    marginTop: 2,
-    marginLeft: 40,
-    bottom: 89,
+    marginHorizontal: 40,
   },
   errorContainer: {
+    position: 'absolute',
+    top: 410,
+    marginHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: color.white_FFFFFF,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    marginTop: 10,
     width: '80%',
     alignSelf: 'center',
     borderWidth: 2,
     gap: 10,
-    bottom: 89,
+    zIndex: 1000,
   },
   errorIconCircle: {
     width: 30,

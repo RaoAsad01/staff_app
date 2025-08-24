@@ -142,7 +142,10 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                     isSearchFocused && styles.searchBarFocused
                 ]}>
                     <TextInput
-                        style={styles.searchInput}
+                        style={[
+                            styles.searchInput,
+                            searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
+                        ]}
                         placeholder="John Doe"
                         placeholderTextColor={color.brown_766F6A}
                         onChangeText={handleSearchChange}
@@ -251,6 +254,16 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         marginLeft: 5,
     },
+    searchInputPlaceholder: {
+        color: color.brown_766F6A,
+        fontWeight: '200',
+        fontSize: 13,
+    },
+    searchInputWithText: {
+        color: color.black_544B45,
+        fontWeight: '400',
+        fontSize: 13,
+    },
     searchIcon: {
         marginRight: 5,
     },
@@ -269,23 +282,23 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: color.black_2F251D,
+        color: color.placeholderTxt_24282C,
         marginBottom: 10,
     },
     value: {
         fontSize: 12,
         fontWeight: '400',
         color: color.black_544B45,
-        marginBottom: 5,
+        marginBottom: 10,
     },
     qrCode: {
         width: 100,
         height: 100,
-        marginTop: 50,
+        paddingTop: 30,
     },
     badge: {
         position: 'absolute',
-        top: 10,
+        top: 13,
         right: 18,
         borderRadius: 5,
         paddingHorizontal: 8,

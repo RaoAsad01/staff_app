@@ -69,41 +69,45 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
   const handleSubItemPress = (subItemLabel, parentLabel) => {
     console.log('CheckInSoldTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
 
-    // Dynamic tab mapping - use the parent label directly
-    // The parent category should be the tab name in BoxOfficeTab
-    let selectedTab = parentLabel;
+    // Only navigate for Available, for other titles we show analytics
+    if (title === 'Available') {
+      // Dynamic tab mapping - use the parent label directly
+      // The parent category should be the tab name in BoxOfficeTab
+      let selectedTab = parentLabel;
 
-    // Handle special cases where parent label might not match tab name exactly
-    if (parentLabel === 'Total Sold') {
-      // For "Total Sold", we need to find the actual category from the data
-      if (stats?.data?.sold_tickets?.by_category) {
-        const byCategory = stats.data.sold_tickets.by_category;
-        // Find the first category that has this sub-item
-        for (const [categoryName, categoryData] of Object.entries(byCategory)) {
-          if (categoryData && typeof categoryData === 'object') {
-            // Check if this category contains the sub-item
-            if (categoryData[subItemLabel] ||
-              Object.keys(categoryData).some(key =>
-                key.toLowerCase() === subItemLabel.toLowerCase()
-              )) {
-              selectedTab = categoryName;
-              break;
+      // Handle special cases where parent label might not match tab name exactly
+      if (parentLabel === 'Total Sold') {
+        // For "Total Sold", we need to find the actual category from the data
+        if (stats?.data?.sold_tickets?.by_category) {
+          const byCategory = stats.data.sold_tickets.by_category;
+          // Find the first category that has this sub-item
+          for (const [categoryName, categoryData] of Object.entries(byCategory)) {
+            if (categoryData && typeof categoryData === 'object') {
+              // Check if this category contains the sub-item
+              if (categoryData[subItemLabel] ||
+                Object.keys(categoryData).some(key =>
+                  key.toLowerCase() === subItemLabel.toLowerCase()
+                )) {
+                selectedTab = categoryName;
+                break;
+              }
             }
           }
         }
       }
-    }
 
-    console.log('CheckInSoldTicketsCard - Mapped tab:', selectedTab);
+      console.log('CheckInSoldTicketsCard - Mapped tab:', selectedTab);
 
-    if (selectedTab && selectedTab !== 'Total Sold') {
-      navigation.navigate('Tickets', {
-        screen: 'BoxOfficeTab',
-        selectedTab: selectedTab
-      });
-    } else {
-      console.warn('CheckInSoldTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
+      if (selectedTab && selectedTab !== 'Total Sold') {
+        navigation.navigate('Tickets', {
+          screen: 'BoxOfficeTab',
+          selectedTab: selectedTab
+        });
+      } else {
+        console.warn('CheckInSoldTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
+      }
     }
+    // For other titles (Sold Tickets, Check-Ins), analytics are handled by the analytics button
   };
 
   // Get sub-items for ADMIN users from sold_tickets.by_category
@@ -159,13 +163,13 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     <Text>{item.total}</Text>
                   </Text>
                 </View>
-                {hasSubItems && title !== 'Check-Ins' && (
+                {hasSubItems && title !== 'Available' && title !== 'Check-Ins' && (
                   <TouchableOpacity
                     style={styles.dropdownButton}
                     onPress={() => toggleExpanded(index)}
                   >
                     <View style={styles.iconsContainer}>
-                      {userRole === 'ADMIN' && title === 'Sold Tickets' && (
+                      {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
                         <TouchableOpacity
                           onPress={() => onAnalyticsPress && onAnalyticsPress(item.label, title)}
                           style={styles.analyticsButton}
@@ -185,17 +189,18 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     </View>
                   </TouchableOpacity>
                 )}
+
               </View>
 
-              {/* Sub-items for ADMIN users */}
-              {hasSubItems && isExpanded && (
+              {/* Sub-items for ADMIN users - Not shown for Check-Ins */}
+              {hasSubItems && isExpanded && title !== 'Check-Ins' && (
                 <View style={styles.subItemsContainer}>
                   {subItems.map((subItem, subIndex) => (
                     <TouchableOpacity
                       key={subIndex}
                       style={styles.subItemRow}
-                      onPress={() => handleSubItemPress(subItem.label, item.label)}
-                      activeOpacity={0.7}
+                      onPress={() => title === 'Available' ? handleSubItemPress(subItem.label, item.label) : null}
+                      activeOpacity={title === 'Available' ? 0.7 : 1}
                     >
                       <CircularProgress
                         value={subItem.checkedIn}
@@ -210,7 +215,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                           <Text>{subItem.total}</Text>
                         </Text>
                       </View>
-                      {userRole === 'ADMIN' && title === 'Sold Tickets' && (
+                      {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
                         <TouchableOpacity
                           onPress={() => onAnalyticsPress && onAnalyticsPress(subItem.label, title)}
                           style={styles.analyticsButtonSubItem}
@@ -237,7 +242,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
           onPress={handleRemainingPress}
           activeOpacity={0.7}
         >
-          <Text style={styles.title}>Available Tickets</Text>
+          <Text style={styles.title}>Available</Text>
           {remainingTicketsData.map((item, index) => {
             const remaining = item.total - item.checkedIn;
             return (

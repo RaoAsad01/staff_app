@@ -229,7 +229,10 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             ]}>
                 <View style={styles.searchBarContainer}>
                     <TextInput
-                        style={styles.searchBar}
+                        style={[
+                            styles.searchBar,
+                            searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
+                        ]}
                         placeholder="John Doe"
                         placeholderTextColor={color.brown_766F6A}
                         onChangeText={handleSearchChange}
@@ -361,14 +364,14 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: color.black_2F251D,
+        color: color.placeholderTxt_24282C,
         marginBottom: 10,
     },
     value: {
         fontSize: 12,
         fontWeight: '400',
         color: color.black_544B45,
-        marginBottom: 8,
+        marginBottom: 10,
     },
     ticketDate: {
         fontSize: 14,
@@ -445,10 +448,20 @@ const styles = StyleSheet.create({
     searchContainerFocused: {
         borderColor: '#24282C',
     },
+    searchInputPlaceholder: {
+        color: color.brown_766F6A,
+        fontWeight: '200',
+        fontSize: 13,
+    },
+    searchInputWithText: {
+        color: color.black_544B45,
+        fontWeight: '400',
+        fontSize: 13,
+    },
     imageContainer: {
         width: 100,
         height: 100,
-        marginTop: 50
+        paddingTop: 30
     },
     tabContainer: {
         flexDirection: 'row',
