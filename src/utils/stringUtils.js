@@ -4,7 +4,7 @@
  * @param {number} maxLength - Maximum length (default: 10)
  * @returns {string} - Truncated string
  */
-export const truncateString = (str, maxLength = 5) => {
+export const truncateString = (str, maxLength = 10) => {
   if (!str || typeof str !== 'string') return str;
   
   if (str.length <= maxLength) {
@@ -26,4 +26,8 @@ export const truncateString = (str, maxLength = 5) => {
  */
 export const truncateCityName = (cityName) => {
   return truncateString(cityName, 5);
+};
+
+export const truncateEventName = (cityName) => {
+  return truncateString(cityName, 10);
 };

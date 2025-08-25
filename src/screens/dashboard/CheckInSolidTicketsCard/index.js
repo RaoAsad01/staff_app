@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '180deg' }],
   },
   subItemsContainer: {
-    backgroundColor: color.brown_F7E4B6,
+    backgroundColor: '#F7E4B690',
     marginTop: 8,
     marginLeft: -15,
     marginRight: -15,

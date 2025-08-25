@@ -15,6 +15,7 @@ import ScanListComponent from '../ScanListComponent';
 import OverallStatistics from '../OverallStatistics';
 import EventsModal from '../../../components/EventsModal';
 import { truncateCityName } from '../../../utils/stringUtils';
+import { truncateEventName } from '../../../utils/stringUtils';
 
 const StaffDashboard = () => {
   const navigation = useNavigation();
@@ -250,7 +251,7 @@ const StaffDashboard = () => {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
-              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(currentEventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
               {/* <TouchableOpacity
                 style={styles.dropdownButton}
                 onPress={() => setEventsModalVisible(true)}

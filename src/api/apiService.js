@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Base URL configuration
-const BASE_URL = 'https://dev-api.hexallo.com/';
+const BASE_URL = 'https://api.hexallo.com/';
 //for dev const BASE_URL = 'https://dev-api.hexallo.com/';
 //for production  const BASE_URL = 'https://api.hexallo.com/';
 // Create axios instance with default config

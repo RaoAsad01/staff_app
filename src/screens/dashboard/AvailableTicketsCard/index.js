@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   subRowBg: {
-    backgroundColor: color.brown_F7E4B6,
-    borderRadius: 8,
+    backgroundColor: '#F7E4B660',
+    borderRadius: 0,
     marginLeft: 0,
     marginRight: 0,
     marginVertical: 0,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subitembg: {
-    backgroundColor: color.brown_F7E4B6,
+    backgroundColor: '#F7E4B660',
   }
 });
 

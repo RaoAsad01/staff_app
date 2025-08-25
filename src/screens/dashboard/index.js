@@ -27,6 +27,7 @@ import AdminBoxOfficePaymentChannel from './AdminBoxOfficePaymentChannel';
 import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 import { truncateCityName } from '../../utils/stringUtils';
+import { truncateEventName } from '../../utils/stringUtils';
 
 const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
@@ -773,7 +774,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
-              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
               {userRole === 'ADMIN' && (
                 <TouchableOpacity
                   style={styles.dropdownButton}

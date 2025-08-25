@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
         marginTop: 6,
         fontSize: 14,
         color: color.brown_3C200A,
+        opacity: 0.7,
         fontWeight: "400",
         textAlign: "center",
         fontFamily: 'System',

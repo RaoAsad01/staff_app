@@ -4,6 +4,7 @@ import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { truncateCityName } from '../src/utils/stringUtils';
+import { truncateEventName } from '../src/utils/stringUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -69,7 +70,7 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
         <View style={styles.headerColumn}>
                   <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.event_title || 'OUTMOSPHERE'}</Text>
+            <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
             <Text style={styles.separator}>   </Text>
             <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
             <Text style={styles.separator}>   </Text>

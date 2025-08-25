@@ -9,7 +9,8 @@ import {
   TouchableWithoutFeedback,
   Platform,
   Alert,
-  Modal
+  Modal,
+  Dimensions
 } from 'react-native';
 import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -52,6 +53,10 @@ const OtpLoginScreen = ({ route }) => {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showOtpSourceModal, setShowOtpSourceModal] = useState(false);
   const [selectedOtpSource, setSelectedOtpSource] = useState('WHATSAPP');
+  
+  const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+  const isSmallScreen = screenHeight < 700;
+  const isNarrowScreen = screenWidth < 400;
   // useEffect(() => {
   //   const checkLoggedIn = async () => {
   //     const token = await SecureStore.getItemAsync('accessToken');
@@ -232,219 +237,215 @@ const OtpLoginScreen = ({ route }) => {
     setErrorMessage('');
   };
   return (
-   
-      <View style={{ flex: 1 ,backgroundColor: "#000000"}}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={{ flex: 1 }}>
-            <StatusBar style="dark" backgroundColor="transparent" translucent />
-            {/* <ExpoImageBackground
+
+    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <StatusBar style="dark" backgroundColor="transparent" translucent />
+          {/* <ExpoImageBackground
             source={require('../../assets/images/bg-img-signup.png')}
             contentFit="cover"
             style={styles.background}
           > */}
-            {/* <View style={styles.topSection}>
+          {/* <View style={styles.topSection}>
               <SvgIcons.hexalloSvg width={36} height={40} fill="transparent" />
               <Text style={styles.topText}>HEXALLO</Text>
             </View>
 
             <Text style={styles.additionalText}>Get Started{'\n'}to do more!</Text> */}
 
-            <View style={styles.container}>
-              <Typography
-                weight="700"
-                size={20}
-                color={color.grey_DEDCDC}
-                style={styles.appName}
+          <View style={styles.container}>
+            <Typography
+              weight="700"
+              size={20}
+              color={color.grey_DEDCDC}
+              style={styles.appName}
+            >
+              Enter OTP
+            </Typography>
+            <View style={styles.otpContainer}>
+              {otp.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  style={[
+                    styles.otpInput,
+                    showError ? styles.otpInputError : null
+                  ]}
+                  value={digit}
+                  placeholder=""
+                  placeholderTextColor={color.white_FFFFFF}
+                  maxLength={1}
+                  keyboardType="numeric"
+                  onChangeText={(value) => handleOtpChange(value, index)}
+                  onKeyPress={(event) => handleKeyPress(event, index)}
+                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  selectionColor={color.selectField_CEBCA0}
+                  editable={!loading}
+                />
+              ))}
+            </View>
+
+            {/* Remove the 'Didn't receive OTP?' label for a cleaner look */}
+            <OtpSuccessPopup
+              visible={showSuccessPopup}
+              onClose={handleCloseSuccessPopup}
+              title="OTP Sent Successfully"
+              subtitle="We've sent a one-time password to your email"
+            />
+            <OtpErrorPopup
+              visible={showErrorPopup}
+              onClose={handleCloseErrorPopup}
+              title="Failed to Send OTP"
+              subtitle="We couldn't send the OTP. Please try again shortly."
+              showResendButton={true}
+              onResend={handleResendOtp}
+            />
+
+            {/* OTP Source Selection Modal */}
+            <Modal
+              visible={showOtpSourceModal}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setShowOtpSourceModal(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowOtpSourceModal(false)}
               >
-                Enter OTP
-              </Typography>
-              <View style={styles.otpContainer}>
-                {otp.map((digit, index) => (
-                  <TextInput
-                    key={index}
-                    style={[
-                      styles.otpInput,
-                      showError ? styles.otpInputError : null
-                    ]}
-                    value={digit}
-                    placeholder=""
-                    placeholderTextColor={color.white_FFFFFF}
-                    maxLength={1}
-                    keyboardType="numeric"
-                    onChangeText={(value) => handleOtpChange(value, index)}
-                    onKeyPress={(event) => handleKeyPress(event, index)}
-                    ref={(ref) => (inputRefs.current[index] = ref)}
-                    selectionColor={color.selectField_CEBCA0}
-                    editable={!loading}
-                  />
-                ))}
-              </View>
-
-              {/* Remove the 'Didn't receive OTP?' label for a cleaner look */}
-              <OtpSuccessPopup
-                visible={showSuccessPopup}
-                onClose={handleCloseSuccessPopup}
-                title="OTP Sent Successfully"
-                subtitle="We've sent a one-time password to your email"
-              />
-              <OtpErrorPopup
-                visible={showErrorPopup}
-                onClose={handleCloseErrorPopup}
-                title="Failed to Send OTP"
-                subtitle="We couldn't send the OTP. Please try again shortly."
-                showResendButton={true}
-                onResend={handleResendOtp}
-              />
-
-              {/* OTP Source Selection Modal */}
-              <Modal
-                visible={showOtpSourceModal}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setShowOtpSourceModal(false)}
-              >
-                <TouchableOpacity
-                  style={styles.modalOverlay}
-                  activeOpacity={1}
-                  onPress={() => setShowOtpSourceModal(false)}
-                >
-                  <View style={styles.modalContainer}>
-                    {/* Close Button */}
-                    <TouchableOpacity
-                      style={styles.closeButton}
-                      onPress={() => setShowOtpSourceModal(false)}
-                    >
-                      <SvgIcons.CrossIconBrownbg width={24} height={24} />
-                    </TouchableOpacity>
-
-                    <Typography
-                      weight="500"
-                      size={18}
-                      color={color.grey_DEDCDC}
-                      style={styles.modalTitle}
-                    >
-                      Get another Code
-                    </Typography>
-
-                    <TouchableOpacity
-                      style={styles.modalOption}
-                      onPress={() => handleOtpSourceSelect('WHATSAPP')}
-                    >
-                      <View style={styles.optionContent}>
-                        <SvgIcons.whatsappIcon width={24} height={24} />
-                        <Typography
-                          weight="400"
-                          size={14}
-                          color={color.grey_DEDCDC}
-                          style={styles.optionText}
-                        >
-                          Send code by whatsapp
-                        </Typography>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.modalOption}
-                      onPress={() => handleOtpSourceSelect('SMS')}
-                    >
-                      <View style={styles.optionContent}>
-                        <SvgIcons.smsIcon width={24} height={24} />
-                        <Typography
-                          weight="400"
-                          size={14}
-                          color={color.grey_DEDCDC}
-                          style={styles.optionText}
-                        >
-                          Send code by text message (sms)
-                        </Typography>
-                      </View>
-                    </TouchableOpacity>
-
-                    {/* Show "Send code by email" option only for phone numbers */}
-                    {!isEmail(userIdentifier) && (
-                      <TouchableOpacity
-                        style={styles.modalOption}
-                        onPress={() => handleOtpSourceSelect('EMAIL')}
-                      >
-                        <View style={styles.optionContent}>
-                          <SvgIcons.emailIcon width={24} height={24} />
-                          <Typography
-                            weight="400"
-                            size={14}
-                            color={color.grey_DEDCDC}
-                            style={styles.optionText}
-                          >
-                            Send code by email
-                          </Typography>
-                        </View>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </Modal>
-              <View style={styles.rowContainer}>
-                {otpResendTime > 0 ? (
-                  <View style={styles.timerRow}>
-                    <Typography
-                      weight="400"
-                      size={14}
-                      color={color.grey_E0E0E0}
-                    >
-                      Request code again in {' '}
-                    </Typography>
-                    <Typography
-                      weight="400"
-                      size={14}
-                      color={color.btnBrown_AE6F28}
-                    >
-                      {formatTime(otpResendTime)}
-                    </Typography>
-                  </View>
-                ) : (
-                  <>
-                    <TouchableOpacity style={styles.changeDetailsButton} onPress={handleResendOtp}>
-                      <Typography
-                        weight="700"
-                        size={16}
-                        color={color.grey_DEDCDC}
-                      >
-                        Resend
-                      </Typography>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.changeDetailsButton} onPress={gotologinscreen}>
-                      <Typography
-                        weight="700"
-                        size={16}
-                        color={color.grey_DEDCDC}
-                      >
-                        Change Details
-                      </Typography>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-
-              {showError && (
-                <View style={styles.errorContainer}>
-                  <TouchableOpacity onPress={dismissError}>
-                    <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                <View style={styles.modalContainer}>
+                  {/* Close Button */}
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setShowOtpSourceModal(false)}
+                  >
+                    <SvgIcons.CrossIconBrownbg width={24} height={24} />
                   </TouchableOpacity>
-                  <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorText}>
-                    {errorMessage}
+
+                  <Typography
+                    weight="500"
+                    size={18}
+                    color={color.grey_DEDCDC}
+                    style={styles.modalTitle}
+                  >
+                    Get another Code
+                  </Typography>
+
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => handleOtpSourceSelect('WHATSAPP')}
+                  >
+                    <View style={styles.optionContent}>
+                      <SvgIcons.whatsappIcon width={24} height={24} />
+                      <Typography
+                        weight="400"
+                        size={14}
+                        color={color.grey_DEDCDC}
+                        style={styles.optionText}
+                      >
+                        Send code by whatsapp
+                      </Typography>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.modalOption}
+                    onPress={() => handleOtpSourceSelect('SMS')}
+                  >
+                    <View style={styles.optionContent}>
+                      <SvgIcons.smsIcon width={24} height={24} />
+                      <Typography
+                        weight="400"
+                        size={14}
+                        color={color.grey_DEDCDC}
+                        style={styles.optionText}
+                      >
+                        Send code by text message (sms)
+                      </Typography>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Show "Send code by email" option only for phone numbers */}
+                  {!isEmail(userIdentifier) && (
+                    <TouchableOpacity
+                      style={styles.modalOption}
+                      onPress={() => handleOtpSourceSelect('EMAIL')}
+                    >
+                      <View style={styles.optionContent}>
+                        <SvgIcons.emailIcon width={24} height={24} />
+                        <Typography
+                          weight="400"
+                          size={14}
+                          color={color.grey_DEDCDC}
+                          style={styles.optionText}
+                        >
+                          Send code by email
+                        </Typography>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </Modal>
+            <View style={styles.rowContainer}>
+              {otpResendTime > 0 ? (
+                <View style={styles.timerRow}>
+                  <Typography
+                    weight="400"
+                    size={14}
+                    color={color.grey_E0E0E0}
+                  >
+                    Request code again in {' '}
+                  </Typography>
+                  <Typography
+                    weight="400"
+                    size={14}
+                    color={color.btnBrown_AE6F28}
+                  >
+                    {formatTime(otpResendTime)}
                   </Typography>
                 </View>
+              ) : (
+                <>
+                  <TouchableOpacity style={[styles.changeDetailsButton, isNarrowScreen && { width: '45%' }]} onPress={handleResendOtp}>
+                    <Text
+                      style={[styles.changeDetailsButtonText, isNarrowScreen && { fontSize: 12 }]}
+                    >
+                      Resend
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.changeDetailsButton, isNarrowScreen && { width: '45%' }]} onPress={gotologinscreen}>
+                    <Text
+                      style={[styles.changeDetailsButtonText, isNarrowScreen && { fontSize: 12 }]}
+                    >
+                      Change Details
+                    </Text>
+                  </TouchableOpacity>
+                </>
               )}
             </View>
 
-            {!isKeyboardVisible && (
-               <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
-              <MiddleSection showGetStartedButton={false} />
-              </LinearGradient>
+            {showError && (
+              <View style={styles.errorContainer}>
+                <TouchableOpacity onPress={dismissError}>
+                  <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                </TouchableOpacity>
+                <Typography weight="400" size={14} color={color.red_EF3E32} style={styles.errorText}>
+                  {errorMessage}
+                </Typography>
+              </View>
             )}
           </View>
-        </TouchableWithoutFeedback>
-      </View>
-   
+
+          {!isKeyboardVisible && (
+            <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+              <MiddleSection showGetStartedButton={false} />
+            </LinearGradient>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
+    </View>
+
   );
 
 };
@@ -520,15 +521,16 @@ const styles = StyleSheet.create({
   },
   changeDetailsButton: {
     marginTop: 3,
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     borderWidth: 1,
     borderColor: color.borderBrown_CEBCA0,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '47%',
-    height: 48,
-
+    width: '48%',
+    minHeight: 48,
+    flexShrink: 0,
   },
   resendText: {
     color: color.blue,
@@ -539,6 +541,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '80%',
     marginBottom: 10,
+    alignItems: 'center',
   },
   timerRow: {
     flexDirection: 'row',
@@ -635,6 +638,14 @@ const styles = StyleSheet.create({
   optionText: {
     marginLeft: 15,
     textAlign: 'left',
+  },
+  changeDetailsButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: color.grey_DEDCDC,
+    textAlign: 'center',
+    flexShrink: 1,
+    numberOfLines: 1,
   },
 });
 

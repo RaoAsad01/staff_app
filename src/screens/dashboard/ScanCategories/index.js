@@ -109,29 +109,31 @@ const ScanCategories = ({ stats }) => {
                             ))}
                         </Svg>
                         <View style={styles.centerText}>
-                            <Text style={styles.amountText}>GHS {formatValue(total)}</Text>
+                            <Text style={styles.amountText}>{formatValue(total)}</Text>
                             <Text style={styles.totalText}>Total</Text>
                         </View>
                     </View>
                     <View style={styles.paymentMethod}>
                         {sortedValues.map((item, index) => (
                             <View style={styles.paymentItem} key={index}>
-                                <View style={styles.colorBoxWrapper}>
-                                    <View style={[styles.colorBox, { backgroundColor: item.color }]} />
-                                </View>
-                                <View style={styles.paymentLabel}>
-                                    {item.label === "Mobile Money" ? (
-                                        <View>
-                                            <Text style={styles.paymentText}>Mobile</Text>
-                                            <Text style={styles.paymentText}>Money</Text>
-                                        </View>
-                                    ) : (
-                                        <Text style={styles.paymentText}>{item.label}</Text>
-                                    )}
+                                <View style={styles.leftContent}>
+                                    <View style={styles.colorBoxWrapper}>
+                                        <View style={[styles.colorBox, { backgroundColor: item.color }]} />
+                                    </View>
+                                    <View style={styles.paymentLabel}>
+                                        {item.label === "Mobile Money" ? (
+                                            <View>
+                                                <Text style={styles.paymentText}>Mobile</Text>
+                                                <Text style={styles.paymentText}>Money</Text>
+                                            </View>
+                                        ) : (
+                                            <Text style={styles.paymentText}>{item.label}</Text>
+                                        )}
+                                    </View>
                                 </View>
 
                                 <View style={styles.paymentValueWrapper}>
-                                    <Text style={styles.labelGHS}>GHS</Text>
+                                    {/* <Text style={styles.labelGHS}>GHS</Text> */}
                                     <Text style={styles.paymentValue}>{formatValue(item.value)}</Text>
                                 </View>
                             </View>
@@ -200,8 +202,13 @@ const styles = StyleSheet.create({
     paymentItem: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
         width: "100%",
         minHeight: 40,
+    },
+    leftContent: {
+        flexDirection: "row",
+        alignItems: "center",
     },
     colorBoxWrapper: {
         width: 5,
@@ -214,14 +221,13 @@ const styles = StyleSheet.create({
         marginRight: 5
     },
     paymentLabel: {
-        paddingLeft: 8,
+        paddingLeft: 12,
         minWidth: 70,
     },
     paymentValueWrapper: {
         gap: 5,
         flexDirection: "row",
-        paddingLeft: 20
-
+        marginLeft: "auto"
     },
     paymentText: {
         fontSize: 14,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, TextInput, TouchableOpacity, Platform, Keyboard,
-  TouchableWithoutFeedback, Text
+  TouchableWithoutFeedback, Text, Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +25,10 @@ const LoginScreen = () => {
   const [selectedCountry, setSelectedCountry] = useState(defaultCountryCode);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [inputType, setInputType] = useState('email'); // 'email' or 'phone'
+  
+  const { height: screenHeight } = Dimensions.get('window');
+  const isSmallScreen = screenHeight < 700;
+  const isLargeScreen = screenHeight > 800;
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -118,7 +122,7 @@ const LoginScreen = () => {
             translucent
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
-            <View style={styles.centeredContent}>
+            <View style={[styles.centeredContent, { paddingTop: screenHeight * 0.40 }]}>
               <Formik
                 initialValues={{ user_identifier: '' }}
                 validationSchema={validationSchema}
@@ -179,7 +183,7 @@ const LoginScreen = () => {
                 )}
               </Formik>
               {showError && (
-                <View style={styles.errorContainer}>
+                <View style={[styles.errorContainer, { top: screenHeight * 0.48 }]}>
                   <TouchableOpacity onPress={dismissError}>
                     <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
                   </TouchableOpacity>
@@ -219,7 +223,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     width: '100%',
-    paddingTop: 350,
     backgroundColor: "#000000"
   },
   logoSection: {
@@ -293,7 +296,6 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     position: 'absolute',
-    top: 410,
     marginHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    width: '80%',
+    width: '82%',
     alignSelf: 'center',
     borderWidth: 2,
     gap: 10,

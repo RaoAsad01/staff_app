@@ -172,10 +172,10 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     borderRadius: 3,
-    marginRight: 5
+    marginRight: 20
   },
   paymentLabel: {
-    paddingLeft: 8,
+    paddingLeft: 0,
     minWidth: 70,
   },
   paymentValueWrapper: {
