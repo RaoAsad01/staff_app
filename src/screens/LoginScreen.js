@@ -115,11 +115,12 @@ const LoginScreen = () => {
   return (
     <>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: 'black' }}>
           <StatusBar
-            style="dark"
+            style="light"
             backgroundColor="transparent"
             translucent
+            hidden={true}
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <View style={[styles.centeredContent, { paddingTop: screenHeight * 0.40 }]}>
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: "#000000"
+    backgroundColor: "#000000",
   },
   logoSection: {
     alignItems: 'center',
@@ -249,8 +250,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     marginBottom: 20,
     height: 54,
-    width: 320,
-    alignSelf: 'center', // Center the input row
+    marginHorizontal: 20
+
   },
   countryCodeButton: {
     flexDirection: 'row',
@@ -275,6 +276,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     height: '100%',
     backgroundColor: 'transparent',
+    paddingRight: 10,
   },
   inputFieldWithCountryCode: {
     paddingLeft: 15,
@@ -282,7 +284,7 @@ const styles = StyleSheet.create({
   arrowButton: {
     backgroundColor: color.btnBrown_AE6F28,
     height: '100%',
-    width: 70,
+    width: 60,
     justifyContent: 'center',
     alignItems: 'center',
     borderTopRightRadius: 14,
@@ -292,7 +294,8 @@ const styles = StyleSheet.create({
     borderColor: color.red_FF0000,
   },
   errorText: {
-    marginHorizontal: 40,
+    width: '100%',
+    marginHorizontal: 20
   },
   errorContainer: {
     position: 'absolute',
@@ -303,7 +306,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    width: '82%',
+    width: '90%',
     alignSelf: 'center',
     borderWidth: 2,
     gap: 10,

@@ -769,6 +769,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   return (
     <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>

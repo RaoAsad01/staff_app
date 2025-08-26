@@ -241,7 +241,7 @@ const OtpLoginScreen = ({ route }) => {
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1 }}>
-          <StatusBar style="dark" backgroundColor="transparent" translucent />
+          <StatusBar style="light" backgroundColor="transparent" translucent hidden={true} />
           {/* <ExpoImageBackground
             source={require('../../assets/images/bg-img-signup.png')}
             contentFit="cover"

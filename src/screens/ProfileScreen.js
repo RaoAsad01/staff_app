@@ -9,6 +9,7 @@ import {
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  StatusBar
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
@@ -123,6 +124,7 @@ const ProfileScreen = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
         </View>

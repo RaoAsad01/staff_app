@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, ActivityIndicator,StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -223,6 +223,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="white" translucent={true} />
             <View style={[
                 styles.searchContainer,
                 isSearchFocused && styles.searchContainerFocused
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
-        paddingTop: 10
+        paddingTop: Platform.OS === 'ios' ? 10 : 18
     },
     ticketContainer: {
         flexDirection: 'row',

@@ -25,26 +25,27 @@ const SplashScreenComponent = () => {
   };
 
   return (
-   
-       <View style={{ flex: 1 }}>
-       <StatusBar
-            style="dark"
-            backgroundColor="transparent"
-            translucent
-          />
+
+    <View style={{ flex: 1, backgroundColor: 'black' }}>
+      <StatusBar
+        style="light"
+        backgroundColor="transparent"
+        translucent
+        hidden={true}
+      />
       <SafeAreaView style={styles.container}>
         <View style={styles.topSection}>
           <SvgIcons.splashQrImg width={172} height={163} fill="transparent" />
         </View>
         <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
-        <MiddleSection 
-          showGetStartedButton={true}
-          onGetStartedPress={handleGetStarted}
-        />
-         </LinearGradient>
+          <MiddleSection
+            showGetStartedButton={true}
+            onGetStartedPress={handleGetStarted}
+          />
+        </LinearGradient>
       </SafeAreaView>
-      </View>
-   
+    </View>
+
   );
 };
 

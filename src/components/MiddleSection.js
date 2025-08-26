@@ -1,13 +1,16 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
 
 const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
+    const { height: screenHeight } = Dimensions.get('window');
+    const isSmallScreen = screenHeight < 700;
+    const isLargeScreen = screenHeight > 800;
     return (
         <>
-            <View style={styles.middleSection}>
+            <View style={[styles.middleSection, { bottom: screenHeight * 0.25 }]}>
                 <View style={styles.logoContainer}>
                     <SvgIcons.hexalloSvg width={35} height={40} fill="transparent" />
                     <Typography
@@ -29,7 +32,7 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
             </View>
 
             {showGetStartedButton && (
-                <TouchableOpacity style={styles.button} onPress={onGetStartedPress}>
+                <TouchableOpacity style={[styles.button, { bottom: screenHeight * 0.15 }]} onPress={onGetStartedPress}>
                     <ButtonTextDemiBold
                         size={16}
                         color={color.btnTxt_FFF6DF}
@@ -41,9 +44,9 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
                 </TouchableOpacity>
             )}
 
-            <View style={styles.bottomtextbg}>
+            <SafeAreaView style={[styles.bottomtextbg, { bottom: screenHeight * 0.08 }]}>
                 <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
-            </View>
+            </SafeAreaView>
         </>
     );
 };
@@ -52,7 +55,6 @@ const styles = {
     middleSection: {
         alignItems: 'center',
         position: 'absolute',
-        bottom: 160,
         left: 0,
         right: 0,
         width: '100%',
@@ -72,7 +74,6 @@ const styles = {
         paddingVertical: 15,
         borderRadius: 8,
         position: 'absolute',
-        bottom: 100,
         left: 20,
         right: 20,
     },
@@ -83,11 +84,9 @@ const styles = {
         borderRadius: 6,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
         alignSelf: 'center',
         backgroundColor: 'transparent',
         position: 'absolute',
-        bottom: 0,
     },
 };
 

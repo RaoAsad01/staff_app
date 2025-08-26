@@ -63,7 +63,11 @@ function Navigation({ route }) {
         component={SplashScreenComponent} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarHidden: true,
+          statusBarStyle: 'light',
+          statusBarTranslucent: true,
+          animation: 'fade'
         }} 
       />
       <Stack.Screen 
@@ -71,7 +75,11 @@ function Navigation({ route }) {
         component={LoginScreen} 
         options={{ 
           headerShown: false, 
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarHidden: true,
+          statusBarStyle: 'light',
+          statusBarTranslucent: true,
+          animation: 'fade'
         }} 
       />
       <Stack.Screen 
@@ -87,7 +95,11 @@ function Navigation({ route }) {
         component={OtpLoginScreen} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarHidden: true,
+          statusBarStyle: 'light',
+          statusBarTranslucent: true,
+          animation: 'fade'
         }} 
       />
       <Stack.Screen 
