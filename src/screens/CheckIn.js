@@ -224,6 +224,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
       <Header eventInfo={eventInfo} />
       <View style={styles.darkBackground}>
         {scanResult && (

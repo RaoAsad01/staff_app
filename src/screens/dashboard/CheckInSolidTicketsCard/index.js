@@ -158,9 +158,9 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                 <View style={styles.textContainer}>
                   <Text style={styles.label}>{item.label}</Text>
                   <Text style={styles.value}>
-                    <Text>{item.checkedIn}</Text>
+                    <Text style={styles.valueResult}>{item.checkedIn}</Text>
                     <Text> / </Text>
-                    <Text>{item.total}</Text>
+                    <Text style={styles.valueTotal}>{item.total}</Text>
                   </Text>
                 </View>
                 {hasSubItems && title !== 'Available' && title !== 'Check-Ins' && (
@@ -210,9 +210,9 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                       <View style={styles.textContainer}>
                         <Text style={styles.subItemLabel}>{subItem.label}</Text>
                         <Text style={styles.value}>
-                          <Text>{subItem.checkedIn}</Text>
+                          <Text style={styles.valueResult}>{subItem.checkedIn}</Text>
                           <Text> / </Text>
-                          <Text>{subItem.total}</Text>
+                          <Text style={styles.valueTotal}>{subItem.total}</Text>
                         </Text>
                       </View>
                       {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
@@ -353,6 +353,16 @@ const styles = StyleSheet.create({
   analyticsButtonSubItem: {
     padding: 4,
     marginRight: 38
+  },
+  valueResult: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: color.placeholderTxt_24282C,
+  },
+  valueTotal: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: color.placeholderTxt_24282C,
   },
 });
 

@@ -90,7 +90,9 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
           <View style={styles.textContainer}>
             <Text style={styles.label}>{item.label}</Text>
             <Text style={styles.value}>
-              {item.scanned} / {item.total}
+              <Text style={styles.valueResult}>{item.scanned}</Text>
+              <Text> / </Text>
+              <Text style={styles.valueTotal}>{item.total}</Text>
             </Text>
           </View>
           {hasSubItems && (
@@ -236,6 +238,16 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  valueResult: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: color.placeholderTxt_24282C,
+  },
+  valueTotal: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: color.placeholderTxt_24282C,
   },
 });
 

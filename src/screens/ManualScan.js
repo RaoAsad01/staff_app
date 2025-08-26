@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, StatusBar } from 'react-native';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import { useNavigation } from '@react-navigation/native';
@@ -113,6 +113,7 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
       <Header eventInfo={eventInfo} />
       <View style={styles.contentContainer}>
         <View style={[

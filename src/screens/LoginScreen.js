@@ -25,7 +25,7 @@ const LoginScreen = () => {
   const [selectedCountry, setSelectedCountry] = useState(defaultCountryCode);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [inputType, setInputType] = useState('email'); // 'email' or 'phone'
-  
+
   const { height: screenHeight } = Dimensions.get('window');
   const isSmallScreen = screenHeight < 700;
   const isLargeScreen = screenHeight > 800;

@@ -53,7 +53,7 @@ const OtpLoginScreen = ({ route }) => {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showOtpSourceModal, setShowOtpSourceModal] = useState(false);
   const [selectedOtpSource, setSelectedOtpSource] = useState('WHATSAPP');
-  
+
   const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
   const isSmallScreen = screenHeight < 700;
   const isNarrowScreen = screenWidth < 400;

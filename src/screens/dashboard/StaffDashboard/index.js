@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, ScrollView,Text } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, ScrollView, Text } from 'react-native';
 import { color } from '../../../color/color';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../../../components/SvgIcons';
@@ -21,10 +21,10 @@ const StaffDashboard = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { eventInfo, staffUuid, staffName, onEventChange } = route.params;
-  
+
   // Local state for current event info
   const [currentEventInfo, setCurrentEventInfo] = useState(eventInfo);
-  
+
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   value: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: color.brown_3C200A,
+    fontSize: 14,
+    fontWeight: "500",
+    color: color.placeholderTxt_24282C,
     marginTop: 2,
   },
   chevronContainer: {
