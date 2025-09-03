@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
@@ -130,7 +130,6 @@ const ManualCheckInAllTickets = () => {
     if (loading) {
         return (
             <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
@@ -142,7 +141,6 @@ const ManualCheckInAllTickets = () => {
     if (error) {
         return (
             <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
                 <View style={styles.errorContainer}>
                     <Text style={styles.errorText}>{error}</Text>
@@ -154,7 +152,6 @@ const ManualCheckInAllTickets = () => {
     if (!ticketDetails || ticketDetails.length === 0) {
         return (
             <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="dark-content" backgroundColor="white" />
                 <Header eventInfo={eventInfo} />
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No ticket details found for this order.</Text>
@@ -165,7 +162,6 @@ const ManualCheckInAllTickets = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="white" />
             <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>

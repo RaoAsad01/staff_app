@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, FlatList, ScrollView, Alert, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, FlatList, ScrollView, Alert, Dimensions, Text } from 'react-native';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
 import AdminOverallStatistics from './AdminOverallStatistics';
@@ -62,7 +62,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         console.log('User role type:', typeof profile?.role);
 
         // Check for common role field variations
-        console.log('profile?.user_role:', profile?.user_role);
+        console.log('profile?.user_role :', profile?.user_role);
         console.log('profile?.type:', profile?.type);
         console.log('profile?.permission:', profile?.permission);
         console.log('profile?.user_type:', profile?.user_type);
@@ -769,7 +769,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+
       <View style={styles.statusBarPlaceholder} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.header}>
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    height: Platform.OS === 'android' ? 0 : 0,
     backgroundColor: 'transparent',
   },
   headerColumn: {

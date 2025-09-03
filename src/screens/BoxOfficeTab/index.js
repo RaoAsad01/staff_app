@@ -60,11 +60,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           setSelectedTabState(categories[0]);
         }
       }
-
-      // Fetch ticket pricing
-      console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
       const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
-      console.log('BoxOfficeTab: Received pricing data:', pricingData);
 
       if (!pricingData) {
         console.error('BoxOfficeTab: No pricing data received');
@@ -99,14 +95,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         return acc;
       }, []);
 
-      console.log('BoxOfficeTab: Processed categories:', categories);
-
       setTicketPricing(categories);
 
       // Set initial selected tickets based on the selected tab
       const targetCategory = selectedTab ? categories.find(cat => cat.title === selectedTab) : categories[0];
       if (targetCategory) {
-        console.log('BoxOfficeTab: Processing category:', targetCategory);
         const initialTickets = targetCategory.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
@@ -117,7 +110,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           purchase_limit: ticket.purchase_limit,
           currency: ticket.currency
         }));
-        console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
         setSelectedTickets(initialTickets);
       }
     } catch (error) {
@@ -139,6 +131,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   useEffect(() => {
     if (selectedTab && pricingCategories.includes(selectedTab)) {
       setSelectedTabState(selectedTab);
+
+      // Reset purchase code when switching to non-Members tab
+      if (selectedTab !== 'Members') {
+        setPurchaseCode('');
+      }
+
       // Update selected tickets for the new tab
       const category = ticketPricing.find(cat => cat.title === selectedTab);
       if (category) {
@@ -165,10 +163,14 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 
   const handleTabPress = (tab) => {
-    console.log('BoxOfficeTab: Tab pressed:', tab);
     setSelectedTabState(tab);
+
+    // Reset purchase code when switching tabs
+    if (tab !== 'Members') {
+      setPurchaseCode('');
+    }
+
     const category = ticketPricing.find(cat => cat.title === tab);
-    console.log('BoxOfficeTab: Found category:', category);
 
     if (category) {
       const updatedTickets = category.tickets.map(ticket => ({
@@ -181,7 +183,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         purchase_limit: ticket.purchase_limit,
         currency: ticket.currency
       }));
-      console.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
       setSelectedTickets(updatedTickets);
     }
   };
@@ -199,6 +200,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
     if (!paymentOption) {
       alert('Please select a payment option.');
+      return;
+    }
+
+    // Check if purchase code is required for Members tab
+    if (selectedTabState === 'Members' && !purchaseCode.trim()) {
+      alert('Please enter a purchase code.');
       return;
     }
 
@@ -224,9 +231,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         email,
         paymentOption.toUpperCase(),
         transactionId,
-        name.trim()
+        name.trim(),
+        selectedTabState === 'Members' ? purchaseCode : undefined
       );
-      console.log('Boxoffice Response:', response)
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
       const ticketNumber = response?.data?.ticket_number;
@@ -243,7 +250,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         onScanCountUpdate: onScanCountUpdate // Pass the callback
       });
     } catch (error) {
-      alert(error.message || 'Failed to process tickets. Please try again.');
+      if (error.isPurchaseCodeError) {
+        alert(`Purchase Code Error: ${error.message}\n\nPlease check your purchase code and try again.`);
+      } else {
+        alert(error.message || 'Failed to process tickets. Please try again.');
+      }
     }
   };
 
@@ -260,6 +271,26 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     if (!email) {
       alert('Please enter a valid email or phone number.');
       return;
+    }
+
+    // Check if purchase code is required for Members tab
+    if (selectedTabState === 'Members' && !purchaseCode.trim()) {
+      alert('Please enter a purchase code for Members tickets.');
+      return;
+    }
+
+    // Basic validation for purchase code format (if Members tab)
+    if (selectedTabState === 'Members' && purchaseCode.trim()) {
+      // Purchase code should be at least 6 characters and contain only alphanumeric characters
+      if (purchaseCode.trim().length < 6) {
+        alert('Purchase code must be at least 6 characters long.');
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9]+$/.test(purchaseCode.trim())) {
+        alert('Purchase code can only contain letters and numbers.');
+        return;
+      }
     }
 
     try {
@@ -281,7 +312,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         email,
         'POS',
         transactionNumber.trim(),
-        name.trim()
+        name.trim(),
+        selectedTabState === 'Members' ? purchaseCode : undefined
       );
 
       // Extract order number from response
@@ -300,7 +332,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         onScanCountUpdate: onScanCountUpdate // Pass the callback
       });
     } catch (error) {
-      alert(error.message || 'Failed to process tickets. Please try again.');
+      if (error.isPurchaseCodeError) {
+        alert(`Purchase Code Error: ${error.message}\n\nPlease check your purchase code and try again.`);
+      } else {
+        alert(error.message || 'Failed to process tickets. Please try again.');
+      }
     }
   };
 
@@ -357,6 +393,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || /^[0-9]{7,15}$/.test(value)
       )
       .required('Required'),
+    purchaseCode: Yup.string()
+      .when('selectedTab', {
+        is: 'Members',
+        then: Yup.string().required('Purchase code is required.'),
+        otherwise: Yup.string()
+      })
   });
 
   const QuantitySelector = ({ quantity, onIncrease, onDecrease }) => {
@@ -408,8 +450,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         </View>
         <View style={styles.rightColumn}>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>{item.currency} {item.price}</Text>
-            <Text style={styles.discountPrice}>{item.currency} {item.discountPrice}</Text>
+            <Text style={styles.discountPrice}>{item.currency} {item.price}</Text>
+            {/* <Text style={styles.originalPrice}>{item.currency} {item.discountPrice}</Text> */}
           </View>
           <View style={styles.quantitySelectorContainer}>
             <TouchableOpacity
@@ -486,15 +528,16 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
         {/* <View style={styles.lineView2}></View> */}
         <Formik
-          initialValues={{ name: '', email: '' }}
+          initialValues={{ name: '', email: '', purchaseCode: '' }}
           validationSchema={validationSchema}
+          context={{ selectedTab: selectedTabState }}
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={{ width: '100%' }}>
               {/* <Text style={styles.inputHeading}>Name</Text> */}
               <TextInput
                 style={[
-                  styles.input, 
+                  styles.input,
                   touched.name && errors.name ? styles.inputError : null,
                   values.name ? styles.inputWithText : styles.inputPlaceholder
                 ]}
@@ -516,7 +559,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
               <TextInput
                 style={[
-                  styles.input, 
+                  styles.input,
                   touched.email && errors.email ? styles.inputError : null,
                   values.email ? styles.inputWithText : styles.inputPlaceholder
                 ]}
@@ -536,17 +579,44 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               )}
 
               {selectedTabState === 'Members' && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Purchase Code"
-                  placeholderTextColor={color.brown_766F6A}
-                  onChangeText={(text) => {
-                    setPurchaseCode(text);
-                  }}
-                  value={purchaseCode}
-                  keyboardType="default"
-                  selectionColor={color.selectField_CEBCA0}
-                />
+                <>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      touched.purchaseCode && errors.purchaseCode ? styles.inputError : null,
+                      values.purchaseCode ? styles.inputWithText : styles.inputPlaceholder
+                    ]}
+                    placeholder="Enter Purchase Code"
+                    placeholderTextColor={color.brown_766F6A}
+                    onChangeText={(text) => {
+                      handleChange('purchaseCode')(text);
+                      setPurchaseCode(text);
+                    }}
+                    onBlur={handleBlur('purchaseCode')}
+                    value={purchaseCode}
+                    keyboardType="default"
+                    selectionColor={color.selectField_CEBCA0}
+                  />
+                  {touched.purchaseCode && errors.purchaseCode && (
+                    <Text style={styles.errorText}>{errors.purchaseCode}</Text>
+                  )}
+
+                  {/* Debug: Test different purchase codes (remove in production)
+                  <View style={styles.debugContainer}>
+                    <Text style={styles.debugText}>Debug: Test Purchase Codes:</Text>
+                    <View style={styles.testCodesContainer}>
+                      {testPurchaseCodes.map((code, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.testCodeButton}
+                          onPress={() => setPurchaseCode(code)}
+                        >
+                          <Text style={styles.testCodeText}>{code}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View> */}
+                </>
               )}
             </View>
           )}
@@ -767,9 +837,9 @@ const styles = StyleSheet.create({
   },
 
   totalValue: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: color.brown_5A2F0E,
+    fontSize: 14,
+    fontWeight: '400',
+    color: color.placeholderTxt_24282C,
     minWidth: 40,
     textAlign: 'left',
   },
@@ -853,9 +923,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   discountPrice: {
-    fontWeight: 'bold',
-    color: 'black',
-    fontSize: 16,
+    fontWeight: '400',
+    color: color.brown_5A2F0E,
+    fontSize: 12,
   },
   quantitySelectorContainer: {
     flexDirection: 'row',
@@ -881,9 +951,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantityText: {
-    fontWeight: 'bold',
-    color: '#544B45',
-    fontSize: 18
+    fontWeight: '400',
+    color: color.black_2F251D,
+    fontSize: 14
   },
   validTillContainer: {
     flexDirection: 'row',

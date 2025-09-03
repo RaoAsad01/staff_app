@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, StatusBar, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
 import { color } from '../color/color';
 import Header from '../../components/header';
 import SvgIcons from '../../components/SvgIcons';
@@ -17,7 +17,7 @@ const TicketScanned = ({ route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="white" />
+
             <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
 

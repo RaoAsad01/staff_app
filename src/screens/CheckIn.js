@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, StatusBar, Dimensions, SafeAreaView, Animated } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, Dimensions, SafeAreaView, Animated } from 'react-native';
 import CameraOverlay from '../../components/CameraOverlay';
 import Header from '../../components/header';
 import { color } from '../color/color';
@@ -224,7 +224,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+
       <Header eventInfo={eventInfo} />
       <View style={styles.darkBackground}>
         {scanResult && (

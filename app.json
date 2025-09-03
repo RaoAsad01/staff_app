@@ -16,20 +16,19 @@
       "bundleIdentifier": "com.asadahmad.staffapp",
       "newArchEnabled": true
     },
-    "android": {
-      "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.asad_ahmad.staffapp",
-      "enableProguardInReleaseBuilds": true,
-      "enableShrinkResources": true,
-      "enableDexGuard": false,
-      "enableSeparateBuildPerCPUArchitecture": true,
-      "newArchEnabled": true
-    },
+   "android": {
+  "package": "com.asad_ahmad.staffapp",
+  "permissions": [
+    "CAMERA",
+    "RECORD_AUDIO"
+  ],
+  "minSdkVersion": 23,
+  "compileSdkVersion": 35,
+  "targetSdkVersion": 35,
+  "enableProguardInReleaseBuilds": true,
+  "enableShrinkResources": true,
+  "newArchEnabled": true
+},
     "web": {
       "bundler": "metro",
       "output": "static"

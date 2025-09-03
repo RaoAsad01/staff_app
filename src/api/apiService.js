@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Base URL configuration
-const BASE_URL = 'https://api.hexallo.com/';
+const BASE_URL = 'https://dev-api.hexallo.com/';
 //for dev const BASE_URL = 'https://dev-api.hexallo.com/';
 //for production  const BASE_URL = 'https://api.hexallo.com/';
 // Create axios instance with default config
@@ -448,11 +448,18 @@ export const ticketService = {
     }
   },
 
-  fetchBoxOfficeGetTicket: async (eventUuid, items, userIdentifier, paymentMethod, transactionId = null, name = null) => {
+  fetchBoxOfficeGetTicket: async (eventUuid, items, userIdentifier, paymentMethod, transactionId = null, name = null, purchaseCode = null) => {
     try {
+      // Add purchase_code to items if provided
+      const itemsWithPurchaseCode = items.map(item => ({
+        ...item,
+        // Only add purchase_code if it's provided and not empty
+        ...(purchaseCode && purchaseCode.trim() && { purchase_code: purchaseCode.trim() })
+      }));
+
       const requestBody = {
         event: eventUuid,
-        items: items,
+        items: itemsWithPurchaseCode,
         user_identifier: userIdentifier,
         payment_method: paymentMethod,
         transaction_id: transactionId,
@@ -460,6 +467,8 @@ export const ticketService = {
       };
 
       console.log('BoxOffice get ticket request body:', requestBody);
+      console.log('Purchase code being sent:', purchaseCode);
+      console.log('Items with purchase code:', itemsWithPurchaseCode);
       const response = await apiClient.post(endpoints.boxOfficeGetTicket, requestBody);
       console.log('BoxOffice get ticket DetailsResponse:', {
         status: response.status,
@@ -487,6 +496,24 @@ export const ticketService = {
       });
       if (error.response?.data) {
         console.log('BoxOffice Response:', error.response?.data);
+        
+        // Handle specific validation errors
+        if (error.response.status === 400 && error.response.data?.data?.purchase_code) {
+          const purchaseCodeErrors = error.response.data.data.purchase_code;
+          if (Array.isArray(purchaseCodeErrors) && purchaseCodeErrors.length > 0) {
+            console.error('Purchase code validation failed:', {
+              purchaseCode: purchaseCode,
+              errors: purchaseCodeErrors,
+              fullResponse: error.response.data
+            });
+            throw {
+              message: `Purchase code error: ${purchaseCodeErrors[0]}`,
+              response: error.response,
+              isPurchaseCodeError: true
+            };
+          }
+        }
+        
         throw {
           message: error.response.data.message || 'Failed to fetch get box office ticket',
           response: error.response
@@ -591,10 +618,58 @@ export const eventService = {
       const response = await apiClient.get(`${endpoints.eventInfo}${eventUuid}/info/`);
       console.log('Fetch Event Info Response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Fetch Event Info Error:', error);
-      throw error;
-    }
+          } catch (error) {
+        console.error('Fetch Event Info Error:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            headers: error.config?.headers
+          }
+        });
+        
+        // Handle 403 Forbidden error specifically
+        if (error.response?.status === 403) {
+          const errorMessage = error.response?.data?.message || error.response?.data?.data?.detail;
+          
+          // Check if it's a business logic error (like "Event is not published")
+          if (errorMessage && errorMessage.includes('not published')) {
+            console.error('403 Forbidden - Business logic error:', errorMessage);
+            throw {
+              message: errorMessage || 'Event is not available.',
+              status: 403,
+              isBusinessError: true,
+              response: error.response
+            };
+          } else {
+            // This might be an authentication error
+            console.error('403 Forbidden - Possible authentication issue detected');
+            // Clear the stored token as it might be invalid
+            await SecureStore.deleteItemAsync('accessToken');
+            throw {
+              message: 'Authentication failed. Please login again.',
+              status: 403,
+              isAuthError: true,
+              response: error.response
+            };
+          }
+        }
+        
+        if (error.response?.data) {
+          throw {
+            message: error.response.data.message || 'Failed to fetch event info',
+            response: error.response
+          };
+        }
+        
+        throw {
+          message: 'Network error. Please check your connection.',
+          error: error
+        };
+      }
   },
 
 }

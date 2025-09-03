@@ -87,7 +87,10 @@ function Navigation({ route }) {
         component={LoggedInScreen} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -107,7 +110,10 @@ function Navigation({ route }) {
         component={TicketsTab} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -115,7 +121,10 @@ function Navigation({ route }) {
         component={BoxOfficeTab} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: false 
+          unmountOnBlur: false,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -123,7 +132,10 @@ function Navigation({ route }) {
         component={CheckInAllTickets} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -131,7 +143,10 @@ function Navigation({ route }) {
         component={ManualCheckInAllTickets} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -139,7 +154,10 @@ function Navigation({ route }) {
         component={TicketScanned} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
       <Stack.Screen 
@@ -147,7 +165,10 @@ function Navigation({ route }) {
         component={StaffDashboard} 
         options={{ 
           headerShown: false,
-          unmountOnBlur: true 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }} 
       />
     </Stack.Navigator>

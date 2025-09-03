@@ -115,31 +115,82 @@ const OtpLoginScreen = ({ route }) => {
           await SecureStore.setItemAsync('accessToken', response.data.access_token);
           // Fetch staff events
           const staffEventsData = await eventService.fetchStaffEvents();
+          console.log('Staff events data structure:', JSON.stringify(staffEventsData, null, 2));
           const eventsList = staffEventsData?.data;
+          console.log('Events list:', eventsList);
+          
+          // Handle different data structures for ADMIN vs Organizer roles
+          let selectedEvent = null;
+          
           if (eventsList && eventsList.length > 0) {
-            const eventUuid = eventsList[0].uuid || eventsList[0].eventUuid;
-            // Fetch event info
-            const eventInfoData = await eventService.fetchEventInfo(eventUuid);
-            navigation.reset({
-              index: 0,
-              routes: [{
-                name: 'LoggedIn',
-                params: {
-                  eventInfo: {
-                    staff_name: eventInfoData?.data?.staff_name,
-                    event_title: eventInfoData?.data?.event_title,
-                    cityName: eventInfoData?.data?.location?.city,
-                    date: eventInfoData?.data?.start_date,
-                    time: eventInfoData?.data?.start_time,
-                    userId: eventInfoData?.data?.staff_id,
-                    scanCount: eventInfoData?.data?.scan_count,
-                    event_uuid: eventInfoData?.data?.location?.uuid,
-                    eventUuid: eventUuid
-                  },
-                },
-              }],
-            });
+                      // For organizer role: eventsList[0] contains {events: [...], staff: "..."}
+          if (eventsList[0].events && Array.isArray(eventsList[0].events)) {
+            console.log('Organizer role detected - events array found');
+            console.log('Events array:', eventsList[0].events);
+            if (eventsList[0].events.length > 0) {
+              selectedEvent = eventsList[0].events[0];
+              console.log('Selected event from organizer role:', selectedEvent);
+            }
           } else {
+            // For admin role or direct event structure
+            console.log('Admin role or direct event structure detected');
+            selectedEvent = eventsList[0];
+            console.log('Selected event from admin role:', selectedEvent);
+          }
+          }
+          
+          if (selectedEvent) {
+            const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
+            console.log('Selected event UUID:', eventUuid);
+            
+            try {
+              // Fetch event info
+              const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+              navigation.reset({
+                index: 0,
+                routes: [{
+                  name: 'LoggedIn',
+                  params: {
+                    eventInfo: {
+                      staff_name: eventInfoData?.data?.staff_name,
+                      event_title: eventInfoData?.data?.event_title,
+                      cityName: eventInfoData?.data?.location?.city,
+                      date: eventInfoData?.data?.start_date,
+                      time: eventInfoData?.data?.start_time,
+                      userId: eventInfoData?.data?.staff_id,
+                      scanCount: eventInfoData?.data?.scan_count,
+                      event_uuid: eventInfoData?.data?.location?.uuid,
+                      eventUuid: eventUuid
+                    },
+                  },
+                }],
+              });
+            } catch (eventError) {
+              console.error('Error fetching event info:', eventError);
+              
+              // Handle business logic errors gracefully
+              if (eventError.isBusinessError) {
+                console.log('Business logic error - proceeding without event data');
+                // Still navigate to logged in screen, just without event data
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'LoggedIn' }],
+                });
+              } else {
+                // For other errors, show error message but still navigate
+                setErrorMessage('Unable to load event details. Please try again later.');
+                setShowError(true);
+                setLoading(false);
+                setTimeout(() => {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'LoggedIn' }],
+                  });
+                }, 2000);
+              }
+            }
+          } else {
+            console.log('No events found - proceeding without event data');
             navigation.reset({
               index: 0,
               routes: [{ name: 'LoggedIn' }],

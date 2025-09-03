@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, StatusBar, SafeAreaView, ScrollView, Text } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, ScrollView, Text } from 'react-native';
 import { color } from '../../../color/color';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../../../components/SvgIcons';
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    height: Platform.OS === 'android' ? 24 : 0,
     backgroundColor: 'transparent',
   },
   header: {

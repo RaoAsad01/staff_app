@@ -168,14 +168,26 @@ function MyTabs() {
     >
       <Tab.Screen
         name="Dashboard"
-        options={{ headerShown: false, unmountOnBlur: true }}
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
+        }}
       >
         {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} onEventChange={handleEventChange} />}
       </Tab.Screen>
 
       <Tab.Screen
         name="Tickets"
-        options={{ headerShown: false, unmountOnBlur: true }}
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
+        }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -199,6 +211,9 @@ function MyTabs() {
         options={{
           headerShown: false,
           unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
         }}
       >
         {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
@@ -206,7 +221,13 @@ function MyTabs() {
 
       <Tab.Screen
         name="Manual"
-        options={{ headerShown: false, unmountOnBlur: true }}
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
+        }}
       >
         {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
       </Tab.Screen>
@@ -214,7 +235,13 @@ function MyTabs() {
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ headerShown: false, unmountOnBlur: true }}
+        options={{ 
+          headerShown: false, 
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: false
+        }}
       />
     </Tab.Navigator>
   );

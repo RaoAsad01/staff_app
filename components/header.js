@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,12 +14,7 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
   const [tabKey, setTabKey] = useState(0);
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      StatusBar.setBackgroundColor('transparent');
-      StatusBar.setTranslucent(true);
-    }
-  }, []);
+
 
   // Update scan count when eventInfo changes
   useEffect(() => {
@@ -113,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    height: Platform.OS === 'android' ? 0 : 0,
     backgroundColor: color.white_FFFFFF,
   },
   safeAreaContainer: {

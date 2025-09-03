@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView, StatusBar } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
 import Header from '../../components/header';
 import TicketsTab from './TicketsTab';
 import BoxOfficeTab from '../screens/BoxOfficeTab';
@@ -112,7 +112,7 @@ const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => 
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+
       <Header eventInfo={finalEventInfo}/>
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>

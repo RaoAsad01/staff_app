@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import React, { useState } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
@@ -112,16 +112,16 @@ const CheckInAllTickets = ({ route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="white" />
+      
             <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
-                    <Text style={styles.userEmail}>{name}</Text>
-                    <Text style={styles.ticketHolder}>{email}</Text>
-                    <Text style={styles.ticketHolder}>{orderNumber}</Text>
+                    <Text style={styles.ticketOrderNum}>Order Number. {orderNumber}</Text>
+                    <Text style={styles.userName}>{name}</Text>
+                    <Text style={styles.ticketEmail}>{email}</Text>
                     <Text style={styles.ticketHolder}>Purchase Date: {tickets[0]?.formatted_date}</Text>
 
 
@@ -223,19 +223,32 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    ticketHolder: {
+    ticketEmail: {
         color: color.placeholderTxt_24282C,
         fontSize: 14,
+        marginTop: 10,
+        fontWeight: '400',
+    },
+    ticketHolder: {
+        color: color.black_544B45,
+        fontSize: 14,
+        marginTop: 10,
+        fontWeight: '400',
+    },
+    ticketOrderNum: {
+        color: color.placeholderTxt_24282C,
+        fontSize: 16,
+        fontWeight: '500',
         marginTop: 10,
     },
     ticketsList: {
         marginTop: 20,
         flex: 1,
     },
-    userEmail: {
-        color: color.brown_3C200A,
+    userName: {
+        color: color.placeholderTxt_24282C,
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '500',
         marginTop: 10,
     },
     orderNumber: {
