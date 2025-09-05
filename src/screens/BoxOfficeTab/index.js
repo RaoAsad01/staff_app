@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
+import { formatDateOnly } from '../../constants/dateAndTime';
 
 const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigation = useNavigation();
@@ -53,34 +54,47 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         const categories = pricingStatsResponse.data.map(item => item.alias);
         setPricingCategories(categories);
 
-        // Set initial selected tab based on selectedTab prop or first category
+        // Set initial selected tab based on selectedTab prop or prioritize Early Bird
         if (selectedTab && categories.includes(selectedTab)) {
           setSelectedTabState(selectedTab);
         } else if (categories.length > 0) {
-          setSelectedTabState(categories[0]);
+          // Prioritize Early Bird as default, fallback to first category
+          const earlyBirdIndex = categories.findIndex(cat => cat === 'Early Bird');
+          if (earlyBirdIndex !== -1) {
+            setSelectedTabState('Early Bird');
+          } else {
+            setSelectedTabState(categories[0]);
+          }
         }
       }
+
+      // Fetch ticket pricing
+      console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
       const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
+      console.log('BoxOfficeTab: Received pricing data:', pricingData);
 
       if (!pricingData) {
         console.error('BoxOfficeTab: No pricing data received');
         return;
       }
 
-      // Process pricing type options into ticket categories
+      // Process pricing type options - DON'T group by type_obj.alias
+      // Each ticket should be treated separately since they have different class_name and uuid
       const categories = pricingData.pricing_type_options.reduce((acc, option) => {
         const categoryTitle = option.type_obj.alias;
-        const existingCategory = acc.find(category => category.alias === categoryTitle);
+        const existingCategory = acc.find(category => category.title === categoryTitle);
 
         const ticket = {
-          name: option.description,
+          name: option.class_name, // Use class_name as primary, fallback to description
           uuid: option.uuid,
           price: parseFloat(option.price),
           discount_price: option.discounted_price ? parseFloat(option.discounted_price) : parseFloat(option.price),
           quantity: option.quantity,
           remaining: option.remaining_tickets,
           purchase_limit: option.purchase_limit,
-          currency: option.currency
+          currency: option.currency,
+          sale_end_date_time: pricingData.sale_end_date_time,
+          description: option.description,
         };
 
         if (existingCategory) {
@@ -95,11 +109,22 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         return acc;
       }, []);
 
+      console.log('BoxOfficeTab: Processed categories:', categories);
+
       setTicketPricing(categories);
 
       // Set initial selected tickets based on the selected tab
-      const targetCategory = selectedTab ? categories.find(cat => cat.title === selectedTab) : categories[0];
+      let targetCategory;
+      if (selectedTab && categories.find(cat => cat.title === selectedTab)) {
+        targetCategory = categories.find(cat => cat.title === selectedTab);
+      } else {
+        // Prioritize Early Bird as default, fallback to first category
+        const earlyBirdCategory = categories.find(cat => cat.title === 'Early Bird');
+        targetCategory = earlyBirdCategory || categories[0];
+      }
+
       if (targetCategory) {
+        console.log('BoxOfficeTab: Processing category:', targetCategory);
         const initialTickets = targetCategory.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
@@ -108,8 +133,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           quantity: 0,
           remaining: ticket.remaining,
           purchase_limit: ticket.purchase_limit,
-          currency: ticket.currency
+          currency: ticket.currency,
+          sale_end_date_time: ticket.sale_end_date_time,
+          description: ticket.description,
         }));
+        console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
         setSelectedTickets(initialTickets);
       }
     } catch (error) {
@@ -129,7 +157,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
   // Handle selectedTab prop changes
   useEffect(() => {
-    if (selectedTab && pricingCategories.includes(selectedTab)) {
+    if (selectedTab && pricingCategories.includes(selectedTab) && ticketPricing.length > 0) {
       setSelectedTabState(selectedTab);
 
       // Reset purchase code when switching to non-Members tab
@@ -140,6 +168,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       // Update selected tickets for the new tab
       const category = ticketPricing.find(cat => cat.title === selectedTab);
       if (category) {
+        console.log('BoxOfficeTab: Processing selectedTab change for category:', category);
         const updatedTickets = category.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
@@ -148,8 +177,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           quantity: 0,
           remaining: ticket.remaining,
           purchase_limit: ticket.purchase_limit,
-          currency: ticket.currency
+          currency: ticket.currency,
+          sale_end_date_time: ticket.sale_end_date_time,
+          description: ticket.description,
         }));
+        console.log('BoxOfficeTab: Updated tickets for selectedTab:', updatedTickets);
         setSelectedTickets(updatedTickets);
       }
     }
@@ -163,6 +195,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 
   const handleTabPress = (tab) => {
+    console.log('BoxOfficeTab: Tab pressed:', tab);
     setSelectedTabState(tab);
 
     // Reset purchase code when switching tabs
@@ -171,6 +204,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     }
 
     const category = ticketPricing.find(cat => cat.title === tab);
+    console.log('BoxOfficeTab: Found category:', category);
 
     if (category) {
       const updatedTickets = category.tickets.map(ticket => ({
@@ -181,8 +215,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         quantity: 0,
         remaining: ticket.remaining,
         purchase_limit: ticket.purchase_limit,
-        currency: ticket.currency
+        currency: ticket.currency,
+        sale_end_date_time: ticket.sale_end_date_time,
+        description: ticket.description,
       }));
+      console.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
       setSelectedTickets(updatedTickets);
     }
   };
@@ -440,9 +477,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           {item.discountPrice < item.price && (
             <Text style={styles.discountText}>Early Bird Discount</Text>
           )}
+          {/* <Text style={styles.descriptionText}>{item.description}</Text> */}
           <View style={styles.validTillContainer}>
             <Text style={styles.validTillText}>valid till</Text>
-            <Text style={styles.dateText}>12-09-2024</Text>
+            <Text style={styles.dateText}>{formatDateOnly(item.sale_end_date_time)}</Text>
           </View>
           <Text style={styles.descriptionText}>
             Join the excitement and be{'\n'}part of the crowd at our event!

@@ -3,7 +3,7 @@ import { color } from '../color/color';
 import Header from '../../components/header';
 import SvgIcons from '../../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
-import { getFormattedDate } from '../constants/dateAndTime';
+import { formatDateTime } from '../constants/dateAndTime';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
 
 const TicketScanned = ({ route }) => {
@@ -58,7 +58,7 @@ const TicketScanned = ({ route }) => {
                                 </Text> */}
                                 <View style={styles.spacer} />
                                 <Text style={[styles.values, styles.marginTop20]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{getFormattedDate(scanResponse?.last_scan) || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.last_scan) || 'N/A'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>

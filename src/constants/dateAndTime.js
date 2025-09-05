@@ -1,20 +1,62 @@
-export const getFormattedDate = (dateString) => {
-  if (!dateString) return ''; // Check if the date is null or undefined
+// Generic function to safely parse a date
+const parseDate = (dateString) => {
+  if (!dateString) return null;
+  const d = new Date(dateString);
+  return isNaN(d) ? null : d;
+};
 
-  const backendDate = new Date(dateString);
+// 🔹 Format: DD-MM-YYYY HH:mm AM/PM
+export const formatDateTime = (dateString) => {
+  const d = parseDate(dateString);
+  if (!d) return '';
 
-  if (isNaN(backendDate)) return ''; // Return empty if the date is invalid
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0'); // 0-indexed
+  const year = d.getUTCFullYear();
 
-  // To display it in UTC without converting to local timezone:
-  const day = String(backendDate.getUTCDate()).padStart(2, '0');
-  const month = String(backendDate.getUTCMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-  const year = backendDate.getUTCFullYear();
-
-  const hours = backendDate.getUTCHours();
-  const minutes = String(backendDate.getUTCMinutes()).padStart(2, '0');
+  const hours = d.getUTCHours();
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
   const isPM = hours >= 12;
   const formattedHours = hours % 12 || 12;
   const ampm = isPM ? 'PM' : 'AM';
 
   return `${day}-${month}-${year} ${formattedHours}:${minutes} ${ampm}`;
+};
+
+// 🔹 Format: DD-MM-YYYY (only date)
+export const formatDateOnly = (dateString) => {
+  const d = parseDate(dateString);
+  if (!d) return '';
+
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const year = d.getUTCFullYear();
+
+  return `${day}-${month}-${year}`;
+};
+
+// 🔹 Format: YYYY-MM-DD (ISO style)
+export const formatISODate = (dateString) => {
+  const d = parseDate(dateString);
+  if (!d) return '';
+
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const year = d.getUTCFullYear();
+
+  return `${year}-${month}-${day}`;
+};
+
+// 🔹 Format: HH:mm AM/PM (only time)
+export const formatTimeOnly = (dateString) => {
+  const d = parseDate(dateString);
+  if (!d) return '';
+
+  const hours = d.getUTCHours();
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+  const isPM = hours >= 12;
+  const formattedHours = hours % 12 || 12;
+  const ampm = isPM ? 'PM' : 'AM';
+
+  return `${formattedHours}:${minutes} ${ampm}`;
 };
