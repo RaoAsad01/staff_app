@@ -12,8 +12,8 @@ import { formatDateOnly } from '../../constants/dateAndTime';
 
 const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigation = useNavigation();
-  // const route = useRoute();
-  // const eventUuid = route.params?.eventUuid;
+  const route = useRoute();
+  const ticketUuid = route.params?.ticketUuid;
   const [selectedTabState, setSelectedTabState] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -97,6 +97,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           description: option.description,
         };
 
+        // If ticketUuid is provided, only include tickets that match
+        if (ticketUuid && ticket.uuid !== ticketUuid) {
+          return acc;
+        }
+
         if (existingCategory) {
           existingCategory.tickets.push(ticket);
         } else {
@@ -152,7 +157,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     React.useCallback(() => {
       resetData();
       fetchData();
-    }, [eventInfo?.eventUuid])
+    }, [eventInfo?.eventUuid, ticketUuid])
   );
 
   // Handle selectedTab prop changes
@@ -190,7 +195,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   // Initial data fetch
   useEffect(() => {
     fetchData();
-  }, [eventInfo?.eventUuid]);
+  }, [eventInfo?.eventUuid, ticketUuid]);
 
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 

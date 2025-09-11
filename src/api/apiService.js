@@ -526,7 +526,7 @@ export const ticketService = {
     }
   },
 
-  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, staffUuid = null) => {
+  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, ticketUuid = null, staffUuid = null) => {
     try {
       let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
       
@@ -537,9 +537,14 @@ export const ticketService = {
         params.append('sales', sales);
       }
       
-      // Add ticket_type query parameter for ADMIN users
+      // Add ticket_type query parameter for filtering by category
       if (ticketType) {
         params.append('ticket_type', ticketType);
+      }
+      
+      // Add ticket_uuid query parameter for filtering specific ticket analytics
+      if (ticketUuid) {
+        params.append('ticket_uuid', ticketUuid);
       }
       
       // Add staff_uuid query parameter for staff-specific data
@@ -552,7 +557,6 @@ export const ticketService = {
       }
       
       const response = await apiClient.get(url);
-      console.log('Dashboard Stats Response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Fetch Dashboard Stats Error:', {

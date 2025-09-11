@@ -66,8 +66,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
     }));
   };
 
-  const handleSubItemPress = (subItemLabel, parentLabel) => {
-    console.log('CheckInSoldTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
+  const handleSubItemPress = (subItemLabel, parentLabel, ticketUuid = null) => {
 
     // Only navigate for Available, for other titles we show analytics
     if (title === 'Available') {
@@ -96,15 +95,12 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
         }
       }
 
-      console.log('CheckInSoldTicketsCard - Mapped tab:', selectedTab);
-
       if (selectedTab && selectedTab !== 'Total Sold') {
         navigation.navigate('Tickets', {
           screen: 'BoxOfficeTab',
-          selectedTab: selectedTab
+          selectedTab: selectedTab,
+          ticketUuid: ticketUuid
         });
-      } else {
-        console.warn('CheckInSoldTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
       }
     }
     // For other titles (Sold Tickets, Check-Ins), analytics are handled by the analytics button
@@ -128,12 +124,13 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
     Object.keys(categoryData).forEach(key => {
       if (key !== 'total_tickets' && key !== 'sold_tickets' && categoryData[key]) {
         const subData = categoryData[key];
-        if (subData.total && subData.sold) {
+        if (subData.total !== undefined && subData.sold !== undefined) {
           subItems.push({
             label: key,
             checkedIn: subData.sold,
             total: subData.total,
-            percentage: subData.total > 0 ? Math.round((subData.sold / subData.total) * 100) : 0
+            percentage: subData.total > 0 ? Math.round((subData.sold / subData.total) * 100) : 0,
+            ticketUuid: subData.ticket_uuid
           });
         }
       }
@@ -154,7 +151,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
           return (
             <View key={index}>
               <View style={styles.row}>
-                <CircularProgress value={item.checkedœIn} total={item.total} percentage={item.percentage} />
+                <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
                 <View style={styles.textContainer}>
                   <Text style={styles.label}>{item.label}</Text>
                   <Text style={styles.value}>
@@ -199,7 +196,7 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     <TouchableOpacity
                       key={subIndex}
                       style={styles.subItemRow}
-                      onPress={() => title === 'Available' ? handleSubItemPress(subItem.label, item.label) : null}
+                      onPress={() => title === 'Available' ? handleSubItemPress(subItem.label, item.label, subItem.ticketUuid) : null}
                       activeOpacity={title === 'Available' ? 0.7 : 1}
                     >
                       <CircularProgress
@@ -217,10 +214,10 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                       </View>
                       {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
                         <TouchableOpacity
-                          onPress={() => onAnalyticsPress && onAnalyticsPress(subItem.label, title)}
+                          onPress={() => onAnalyticsPress && onAnalyticsPress(item.label, title, subItem.ticketUuid, subItem.label)}
                           style={styles.analyticsButtonSubItem}
                         >
-                          {activeAnalytics === `${title}-${subItem.label}` ? (
+                          {activeAnalytics === `${title}-${subItem.ticketUuid || subItem.label}` ? (
                             <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
                           ) : (
                             <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />

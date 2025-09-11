@@ -29,9 +29,6 @@ const StaffDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [analyticsTitle, setAnalyticsTitle] = useState('');
-  const [activeAnalytics, setActiveAnalytics] = useState(null);
   const [eventsModalVisible, setEventsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -79,58 +76,11 @@ const StaffDashboard = () => {
   };
 
 
-  const handleAnalyticsPress = async (ticketType, title) => {
-    if (!currentEventInfo?.eventUuid || !staffUuid) return;
-
-    const analyticsKey = `${title}-${ticketType}`;
-
-    // If already active, deactivate
-    if (activeAnalytics === analyticsKey) {
-      setActiveAnalytics(null);
-      setAnalyticsData(null);
-      setAnalyticsTitle('');
-      return;
-    }
-
-    try {
-      // Determine sales parameter based on title
-      let salesParam = null;
-      if (title === 'Sold Tickets') {
-        salesParam = 'box_office';
-      }
-
-      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, ticketType, staffUuid);
-
-      if (response?.data?.sold_tickets_analytics?.data) {
-        const analytics = response.data.sold_tickets_analytics.data;
-        const chartData = Object.entries(analytics).map(([hour, value]) => {
-          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
-          let formattedTime = hour;
-          if (hour.includes(':00 ')) {
-            const [time, period] = hour.split(' ');
-            const [hours] = time.split(':');
-            formattedTime = `${hours}${period.toLowerCase()}`;
-          }
-
-          return {
-            time: formattedTime,
-            value: value || 0
-          };
-        });
-
-        setAnalyticsData(chartData);
-        setAnalyticsTitle(`${ticketType} Sales`);
-        setActiveAnalytics(analyticsKey);
-      }
-    } catch (error) {
-      console.error('Error fetching analytics for', ticketType, error);
-    }
-  };
 
   const getSoldTicketsData = () => {
     const dataSource = dashboardStats?.data?.sold_tickets;
 
-    if (!dataSource?.total_tickets || !dataSource?.sold_tickets) {
+    if (dataSource?.total_tickets === undefined || dataSource?.sold_tickets === undefined) {
       return [{
         label: "Total Sold",
         checkedIn: 0,
@@ -207,22 +157,12 @@ const StaffDashboard = () => {
             showRemaining={true}
             userRole="STAFF"
             stats={dashboardStats}
-            onAnalyticsPress={handleAnalyticsPress}
-            activeAnalytics={activeAnalytics}
           />
-          {analyticsData && activeAnalytics ? (
-            <AnalyticsChart
-              title={analyticsTitle}
-              data={analyticsData}
-              dataType="sold"
-            />
-          ) : (
-            <AnalyticsChart
-              title="Sold Tickets"
-              data={soldTicketsChartData}
-              dataType="sold"
-            />
-          )}
+          <AnalyticsChart
+            title="Sold Tickets"
+            data={soldTicketsChartData}
+            dataType="sold"
+          />
         </>
       );
     } else if (selectedSaleScanTab === "Scans") {
@@ -350,7 +290,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? 24 : 0,
+    height: Platform.OS === 'android' ? 0 : 0,
     backgroundColor: 'transparent',
   },
   header: {

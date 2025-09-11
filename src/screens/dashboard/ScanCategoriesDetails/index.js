@@ -106,7 +106,7 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
           )}
           {isSubItem && onScanAnalyticsPress && (
             <TouchableOpacity
-              onPress={() => onScanAnalyticsPress(item.label, parentCategory)}
+              onPress={() => onScanAnalyticsPress(item.label, parentCategory, item.ticketUuid)}
               style={styles.analyticsButton}
             >
               {activeScanAnalytics === `Scan-${parentCategory}-${item.label}` ? (
@@ -151,6 +151,7 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
             scanned: scanned,
             total: total,
             percentage: total > 0 ? Math.round((scanned / total) * 100) : 0,
+            ticketUuid: ticketData.ticket_uuid,
             subItems: []
           });
         }

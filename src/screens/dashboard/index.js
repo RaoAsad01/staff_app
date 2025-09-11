@@ -185,10 +185,10 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     return null;
   };
 
-  const handleAnalyticsPress = async (ticketType, title) => {
+  const handleAnalyticsPress = async (ticketType, title, ticketUuid = null, subitemLabel = null) => {
     if (!eventInfo?.eventUuid || userRole !== 'ADMIN') return;
 
-    const analyticsKey = `${title}-${ticketType}`;
+    const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
 
     // If already active, deactivate
     if (activeAnalytics === analyticsKey) {
@@ -199,13 +199,10 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     }
 
     try {
-      // Determine sales parameter based on title
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
-      if (title === 'Sold Tickets') {
-        salesParam = 'box_office';
-      }
 
-      const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType);
+      const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
       if (response?.data?.sold_tickets_analytics?.data) {
         const analytics = response.data.sold_tickets_analytics.data;
@@ -225,7 +222,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         });
 
         setAnalyticsData(chartData);
-        setAnalyticsTitle(`${ticketType} Sales`);
+        setAnalyticsTitle(subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`);
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
@@ -233,7 +230,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     }
   };
 
-  const handleScanAnalyticsPress = async (scanType, parentCategory) => {
+  const handleScanAnalyticsPress = async (scanType, parentCategory, ticketUuid = null) => {
     if (!eventInfo?.eventUuid) return;
 
     const analyticsKey = `Scan-${parentCategory}-${scanType}`;
@@ -294,8 +291,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   const getCheckInData = () => {
     if (
-      !dashboardStats?.data?.check_ins?.total_checkins ||
-      !dashboardStats?.data?.check_ins?.total_tickets
+      dashboardStats?.data?.check_ins?.total_checkins === undefined ||
+      dashboardStats?.data?.check_ins?.total_tickets === undefined
     ) {
       return [{
         label: "Total Checked In",
@@ -351,8 +348,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     }
 
     if (
-      !dataSource?.total_tickets ||
-      !dataSource?.sold_tickets
+      dataSource?.total_tickets === undefined ||
+      dataSource?.sold_tickets === undefined
     ) {
       return [{
         label: "Total Sold",
@@ -440,6 +437,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 checkedIn: ticketAvailable,
                 total: ticketTotal,
                 percentage: ticketTotal > 0 ? Math.round((ticketAvailable / ticketTotal) * 100) : 0,
+                ticketUuid: ticketInfo.ticket_uuid,
                 subItems: []
               });
             }
