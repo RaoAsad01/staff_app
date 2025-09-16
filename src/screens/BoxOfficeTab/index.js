@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal, ActivityIndicator } from 'react-native';
 // import { boxofficetablist } from '../../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +26,14 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTickets, setSelectedTickets] = useState([]);
   const { width } = Dimensions.get('window');
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [purchaseError, setPurchaseError] = useState('');
+  const [wrongPurchaseCodeError, setWrongPurchaseCodeError] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+  const [ticketError, setTicketError] = useState('');
+  const [showError, setShowError] = useState(false);
+  const formikRef = useRef(null);
 
   const resetData = () => {
     setSelectedTabState('');
@@ -39,6 +47,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setPricingCategories([]);
     setSelectedTickets([]);
     setIsLoading(true);
+    setNameError('');
+    setEmailError('');
+    setPurchaseError('');
+    setWrongPurchaseCodeError('');
+    setPaymentError('');
+    setTicketError('');
   };
 
   const fetchData = async () => {
@@ -165,10 +179,16 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     if (selectedTab && pricingCategories.includes(selectedTab) && ticketPricing.length > 0) {
       setSelectedTabState(selectedTab);
 
-      // Reset purchase code when switching to non-Members tab
-      if (selectedTab !== 'Members') {
-        setPurchaseCode('');
-      }
+      // Clear all form fields when switching tabs
+      setName('');
+      setEmail('');
+      setPurchaseCode('');
+      setPurchaseError('');
+      setWrongPurchaseCodeError('');
+      setNameError('');
+      setEmailError('');
+      setPaymentError('');
+      setTicketError('');
 
       // Update selected tickets for the new tab
       const category = ticketPricing.find(cat => cat.title === selectedTab);
@@ -203,9 +223,21 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     console.log('BoxOfficeTab: Tab pressed:', tab);
     setSelectedTabState(tab);
 
-    // Reset purchase code when switching tabs
-    if (tab !== 'Members') {
-      setPurchaseCode('');
+    // Clear all form fields when switching tabs
+    setName('');
+    setEmail('');
+    setPurchaseCode('');
+    setPaymentOption('');
+    setPurchaseError('');
+    setWrongPurchaseCodeError('');
+    setNameError('');
+    setEmailError('');
+    setPaymentError('');
+    setTicketError('');
+    
+    // Reset Formik form values
+    if (formikRef.current) {
+      formikRef.current.resetForm();
     }
 
     const category = ticketPricing.find(cat => cat.title === tab);
@@ -230,24 +262,32 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   };
 
   const navigateToCheckInAllTicketsScreen = async () => {
+    // Clear previous errors
+    setNameError('');
+    setEmailError('');
+    setPurchaseError('');
+    setWrongPurchaseCodeError('');
+    setPaymentError('');
+    setTicketError('');
+
     if (!name.trim()) {
-      alert('Please enter a valid name.');
+      setNameError('Please enter a valid name.');
       return;
     }
 
     if (!email) {
-      alert('Please enter a valid email or phone number.');
+      setEmailError('Please enter a valid email or phone number.');
       return;
     }
 
     if (!paymentOption) {
-      alert('Please select a payment option.');
+      setPaymentError('Please select a payment option.');
       return;
     }
 
     // Check if purchase code is required for Members tab
     if (selectedTabState === 'Members' && !purchaseCode.trim()) {
-      alert('Please enter a purchase code.');
+      setPurchaseError('Please enter a valid Purchase code.');
       return;
     }
 
@@ -260,7 +300,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         }));
 
       if (items.length === 0) {
-        alert('Please select at least one ticket.');
+        setTicketError('Please select at least one ticket.');
         return;
       }
 
@@ -293,16 +333,24 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       });
     } catch (error) {
       if (error.isPurchaseCodeError) {
-        alert(`Purchase Code Error: ${error.message}\n\nPlease check your purchase code and try again.`);
+        setWrongPurchaseCodeError('Please enter a valid purchase code');
       } else {
-        alert(error.message || 'Failed to process tickets. Please try again.');
+        setWrongPurchaseCodeError('Please enter a valid purchase code');
       }
     }
   };
 
   const handlePOSPayment = async () => {
+    // Clear previous errors
+    setNameError('');
+    setEmailError('');
+    setPurchaseError('');
+    setWrongPurchaseCodeError('');
+    setPaymentError('');
+    setTicketError('');
+
     if (!name.trim()) {
-      alert('Please enter a valid name.');
+      setNameError('Please enter a valid name.');
       return;
     }
 
@@ -311,13 +359,13 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       return;
     }
     if (!email) {
-      alert('Please enter a valid email or phone number.');
+      setEmailError('Please enter a valid email or phone number.');
       return;
     }
 
     // Check if purchase code is required for Members tab
     if (selectedTabState === 'Members' && !purchaseCode.trim()) {
-      alert('Please enter a purchase code for Members tickets.');
+      setPurchaseError('Please enter a valid Purchase code.');
       return;
     }
 
@@ -325,12 +373,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     if (selectedTabState === 'Members' && purchaseCode.trim()) {
       // Purchase code should be at least 6 characters and contain only alphanumeric characters
       if (purchaseCode.trim().length < 6) {
-        alert('Purchase code must be at least 6 characters long.');
+        setPurchaseError('Purchase code must be at least 6 characters long.');
         return;
       }
 
       if (!/^[a-zA-Z0-9]+$/.test(purchaseCode.trim())) {
-        alert('Purchase code can only contain letters and numbers.');
+        setPurchaseError('Purchase code can only contain letters and numbers.');
         return;
       }
     }
@@ -344,7 +392,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         }));
 
       if (items.length === 0) {
-        alert('Please select at least one ticket.');
+        setTicketError('Please select at least one ticket.');
         return;
       }
 
@@ -375,9 +423,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       });
     } catch (error) {
       if (error.isPurchaseCodeError) {
-        alert(`Purchase Code Error: ${error.message}\n\nPlease check your purchase code and try again.`);
+        setWrongPurchaseCodeError('Please enter a valid purchase code');
       } else {
-        alert(error.message || 'Failed to process tickets. Please try again.');
+        setWrongPurchaseCodeError('Please enter a valid purchase code');
       }
     }
   };
@@ -471,6 +519,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     if (newQuantity >= 0) {
       updatedTickets[index].quantity = newQuantity;
       setSelectedTickets(updatedTickets);
+      // Clear ticket error when user changes quantity
+      if (ticketError) {
+        setTicketError('');
+      }
     }
   };
 
@@ -536,6 +588,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     );
   }
 
+  const dismissError = () => {
+    setShowError(false);
+    setErrorMessage('');
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.tabContainer}>
@@ -568,9 +625,13 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             <Text style={[styles.totalValue, { textAlign: 'left' }]}>GHS{calculateTotal()}</Text>
           </View>
         </View>
+        {ticketError && (
+          <Text style={styles.errorText}>{ticketError}</Text>
+        )}
 
         {/* <View style={styles.lineView2}></View> */}
         <Formik
+          ref={formikRef}
           initialValues={{ name: '', email: '', purchaseCode: '' }}
           validationSchema={validationSchema}
           context={{ selectedTab: selectedTabState }}
@@ -589,6 +650,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 onChangeText={(text) => {
                   handleChange('name')(text);
                   setName(text);
+                  // Clear name error when user starts typing
+                  if (nameError) {
+                    setNameError('');
+                  }
                 }}
                 onBlur={handleBlur('name')}
                 value={values.name}
@@ -597,6 +662,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               />
               {touched.name && errors.name && (
                 <Text style={styles.errorText}>{errors.name}</Text>
+              )}
+              {nameError && (
+                <Text style={styles.errorText}>{nameError}</Text>
               )}
 
               {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
@@ -611,6 +679,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 onChangeText={(text) => {
                   handleChange('email')(text);
                   setEmail(text);
+                  // Clear email error when user starts typing
+                  if (emailError) {
+                    setEmailError('');
+                  }
                 }}
                 onBlur={handleBlur('email')}
                 value={values.email}
@@ -619,6 +691,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               />
               {touched.email && errors.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+              {emailError && (
+                <Text style={styles.errorText}>{emailError}</Text>
               )}
 
               {selectedTabState === 'Members' && (
@@ -634,6 +709,13 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                     onChangeText={(text) => {
                       handleChange('purchaseCode')(text);
                       setPurchaseCode(text);
+                      // Clear purchase errors when user starts typing
+                      if (purchaseError) {
+                        setPurchaseError('');
+                      }
+                      if (wrongPurchaseCodeError) {
+                        setWrongPurchaseCodeError('');
+                      }
                     }}
                     onBlur={handleBlur('purchaseCode')}
                     value={purchaseCode}
@@ -642,6 +724,19 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                   />
                   {touched.purchaseCode && errors.purchaseCode && (
                     <Text style={styles.errorText}>{errors.purchaseCode}</Text>
+                  )}
+                  {purchaseError && (
+                    <Text style={styles.errorText}>{purchaseError}</Text>
+                  )}
+                  {wrongPurchaseCodeError && (
+                    <View style={styles.wrongPurchaseCodeErrorContainer}>
+                      <TouchableOpacity onPress={dismissError}>
+                        <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                      </TouchableOpacity>
+                      <Text style={styles.wrongPurchaseCodeErrorText}>
+                        {wrongPurchaseCodeError}
+                      </Text>
+                    </View>
                   )}
 
                   {/* Debug: Test different purchase codes (remove in production)
@@ -675,7 +770,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             style={[styles.paymentOption,
             paymentOption === 'CASH' && { borderColor: '#AE6F28' }
             ]}
-            onPress={() => setPaymentOption('CASH')}
+            onPress={() => {
+              setPaymentOption('CASH');
+              if (paymentError) {
+                setPaymentError('');
+              }
+            }}
           >
             {paymentOption === 'CASH' ? (
               <SvgIcons.cameraIconActive width={24} height={24} />
@@ -692,7 +792,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             style={[styles.paymentOption,
             paymentOption === 'BANK' && { borderColor: '#AE6F28' }
             ]}
-            onPress={() => setPaymentOption('BANK')}
+            onPress={() => {
+              setPaymentOption('BANK');
+              if (paymentError) {
+                setPaymentError('');
+              }
+            }}
           >
             {paymentOption === 'BANK' ? (
               <SvgIcons.cardIconActive width={24} height={24} />
@@ -712,6 +817,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             onPress={() => {
               setPaymentOption('P.O.S');
               setPOSModalVisible(true);
+              if (paymentError) {
+                setPaymentError('');
+              }
             }}
           >
             {paymentOption === 'P.O.S' ? (
@@ -726,7 +834,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             style={[styles.paymentOption,
             paymentOption === 'MOBILE_MONEY' && { borderColor: '#AE6F28' }
             ]}
-            onPress={() => setPaymentOption('MOBILE_MONEY')}
+            onPress={() => {
+              setPaymentOption('MOBILE_MONEY');
+              if (paymentError) {
+                setPaymentError('');
+              }
+            }}
           >
             {paymentOption === 'MOBILE_MONEY' ? (
               <SvgIcons.mobMoneyIconActive width={24} height={24} />
@@ -738,6 +851,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             </Text>
           </TouchableOpacity>
         </View>
+        {paymentError && (
+          <Text style={styles.errorText}>{paymentError}</Text>
+        )}
         {paymentOption && paymentOption !== 'P.O.S' && (
           <TouchableOpacity
             style={[
@@ -1127,6 +1243,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  wrongPurchaseCodeErrorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 25,
+  },
+  wrongPurchaseCodeErrorText: {
+    flex: 1,
+    color: color.red_EF3E32,
+    fontSize: 13,
+    fontWeight: '400',
   }
 });
 
