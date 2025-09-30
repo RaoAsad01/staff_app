@@ -27,6 +27,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [selectedTickets, setSelectedTickets] = useState([]);
   const { width } = Dimensions.get('window');
   const [nameError, setNameError] = useState('');
+  const [transactionError, setTransactionError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [purchaseError, setPurchaseError] = useState('');
   const [wrongPurchaseCodeError, setWrongPurchaseCodeError] = useState('');
@@ -48,6 +49,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setSelectedTickets([]);
     setIsLoading(true);
     setNameError('');
+    setTransactionError('');
     setEmailError('');
     setPurchaseError('');
     setWrongPurchaseCodeError('');
@@ -186,6 +188,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       setPurchaseError('');
       setWrongPurchaseCodeError('');
       setNameError('');
+      setTransactionError('');
       setEmailError('');
       setPaymentError('');
       setTicketError('');
@@ -231,6 +234,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setPurchaseError('');
     setWrongPurchaseCodeError('');
     setNameError('');
+    setTransactionError('');
     setEmailError('');
     setPaymentError('');
     setTicketError('');
@@ -264,6 +268,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigateToCheckInAllTicketsScreen = async () => {
     // Clear previous errors
     setNameError('');
+    setTransactionError('');
     setEmailError('');
     setPurchaseError('');
     setWrongPurchaseCodeError('');
@@ -277,6 +282,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
     if (!email) {
       setEmailError('Please enter a valid email or phone number.');
+      return;
+    }
+
+    if (!transactionNumber.trim()) {
+      setTransactionError('Please enter a valid transaction number.');
       return;
     }
 
@@ -343,6 +353,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const handlePOSPayment = async () => {
     // Clear previous errors
     setNameError('');
+    setTransactionError('');
     setEmailError('');
     setPurchaseError('');
     setWrongPurchaseCodeError('');
@@ -355,9 +366,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     }
 
     if (!transactionNumber.trim()) {
-      alert('Please enter a valid transaction number.');
+      setTransactionError('Please enter a valid transaction number.');
       return;
     }
+
     if (!email) {
       setEmailError('Please enter a valid email or phone number.');
       return;
@@ -484,10 +496,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       )
       .required('Required'),
     purchaseCode: Yup.string()
-      .when('selectedTab', {
-        is: 'Members',
-        then: Yup.string().required('Purchase code is required.'),
-        otherwise: Yup.string()
+      .when([], {
+        is: () => selectedTabState === 'Members',
+        then: (schema) => schema.required('Purchase code is required.'),
+        otherwise: (schema) => schema
       })
   });
 
@@ -645,7 +657,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                   touched.name && errors.name ? styles.inputError : null,
                   values.name ? styles.inputWithText : styles.inputPlaceholder
                 ]}
-                placeholder="Enter your name"
+                placeholder="Enter Name"
                 placeholderTextColor={color.brown_766F6A}
                 onChangeText={(text) => {
                   handleChange('name')(text);
@@ -873,13 +885,25 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             <View style={styles.modalTitleContainer}>
               <Text style={styles.modalTitle}>Pay with P.O.S</Text></View>
             <TextInput
-              style={styles.inputTransaction}
+              style={[
+                styles.inputTransaction,
+                transactionError ? styles.inputError : null
+              ]}
               placeholder="Transaction / Receipt ID"
               placeholderTextColor={color.brown_766F6A}
               value={transactionNumber}
-              onChangeText={setTransactionNumber}
+              onChangeText={(text) => {
+                setTransactionNumber(text);
+                // Clear transaction error when user starts typing
+                if (transactionError) {
+                  setTransactionError('');
+                }
+              }}
               keyboardType="default"
             />
+            {transactionError && (
+              <Text style={styles.errorTextTransaction}>{transactionError}</Text>
+            )}
             <TouchableOpacity style={[
               styles.getTicketsButtonPOS,
               !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
@@ -1181,6 +1205,9 @@ const styles = StyleSheet.create({
     top: 10,
     color: color.red_FF0000,
     marginBottom: 10,
+  },
+  errorTextTransaction: {
+    color: color.red_FF0000,
   },
   Paylabel: {
     top: 30,

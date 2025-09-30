@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         width: '100%',
-        marginTop: 10,
+        marginTop: 16,
     },
 
     labeltickets: {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         padding: 16,
         marginTop: 15,
-        marginBottom: 10,
+        marginBottom: 6,
         width: '100%',
     },
     row: {
@@ -290,7 +290,8 @@ const styles = StyleSheet.create({
     noteDescription: {
         fontSize: 14,
         fontWeight: '400',
-        color: color.black_544B45,
+        color: color.brown_766F6A,
+        opacity: 0.7,
         marginTop: 5
     },
 });

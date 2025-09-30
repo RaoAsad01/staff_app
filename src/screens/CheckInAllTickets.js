@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     },
     wrapper: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
     },
     popUp: {
         alignItems: 'center',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         borderRadius: 15,
         width: '100%',
-        marginTop: 20,
+        marginTop: 18,
     },
     button: {
         backgroundColor: color.btnBrown_AE6F28,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     ticketsList: {
-        marginTop: 20,
+        marginTop: 16,
         flex: 1,
     },
     userName: {

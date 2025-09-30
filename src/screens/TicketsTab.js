@@ -468,14 +468,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
 
     tabButton: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 8,
-        paddingHorizontal: 12,
+        paddingHorizontal: 20,
         borderRadius: 7,
     },
 

@@ -1075,6 +1075,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   saleScanTabButton: {
+    marginTop: 3,
     padding: 10,
     width: '50%',
     justifyContent: 'center',
