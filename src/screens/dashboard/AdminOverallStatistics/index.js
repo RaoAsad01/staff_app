@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     heading: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '500',
         textAlign: 'left',
         color: color.placeholderTxt_24282C,
@@ -101,9 +101,8 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        gap: 12,
+        gap: 6,
         marginBottom: 6,
-
     },
     statContainer: {
         height: 76,
@@ -116,6 +115,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         borderColor: color.brown_CEBCA04D,
         borderWidth: 1,
+        marginBottom: 5,
 
     },
     statRow: {

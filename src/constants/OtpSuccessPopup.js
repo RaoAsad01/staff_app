@@ -1,19 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import Typography from '../components/Typography';
 
 const OtpSuccessPopup = ({ visible, onClose, title = "OTP Sent Successfully", subtitle = "We've sent a one-time password to your email" }) => {
+    const timerRef = useRef(null);
+    
     // Auto-close after 2 seconds
     useEffect(() => {
         if (visible) {
-            const timer = setTimeout(() => {
+            // Clear any existing timer
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+            
+            // Set new timer
+            timerRef.current = setTimeout(() => {
                 onClose();
-            }, 1000);
-
-            return () => clearTimeout(timer);
+            }, 2000);
+        } else {
+            // Clear timer when modal is not visible
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
         }
+
+        // Cleanup function
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+        };
     }, [visible, onClose]);
 
     return (
@@ -24,6 +44,7 @@ const OtpSuccessPopup = ({ visible, onClose, title = "OTP Sent Successfully", su
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
+            <View style={styles.container}>
                 <View style={styles.modalContainer}>
                     <View style={styles.iconContainer}>
                         <View style={styles.successIconCircle}>
@@ -45,6 +66,7 @@ const OtpSuccessPopup = ({ visible, onClose, title = "OTP Sent Successfully", su
                         {subtitle}
                     </Typography>
                 </View>
+                </View>
             </View>
         </Modal>
     );
@@ -57,21 +79,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    container: {
+        width: '100%',
+        paddingHorizontal: 30,
+        marginBottom: 180
+    },
     modalContainer: {
-        backgroundColor: '#1A1A1A',
+        backgroundColor: '#131314',
         borderRadius: 20,
-        padding: 30,
+        padding: 15,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 8,
-        minWidth: 350,
-        maxWidth: 400,
+       
     },
     iconContainer: {
         marginBottom: 20,

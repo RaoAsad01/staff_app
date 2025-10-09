@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, TextInput, TouchableOpacity, Platform, Keyboard,
-  TouchableWithoutFeedback, Text, Dimensions
+  TouchableWithoutFeedback, Text, Dimensions, Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -24,7 +24,9 @@ const LoginScreen = () => {
   const [showError, setShowError] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(defaultCountryCode);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
-  const [inputType, setInputType] = useState('email'); // 'email' or 'phone'
+  const [inputType, setInputType] = useState('phone'); // Start with 'phone' as default
+  const [fadeAnim] = useState(new Animated.Value(1));
+  const [slideAnim] = useState(new Animated.Value(0));
 
   const { height: screenHeight } = Dimensions.get('window');
   const isSmallScreen = screenHeight < 700;
@@ -51,9 +53,13 @@ const LoginScreen = () => {
       .required('Required')
       .test('emailOrPhone', 'Invalid email or phone number', (value) => {
         if (!value) return false;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^[0-9]{7,15}$/; // Updated to handle phone numbers without country code
-        return emailRegex.test(value) || phoneRegex.test(value);
+        if (inputType === 'email') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(value);
+        } else {
+          const phoneRegex = /^[0-9]{7,15}$/;
+          return phoneRegex.test(value);
+        }
       }),
   });
 
@@ -61,8 +67,8 @@ const LoginScreen = () => {
     try {
       let userIdentifier = values.user_identifier.trim();
 
-      // If it's a phone number (not email), add the country code
-      if (inputType === 'phone' && !userIdentifier.includes('@')) {
+      // If it's a phone number, add the country code
+      if (inputType === 'phone') {
         userIdentifier = selectedCountry.dialCode + userIdentifier;
       }
 
@@ -80,7 +86,7 @@ const LoginScreen = () => {
       }
     } catch (error) {
       if (error.response?.data?.message) {
-        setErrorMessage('Invalid email or phone number');
+        setErrorMessage(`Invalid ${inputType === 'email' ? 'email' : 'phone number'}`);
         setShowError(true);
       } else {
         setErrorMessage('Failed to request OTP. Please try again.');
@@ -94,17 +100,34 @@ const LoginScreen = () => {
     setErrorMessage('');
   };
 
+  const toggleInputType = (setFieldValue) => {
+    // Clear the input field when switching types
+    setFieldValue('user_identifier', '');
+    const newInputType = inputType === 'phone' ? 'email' : 'phone';
+    
+    // Animate the transition
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: newInputType === 'phone' ? 0 : 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setInputType(newInputType);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
   const handleInputChange = (text, setFieldValue) => {
-    // Detect if input is email or phone and update immediately
-    if (text.includes('@')) {
-      setInputType('email');
-    } else if (text.length > 0 && /^[0-9]+$/.test(text)) {
-      // Set as phone if the input contains only numbers
-      setInputType('phone');
-    } else if (text.length === 0) {
-      // Reset to email when input is empty
-      setInputType('email');
-    }
     setFieldValue('user_identifier', text);
   };
 
@@ -130,13 +153,13 @@ const LoginScreen = () => {
                 onSubmit={handleSignIn}
               >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
-                  <View style={{ width: '100%' }}>
+                  <Animated.View style={{ width: '100%', opacity: fadeAnim }}>
                     <View style={[
                       styles.inputRow,
                       (touched.user_identifier && errors.user_identifier) || showError ? styles.inputError : null
                     ]}>
                       {/* Country Code Picker (only show for phone input) */}
-                      {/* {inputType === 'phone' && (
+                      {inputType === 'phone' && (
                         <TouchableOpacity
                           style={styles.countryCodeButton}
                           onPress={() => setShowCountryPicker(true)}
@@ -152,15 +175,15 @@ const LoginScreen = () => {
                           </Typography>
                           <SvgIcons.downArrow width={12} height={12} fill={color.grey_87807C} />
                         </TouchableOpacity>
-                      )} */}
+                      )}
 
                       <TextInput
                         style={[
                           styles.inputField,
                           touched.user_identifier && errors.user_identifier ? styles.inputError : null,
-                          inputType === 'phone' ? styles.inputFieldWithCountryCode : null
+                          inputType === 'phone' ? styles.inputFieldWithCountryCode : styles.inputFieldWithoutCountryCode
                         ]}
-                        placeholder={inputType === 'phone' ? "Phone Number" : "Email or Phone Number"}
+                        placeholder={inputType === 'phone' ? "Enter Phone Number" : "Enter Email"}
                         placeholderTextColor={color.grey_87807C}
                         onChangeText={(text) => handleInputChange(text, setFieldValue)}
                         onBlur={handleBlur('user_identifier')}
@@ -168,6 +191,7 @@ const LoginScreen = () => {
                         keyboardType={inputType === 'phone' ? "numeric" : "email-address"}
                         selectionColor={color.selectField_CEBCA0}
                         autoCapitalize="none"
+                        autoComplete={inputType === 'phone' ? "tel" : "email"}
                       />
                       <TouchableOpacity
                         style={styles.arrowButton}
@@ -180,7 +204,21 @@ const LoginScreen = () => {
                     {touched.user_identifier && errors.user_identifier && (
                       <Caption color={color.red_FF0000} style={styles.errorText}>{errors.user_identifier}</Caption>
                     )}
-                  </View>
+                    
+                    {/* Toggle Button */}
+                    <TouchableOpacity 
+                      style={styles.toggleButton} 
+                      onPress={() => toggleInputType(setFieldValue)}
+                    >
+                      <Typography 
+                        weight="400" 
+                        size={14} 
+                        color={color.btnBrown_AE6F28}
+                      >
+                        {inputType === 'phone' ? 'Sign In with Email' : 'Sign In with Phone Number'}
+                      </Typography>
+                    </TouchableOpacity>
+                  </Animated.View>
                 )}
               </Formik>
               {showError && (
@@ -281,6 +319,9 @@ const styles = StyleSheet.create({
   inputFieldWithCountryCode: {
     paddingLeft: 15,
   },
+  inputFieldWithoutCountryCode: {
+    paddingLeft: 20,
+  },
   arrowButton: {
     backgroundColor: color.btnBrown_AE6F28,
     height: '100%',
@@ -323,6 +364,11 @@ const styles = StyleSheet.create({
   },
   errorTextCross: {
     flex: 1,
+  },
+  toggleButton: {
+    alignItems: 'center',
+    marginTop: 8,
+    paddingVertical: 8,
   },
 });
 

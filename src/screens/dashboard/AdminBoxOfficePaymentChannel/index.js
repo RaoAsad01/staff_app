@@ -131,10 +131,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     heading: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: "500",
         marginBottom: 10,
-        color: color.black_2F251D,
+        color: color.placeholderTxt_24282C,
         alignSelf: "flex-start",
     },
     row: {

@@ -634,7 +634,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           </View>
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>Total Amount</Text>
-            <Text style={[styles.totalValue, { textAlign: 'left' }]}>GHS{calculateTotal()}</Text>
+            <Text style={[styles.totalValue, { textAlign: 'left' }]}>GHS {calculateTotal()}</Text>
           </View>
         </View>
         {ticketError && (
@@ -1015,14 +1015,14 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: 14,
     fontWeight: '400',
-    color: color.black_544B45,
+    color: color.placeholderTxt_24282C,
     flex: 1,
   },
 
   totalValue: {
     fontSize: 14,
-    fontWeight: '400',
-    color: color.placeholderTxt_24282C,
+    fontWeight: '600',
+    color: color.brown_5A2F0E,
     minWidth: 40,
     textAlign: 'left',
   },
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   paymentOptionsPOS: {
-    top: 40,
+    top: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: 35,
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    top: 30,
+    top: 20,
     marginBottom: 45
   },
   getTicketsButtonText: {

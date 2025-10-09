@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -243,13 +243,13 @@ const OtpLoginScreen = ({ route }) => {
     }
   };
 
-  const handleCloseSuccessPopup = () => {
+  const handleCloseSuccessPopup = useCallback(() => {
     setShowSuccessPopup(false);
-  };
+  }, []);
 
-  const handleCloseErrorPopup = () => {
+  const handleCloseErrorPopup = useCallback(() => {
     setShowErrorPopup(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (otpResendTime > 0) {
@@ -341,12 +341,18 @@ const OtpLoginScreen = ({ route }) => {
               visible={showSuccessPopup}
               onClose={handleCloseSuccessPopup}
               title="OTP Sent Successfully"
-              subtitle="We've sent a one-time password to your email"
+              subtitle={
+                selectedOtpSource === 'WHATSAPP' 
+                  ? "We've sent a one-time password to your WhatsApp"
+                  : selectedOtpSource === 'SMS'
+                  ? "We've sent a one-time password via SMS"
+                  : "We've sent a one-time password to your email"
+              }
             />
             <OtpErrorPopup
               visible={showErrorPopup}
               onClose={handleCloseErrorPopup}
-              title="Failed to Send OTP"
+              title="Sending Failed"
               subtitle="We couldn't send the OTP. Please try again shortly."
               showResendButton={true}
               onResend={handleResendOtp}
@@ -457,22 +463,15 @@ const OtpLoginScreen = ({ route }) => {
                   </Typography>
                 </View>
               ) : (
-                <>
-                  <TouchableOpacity style={[styles.changeDetailsButton, isNarrowScreen && { width: '45%' }]} onPress={handleResendOtp}>
-                    <Text
-                      style={[styles.changeDetailsButtonText, isNarrowScreen && { fontSize: 12 }]}
-                    >
-                      Resend
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.changeDetailsButton, isNarrowScreen && { width: '45%' }]} onPress={gotologinscreen}>
-                    <Text
-                      style={[styles.changeDetailsButtonText, isNarrowScreen && { fontSize: 12 }]}
-                    >
-                      Change Details
-                    </Text>
-                  </TouchableOpacity>
-                </>
+                <TouchableOpacity style={styles.resendOtpButton} onPress={handleResendOtp}>
+                  <Typography
+                    weight="400"
+                    size={14}
+                    color={color.btnBrown_AE6F28}
+                  >
+                    Resend Otp
+                  </Typography>
+                </TouchableOpacity>
               )}
             </View>
 
@@ -589,8 +588,8 @@ const styles = StyleSheet.create({
   },
   rowContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
+    justifyContent: 'center',
+    width: '100%',
     marginBottom: 10,
     alignItems: 'center',
   },
@@ -647,8 +646,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  
   },
   modalContainer: {
+    marginBottom: 180,
     backgroundColor: "#131314",
     borderRadius: 15,
     padding: 20,
@@ -697,6 +698,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flexShrink: 1,
     numberOfLines: 1,
+  },
+  resendOtpButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
   },
 });
 

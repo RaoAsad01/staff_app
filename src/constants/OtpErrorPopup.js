@@ -7,7 +7,7 @@ import Typography from '../components/Typography';
 const OtpErrorPopup = ({ 
     visible, 
     onClose, 
-    title = "Failed to Send OTP", 
+    title = "Sending Failed", 
     subtitle = "We couldn't send the OTP. Please try shortly.",
     showResendButton = false,
     onResend 
@@ -51,7 +51,7 @@ const OtpErrorPopup = ({
                             <Typography
                                 weight="600"
                                 size={16}
-                                color={color.grey_DEDCDC}
+                                color={color.btnBrown_AE6F28}
                             >
                                 Resend
                             </Typography>
@@ -73,12 +73,13 @@ const styles = StyleSheet.create({
     },
     conatiner: {
         width: '100%',
-        paddingHorizontal: 16,
+        paddingHorizontal: 30,
+        marginBottom: 150,
     },
     modalContainer: {
         backgroundColor: '#131314',
         borderRadius: 20,
-        padding: 30,
+        padding: 10,
         alignItems: 'center',
         width: '100%',
     },
@@ -112,15 +113,11 @@ const styles = StyleSheet.create({
     },
     resendButton: {
         backgroundColor: '#131314',
-        borderRadius: 10,
         paddingVertical: 12,
         paddingHorizontal: 24,
-        marginTop: 20,
         alignSelf: 'center',
         width: '100%',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: color.borderBrown_CEBCA0,
     },
 });
 

@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(26, 26, 27, 0.9)',
         borderRadius: 10,
         paddingHorizontal: 15,
-        paddingVertical: 12,
         borderWidth: 1,
         borderColor: color.borderBrown_CEBCA0,
     },
@@ -240,6 +239,7 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: color.borderBrown_CEBCA0,
         marginLeft: 20,
+        marginRight: 20,
     },
     noResults: {
         flex: 1,

@@ -181,9 +181,9 @@ const styles = StyleSheet.create({
         marginVertical: 8,
     },
     title: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: "500",
-        color: color.black_2F251D,
+        color: color.placeholderTxt_24282C,
         marginBottom: 8,
         textAlign: 'left',
     },
