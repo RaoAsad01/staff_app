@@ -4,12 +4,30 @@ import { Svg, Circle } from "react-native-svg";
 import { color } from "../../../color/color";
 import { formatValue } from "../../../constants/formatValue";
 
-const BoxOfficeSales = ({ stats }) => {
+const BoxOfficeSales = ({ stats, onDebugData }) => {
     // Extract box office sales data with default values
     const boxOfficeData = stats?.data?.box_office_sales || {};
     const paymentWise = boxOfficeData?.payment_wise || {};
     const total = paymentWise?.total || 0;
     const byMethods = paymentWise?.by_methods || {};
+
+    // Debug logging
+    console.log('BoxOfficeSales - Received stats:', JSON.stringify(stats, null, 2));
+    console.log('BoxOfficeSales - BoxOffice Data:', JSON.stringify(boxOfficeData, null, 2));
+    console.log('BoxOfficeSales - Payment Wise:', JSON.stringify(paymentWise, null, 2));
+    console.log('BoxOfficeSales - By Methods:', JSON.stringify(byMethods, null, 2));
+    console.log('BoxOfficeSales - Total:', total);
+
+    // Call debug callback if provided
+    if (onDebugData) {
+        onDebugData({
+            stats,
+            boxOfficeData,
+            paymentWise,
+            total,
+            byMethods
+        });
+    }
 
     // Map payment methods to colors
     const paymentMethodColors = {

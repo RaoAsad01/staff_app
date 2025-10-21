@@ -16,6 +16,7 @@ import { fontSize, fontWeight } from '../constants/typography';
 import MiddleSection from '../components/MiddleSection';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { defaultCountryCode } from '../constants/countryCodes';
+import { getAutoDetectedCountry } from '../utils/countryDetection';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -27,6 +28,7 @@ const LoginScreen = () => {
   const [inputType, setInputType] = useState('phone'); // Start with 'phone' as default
   const [fadeAnim] = useState(new Animated.Value(1));
   const [slideAnim] = useState(new Animated.Value(0));
+  const [isDetectingCountry, setIsDetectingCountry] = useState(false);
 
   const { height: screenHeight } = Dimensions.get('window');
   const isSmallScreen = screenHeight < 700;
@@ -45,6 +47,28 @@ const LoginScreen = () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
+  }, []);
+
+  // Auto-detect country code when component mounts
+  useEffect(() => {
+    const autoDetectCountry = async () => {
+      // Only auto-detect if we're still using the default country
+      if (selectedCountry.code === defaultCountryCode.code) {
+        setIsDetectingCountry(true);
+        try {
+          const detectedCountry = await getAutoDetectedCountry();
+          if (detectedCountry && detectedCountry.code !== defaultCountryCode.code) {
+            setSelectedCountry(detectedCountry);
+          }
+        } catch (error) {
+          console.error('Failed to auto-detect country:', error);
+        } finally {
+          setIsDetectingCountry(false);
+        }
+      }
+    };
+
+    autoDetectCountry();
   }, []);
 
   const validationSchema = Yup.object().shape({
@@ -163,17 +187,20 @@ const LoginScreen = () => {
                         <TouchableOpacity
                           style={styles.countryCodeButton}
                           onPress={() => setShowCountryPicker(true)}
+                          disabled={isDetectingCountry}
                         >
                           <Text style={styles.flagText}>{selectedCountry.flag}</Text>
                           <Typography
                             weight="600"
                             size={14}
-                            color={color.grey_DEDCDC}
+                            color={isDetectingCountry ? color.grey_87807C : color.grey_DEDCDC}
                             style={styles.countryCodeText}
                           >
-                            {selectedCountry.dialCode}
+                            {isDetectingCountry ? '...' : selectedCountry.dialCode}
                           </Typography>
-                          <SvgIcons.downArrow width={12} height={12} fill={color.grey_87807C} />
+                          {!isDetectingCountry && (
+                            <SvgIcons.downArrow width={12} height={12} fill={color.grey_87807C} />
+                          )}
                         </TouchableOpacity>
                       )}
 

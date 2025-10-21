@@ -28,7 +28,7 @@ const AdminOverallStatistics = ({ stats,
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
-                <Text style={styles.heading}>Overall Statistics</Text>
+                <Text style={styles.heading}>Tickets Statistics</Text>
                 <View style={styles.row}>
 
                     <View style={styles.statContainer}>

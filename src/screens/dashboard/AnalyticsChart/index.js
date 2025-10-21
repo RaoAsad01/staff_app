@@ -93,29 +93,23 @@ const AnalyticsChart = ({ title, data, dataType }) => {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ height: CHART_HEIGHT + 24, alignItems: "flex-end" }}
+                        contentContainerStyle={{ 
+                            height: CHART_HEIGHT + 24, 
+                            alignItems: "flex-end",
+                            paddingHorizontal: 60 // Add padding to prevent tooltip cutoff on edges
+                        }}
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: CHART_HEIGHT }}>
                             {data.map((item, index) => {
-                                // Don't render bar if value is 0
+                                // Only render bar and time if value is greater than 0
                                 if (item.value === 0) {
-                                    return (
-                                        <View key={index} style={{ alignItems: 'center', width: BAR_SPACING }}>
-                                            <Text
-                                                style={[
-                                                    styles.timeLabel,
-                                                    { marginTop: 10 },
-                                                ]}
-                                            >
-                                                {item.time}
-                                            </Text>
-                                        </View>
-                                    );
+                                    return null; // Don't render anything for zero values
                                 }
 
                                 const calculatedHeight = (item.value / yAxisMax) * CHART_HEIGHT;
                                 const barHeight = Math.max(calculatedHeight, 8); // Minimum bar height of 8px
                                 const isSelected = selectedBar === index;
+                                
                                 return (
                                     <View key={index} style={{ alignItems: 'center', width: BAR_SPACING }}>
                                         <TouchableOpacity
@@ -251,9 +245,9 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: "100%",
         left: "50%",
-        transform: [{ translateX: -0.5 * BAR_WIDTH }],
+        transform: [{ translateX: -70 }], // Center the tooltip properly (half of tooltip width)
         zIndex: 10,
-        width: BAR_WIDTH,
+        width: 140, // Match tooltip width
         alignItems: 'center',
         marginBottom: 10,
     },

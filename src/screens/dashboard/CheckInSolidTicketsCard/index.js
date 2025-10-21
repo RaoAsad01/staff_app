@@ -106,9 +106,9 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
     // For other titles (Sold Tickets, Check-Ins), analytics are handled by the analytics button
   };
 
-  // Get sub-items for ADMIN users from sold_tickets.by_category
+  // Get sub-items for ADMIN and STAFF users from sold_tickets.by_category
   const getSubItems = (item, itemIndex) => {
-    if (userRole !== 'ADMIN' || !stats?.data?.sold_tickets?.by_category) {
+    if ((userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'ORGANIZER') || !stats?.data?.sold_tickets?.by_category) {
       return null;
     }
 
@@ -150,7 +150,11 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
 
           return (
             <View key={index}>
-              <View style={styles.row}>
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => hasSubItems && toggleExpanded(index)}
+                activeOpacity={hasSubItems ? 0.7 : 1}
+              >
                 <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
                 <View style={styles.textContainer}>
                   <Text style={styles.label}>{item.label}</Text>
@@ -160,15 +164,15 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                     <Text style={styles.valueTotal}>{item.total}</Text>
                   </Text>
                 </View>
-                {hasSubItems && title !== 'Available' && title !== 'Check-Ins' && (
-                  <TouchableOpacity
-                    style={styles.dropdownButton}
-                    onPress={() => toggleExpanded(index)}
-                  >
+                {hasSubItems && (
+                  <View style={styles.dropdownButton}>
                     <View style={styles.iconsContainer}>
-                      {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
+                      {(userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (
                         <TouchableOpacity
-                          onPress={() => onAnalyticsPress && onAnalyticsPress(item.label, title)}
+                          onPress={(e) => {
+                            e.stopPropagation(); // Prevent row press
+                            onAnalyticsPress && onAnalyticsPress(item.label, title);
+                          }}
                           style={styles.analyticsButton}
                         >
                           {activeAnalytics === `${title}-${item.label}` ? (
@@ -184,20 +188,27 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                         <SvgIcons.downArrow width={10} height={7} fill={color.black_544B45} />
                       )}
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 )}
 
-              </View>
+              </TouchableOpacity>
 
-              {/* Sub-items for ADMIN users - Not shown for Check-Ins */}
-              {hasSubItems && isExpanded && title !== 'Check-Ins' && (
+              {/* Sub-items for ADMIN users */}
+              {hasSubItems && isExpanded && (
                 <View style={styles.subItemsContainer}>
                   {subItems.map((subItem, subIndex) => (
                     <TouchableOpacity
                       key={subIndex}
                       style={styles.subItemRow}
-                      onPress={() => title === 'Available' ? handleSubItemPress(subItem.label, item.label, subItem.ticketUuid) : null}
-                      activeOpacity={title === 'Available' ? 0.7 : 1}
+                      onPress={() => {
+                        if (title === 'Available') {
+                          handleSubItemPress(subItem.label, item.label, subItem.ticketUuid);
+                        } else if ((userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (title === 'Sold Tickets' || title === 'Check-Ins') && onAnalyticsPress) {
+                          // Trigger analytics when subitem is clicked
+                          onAnalyticsPress(item.label, title, subItem.ticketUuid, subItem.label);
+                        }
+                      }}
+                      activeOpacity={(title === 'Available' || ((userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (title === 'Sold Tickets' || title === 'Check-Ins'))) ? 0.7 : 1}
                     >
                       <CircularProgress
                         value={subItem.checkedIn}
@@ -212,9 +223,12 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                           <Text style={styles.valueTotal}>{subItem.total}</Text>
                         </Text>
                       </View>
-                      {userRole === 'ADMIN' && (title === 'Sold Tickets' || title === 'Check-Ins') && (
+                      {(userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (
                         <TouchableOpacity
-                          onPress={() => onAnalyticsPress && onAnalyticsPress(item.label, title, subItem.ticketUuid, subItem.label)}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            onAnalyticsPress && onAnalyticsPress(item.label, title, subItem.ticketUuid, subItem.label);
+                          }}
                           style={styles.analyticsButtonSubItem}
                         >
                           {activeAnalytics === `${title}-${subItem.ticketUuid || subItem.label}` ? (
@@ -279,7 +293,8 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   textContainer: {
-    marginLeft: 20,
+    marginBottom: 2,
+    marginLeft: 16,
     flex: 1,
   },
   label: {
@@ -358,8 +373,8 @@ const styles = StyleSheet.create({
   },
   valueTotal: {
     fontSize: 14,
-    fontWeight: "500",
-    color: color.placeholderTxt_24282C,
+    fontWeight: "400",
+    color: color.black_544B45,
   },
 });
 

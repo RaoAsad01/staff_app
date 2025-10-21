@@ -76,11 +76,13 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
             styles.row,
             isSubItem && styles.subRow
           ]}
-          activeOpacity={hasSubItems ? 0.7 : 1}
+          activeOpacity={hasSubItems ? 0.7 : (isSubItem ? 0.7 : 1)}
           onPress={() => {
             if (isSubItem) {
-              // For subitems, we don't need to do anything on row press since we have analytics button
-              return;
+              // Trigger analytics when subitem is clicked
+              if (onScanAnalyticsPress) {
+                onScanAnalyticsPress(item.label, parentCategory, item.ticketUuid);
+              }
             } else if (hasSubItems) {
               toggle(item.label);
             }
@@ -106,7 +108,10 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
           )}
           {isSubItem && onScanAnalyticsPress && (
             <TouchableOpacity
-              onPress={() => onScanAnalyticsPress(item.label, parentCategory, item.ticketUuid)}
+              onPress={(e) => {
+                e.stopPropagation();
+                onScanAnalyticsPress(item.label, parentCategory, item.ticketUuid);
+              }}
               style={styles.analyticsButton}
             >
               {activeScanAnalytics === `Scan-${parentCategory}-${item.label}` ? (
@@ -247,8 +252,8 @@ const styles = StyleSheet.create({
   },
   valueTotal: {
     fontSize: 14,
-    fontWeight: "500",
-    color: color.placeholderTxt_24282C,
+    fontWeight: "400",
+    color: color.black_544B45,
   },
 });
 

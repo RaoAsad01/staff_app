@@ -29,21 +29,18 @@ function LoadingScreen() {
 }
 
 function Navigation({ route }) {
-  const [initialRoute, setInitialRoute] = useState(null);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuthToken = async () => {
       try {
         const token = await SecureStore.getItemAsync('accessToken');
-        if (token) {
-          setInitialRoute('Login');
-        } else {
-          setInitialRoute('Login');
-        }
+        setHasCheckedAuth(true);
+        // We'll handle navigation from the SplashScreen component
       } catch (error) {
         console.error('Error checking auth token:', error);
-        setInitialRoute('Login');
+        setHasCheckedAuth(true);
       } finally {
         setIsLoading(false);
       }
@@ -52,7 +49,7 @@ function Navigation({ route }) {
     checkAuthToken();
   }, []);
 
-  if (isLoading || initialRoute === null) {
+  if (isLoading || !hasCheckedAuth) {
     return <LoadingScreen />;
   }
 

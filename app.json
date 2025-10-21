@@ -7,28 +7,35 @@
     "orientation": "portrait",
     "scheme": "myapp",
     "splash": {
-  "backgroundColor": "#000000"
-},
+      "backgroundColor": "#000000",
+      "image": "./assets/images/logo_small.png"
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.asadahmad.staffapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses location to automatically detect your country code for phone number input.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses location to automatically detect your country code for phone number input."
+      },
       "newArchEnabled": true
     },
-   "android": {
-  "package": "com.asad_ahmad.staffapp",
-  "permissions": [
-    "CAMERA",
-    "RECORD_AUDIO"
-  ],
-  "minSdkVersion": 23,
-  "compileSdkVersion": 35,
-  "targetSdkVersion": 35,
-  "enableProguardInReleaseBuilds": true,
-  "enableShrinkResources": true,
-  "newArchEnabled": true
-},
+    "android": {
+      "package": "com.asad_ahmad.staffapp",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "minSdkVersion": 23,
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResources": true,
+      "newArchEnabled": true
+    },
     "web": {
       "bundler": "metro",
       "output": "static"

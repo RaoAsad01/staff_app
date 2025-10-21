@@ -10,6 +10,8 @@ import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
 import { fetchUpdatedScanCount, updateEventInfoScanCount } from '../utils/scanCountUpdater';
+import { eventService } from '../api/apiService';
+import * as SecureStore from 'expo-secure-store';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +19,7 @@ function MyTabs() {
   const route = useRoute();
   const initialEventInfo = route?.params?.eventInfo;
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
+  const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
 
   // Update eventInfo when route params change
   useEffect(() => {
@@ -24,6 +27,102 @@ function MyTabs() {
       setEventInformation(route.params.eventInfo);
     }
   }, [route?.params?.eventInfo]);
+
+  // Fetch event info if not available (app restart scenario)
+  useEffect(() => {
+    const fetchEventInfoIfNeeded = async () => {
+      if (!eventInformation?.eventUuid) {
+        try {
+          setIsLoadingEventInfo(true);
+          console.log('No eventInfo found, fetching from backend...');
+          
+          // Try to get the last selected event from secure storage
+          const lastEventUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
+          console.log('Retrieved stored UUID:', lastEventUuid);
+          
+          if (lastEventUuid) {
+            console.log('Found last event UUID in storage:', lastEventUuid);
+            const eventInfoData = await eventService.fetchEventInfo(lastEventUuid);
+            
+            const transformedEventInfo = {
+              staff_name: eventInfoData?.data?.staff_name,
+              event_title: eventInfoData?.data?.event_title,
+              cityName: eventInfoData?.data?.location?.city,
+              date: eventInfoData?.data?.start_date,
+              time: eventInfoData?.data?.start_time,
+              userId: eventInfoData?.data?.staff_id,
+              scanCount: eventInfoData?.data?.scan_count,
+              event_uuid: eventInfoData?.data?.location?.uuid,
+              eventUuid: lastEventUuid
+            };
+            
+            console.log('Fetched event info from backend:', transformedEventInfo);
+            setEventInformation(transformedEventInfo);
+          } else {
+            console.log('No last event UUID found in storage, fetching user events...');
+            // Fallback: fetch user events and use the first available event
+            try {
+              const staffEventsData = await eventService.fetchStaffEvents();
+              const eventsList = staffEventsData?.data;
+              
+              if (eventsList && eventsList.length > 0) {
+                let selectedEvent = null;
+                
+                // Handle different data structures for ADMIN vs Organizer roles
+                if (eventsList[0].events && Array.isArray(eventsList[0].events)) {
+                  // For organizer role: eventsList[0] contains {events: [...], staff: "..."}
+                  if (eventsList[0].events.length > 0) {
+                    selectedEvent = eventsList[0].events[0];
+                  }
+                } else {
+                  // For admin role or direct event structure
+                  selectedEvent = eventsList[0];
+                }
+                
+                if (selectedEvent) {
+                  const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
+                  console.log('Using first available event:', eventUuid);
+                  
+                  // Store this event UUID for future use
+                  await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
+                  
+                  // Fetch event info
+                  const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+                  
+                  const transformedEventInfo = {
+                    staff_name: eventInfoData?.data?.staff_name,
+                    event_title: eventInfoData?.data?.event_title,
+                    cityName: eventInfoData?.data?.location?.city,
+                    date: eventInfoData?.data?.start_date,
+                    time: eventInfoData?.data?.start_time,
+                    userId: eventInfoData?.data?.staff_id,
+                    scanCount: eventInfoData?.data?.scan_count,
+                    event_uuid: eventInfoData?.data?.location?.uuid,
+                    eventUuid: eventUuid
+                  };
+                  
+                  console.log('Fetched fallback event info from backend:', transformedEventInfo);
+                  setEventInformation(transformedEventInfo);
+                } else {
+                  console.log('No events available for user');
+                }
+              } else {
+                console.log('No events found for user');
+              }
+            } catch (fallbackError) {
+              console.error('Error fetching fallback events:', fallbackError);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching event info on app restart:', error);
+        } finally {
+          setIsLoadingEventInfo(false);
+        }
+      }
+    };
+
+    fetchEventInfoIfNeeded();
+  }, []);
 
   // Function to update scan count
   const updateScanCount = async () => {
@@ -41,7 +140,7 @@ function MyTabs() {
   };
 
   // Function to handle event change from dashboard
-  const handleEventChange = (newEvent) => {
+  const handleEventChange = async (newEvent) => {
     console.log('Event changed to:', newEvent);
     // Transform the event data to match the expected format
     const transformedEvent = {
@@ -52,6 +151,15 @@ function MyTabs() {
       date: eventInformation?.date || '28-12-2024',
       time: eventInformation?.time || '7:00 PM',
     };
+    
+    // Store the new event UUID for app restart scenarios
+    try {
+      await SecureStore.setItemAsync('lastSelectedEventUuid', newEvent.uuid);
+      console.log('Stored new selected event UUID:', newEvent.uuid);
+    } catch (error) {
+      console.error('Error storing event UUID:', error);
+    }
+    
     setEventInformation(transformedEvent);
     
     // The dashboard will automatically refresh its data when eventInformation changes

@@ -151,8 +151,8 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity onPress={() => handleTicketPress(item)} style={styles.ticketContainer}>
             <View>
-                <Text style={styles.label}>Email</Text>
-                <Text style={styles.value}>{item.email}</Text>
+                <Text style={styles.label}>Name</Text>
+                <Text style={styles.value}>{item.name}</Text>
                 <Text style={styles.label}>Ticket ID</Text>
                 <Text style={styles.value}>{item.id}</Text>
                 {/* <Text style={styles.ticketType}>{item.type}</Text> */}
@@ -284,27 +284,29 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={filteredTickets}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                ListEmptyComponent={() =>
-                    !isLoading ? (
-                        <NoResults message={getNoResultsMessage()} />
-                    ) : (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
-                        </View>
-                    )
-                }
-                ListFooterComponent={() =>
-                    isLoading && filteredTickets.length > 0 ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
-                        </View>
-                    ) : null
-                }
-            />
+            <View style={styles.flatListContainer}>
+                <FlatList
+                    data={filteredTickets}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id}
+                    ListEmptyComponent={() =>
+                        !isLoading ? (
+                            <NoResults message={getNoResultsMessage()} />
+                        ) : (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+                            </View>
+                        )
+                    }
+                    ListFooterComponent={() =>
+                        isLoading && filteredTickets.length > 0 ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+                            </View>
+                        ) : null
+                    }
+                />
+            </View>
         </SafeAreaView>
     );
 };
@@ -531,6 +533,9 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
         alignItems: 'center',
     },
+    flatListContainer: {
+        top: 6
+    }
 });
 
 export default TicketsTab;

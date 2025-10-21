@@ -37,6 +37,30 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Response interceptor for handling auth errors
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    // If we get a 401 Unauthorized response, the token is invalid/expired
+    if (error.response?.status === 401) {
+      try {
+        // Clear the invalid token
+        await SecureStore.deleteItemAsync('accessToken');
+        console.log('Token expired or invalid, cleared from storage');
+        
+        // You could also dispatch a logout action here if using Redux
+        // or trigger a navigation to login screen
+      } catch (clearError) {
+        console.error('Error clearing token:', clearError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 
 // API endpoints
 const endpoints = {

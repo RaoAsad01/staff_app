@@ -883,7 +883,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>Pay with P.O.S</Text></View>
+              <Text style={styles.modalTitle}>POS Payment</Text></View>
             <TextInput
               style={[
                 styles.inputTransaction,

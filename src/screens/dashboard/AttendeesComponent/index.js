@@ -289,8 +289,16 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       )}
 
       <Modal visible={isModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setModalVisible(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalContainer} 
+            activeOpacity={1} 
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filters</Text>
               <TouchableOpacity onPress={clearFilter}>
@@ -420,13 +428,20 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
             </View>
 
             <TouchableOpacity
-              style={styles.applyButton}
+              style={[
+                styles.applyButton,
+                !selectedFilter && styles.applyButtonDisabled
+              ]}
               onPress={() => setModalVisible(false)}
+              disabled={!selectedFilter}
             >
-              <Text style={styles.applyButtonText}>Apply</Text>
+              <Text style={[
+                styles.applyButtonText,
+                !selectedFilter && styles.applyButtonTextDisabled
+              ]}>Apply</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </ScrollView>
   );
@@ -513,6 +528,7 @@ const styles = StyleSheet.create({
     width: 46,
     marginBottom: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: 'white',
@@ -653,6 +669,13 @@ const styles = StyleSheet.create({
     color: color.btnTxt_FFF6DF,
     fontSize: 16,
     fontWeight: '700'
+  },
+  applyButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+    borderColor: '#E0E0E0',
+  },
+  applyButtonTextDisabled: {
+    color: '#9E9E9E',
   },
   lineView: {
     borderColor: '#F1F1F1',

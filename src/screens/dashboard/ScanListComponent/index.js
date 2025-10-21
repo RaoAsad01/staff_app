@@ -227,7 +227,6 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
 const styles = StyleSheet.create({
     container: {
         marginHorizontal: 16,
-        marginVertical: 8
     },
     searchFilterContainer: {
         flexDirection: 'row',

@@ -146,6 +146,15 @@ const OtpLoginScreen = ({ route }) => {
             try {
               // Fetch event info
               const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+              
+              // Store the selected event UUID for app restart scenarios
+              await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
+              console.log('Stored last selected event UUID:', eventUuid);
+              
+              // Verify the storage worked
+              const storedUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
+              console.log('Verified stored UUID:', storedUuid);
+              
               navigation.reset({
                 index: 0,
                 routes: [{
@@ -371,13 +380,13 @@ const OtpLoginScreen = ({ route }) => {
                 onPress={() => setShowOtpSourceModal(false)}
               >
                 <View style={styles.modalContainer}>
-                  {/* Close Button */}
+                  {/* Close Button 
                   <TouchableOpacity
                     style={styles.closeButton}
                     onPress={() => setShowOtpSourceModal(false)}
                   >
                     <SvgIcons.CrossIconBrownbg width={24} height={24} />
-                  </TouchableOpacity>
+                  </TouchableOpacity>*/}
 
                   <Typography
                     weight="500"

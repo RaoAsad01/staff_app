@@ -71,7 +71,6 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
               <Text style={styles.separator}>   </Text>
               <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.date || '28-12-2024'}</Text>
               <Text style={styles.separator}> </Text>
-              <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">at</Text>
               <Text style={styles.separator}> </Text>
               <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
             </View>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,14 +14,29 @@ import SvgIcons from '../../components/SvgIcons';
 import { StatusBar } from 'expo-status-bar';
 import Typography, { Heading3, Body1, ButtonTextDemiBold, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
+import * as SecureStore from 'expo-secure-store';
 
 const { width, height } = Dimensions.get('window');
 
 const SplashScreenComponent = () => {
   const navigation = useNavigation();
 
-  const handleGetStarted = () => {
-    navigation.replace('Login');
+  const handleGetStarted = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      
+      if (token) {
+        // User has a token, go to main app (Check In screen)
+        navigation.replace('LoggedIn');
+      } else {
+        // No token or logged out, go to login
+        navigation.replace('Login');
+      }
+    } catch (error) {
+      console.error('Error checking auth token:', error);
+      // On error, go to login
+      navigation.replace('Login');
+    }
   };
 
   return (

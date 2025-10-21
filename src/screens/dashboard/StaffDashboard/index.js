@@ -31,6 +31,12 @@ const StaffDashboard = () => {
   const [error, setError] = useState(null);
   const [eventsModalVisible, setEventsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsTitle, setAnalyticsTitle] = useState('');
+  const [activeAnalytics, setActiveAnalytics] = useState(null);
+  const [scanAnalyticsData, setScanAnalyticsData] = useState(null);
+  const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
+  const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -40,6 +46,8 @@ const StaffDashboard = () => {
           // Use the same API but with staff_uuid parameter
           const stats = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, null, null, staffUuid);
           setDashboardStats(stats);
+          console.log('StaffDashboard - Full Backend Response:', JSON.stringify(stats, null, 2));
+          console.log('StaffDashboard - BoxOffice Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
           setError(null);
         }
       } catch (err) {
@@ -75,7 +83,95 @@ const StaffDashboard = () => {
     setEventsModalVisible(false);
   };
 
+  const handleAnalyticsPress = async (ticketType, title, ticketUuid = null, subitemLabel = null) => {
+    if (!currentEventInfo?.eventUuid) return;
 
+    const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
+
+    // If already active, deactivate
+    if (activeAnalytics === analyticsKey) {
+      setActiveAnalytics(null);
+      setAnalyticsData(null);
+      setAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
+      let salesParam = null;
+
+      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, ticketType, ticketUuid, staffUuid);
+
+      if (response?.data?.sold_tickets_analytics?.data) {
+        const analytics = response.data.sold_tickets_analytics.data;
+        const chartData = Object.entries(analytics).map(([hour, value]) => {
+          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+          let formattedTime = hour;
+          if (hour.includes(':00 ')) {
+            const [time, period] = hour.split(' ');
+            const [hours] = time.split(':');
+            formattedTime = `${hours}${period.toLowerCase()}`;
+          }
+
+          return {
+            time: formattedTime,
+            value: value || 0
+          };
+        });
+
+        setAnalyticsData(chartData);
+        setAnalyticsTitle(subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`);
+        setActiveAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics for', ticketType, error);
+    }
+  };
+
+  const handleScanAnalyticsPress = async (scanType, parentCategory, ticketUuid = null) => {
+    if (!currentEventInfo?.eventUuid) return;
+
+    const analyticsKey = `Scan-${parentCategory}-${scanType}`;
+
+    // If already active, deactivate
+    if (activeScanAnalytics === analyticsKey) {
+      setActiveScanAnalytics(null);
+      setScanAnalyticsData(null);
+      setScanAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // For scan analytics, we need to fetch fresh data with staffUuid for specific analytics
+      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, null, null, null, staffUuid);
+      
+      if (response?.data?.scan_analytics?.data) {
+        const scanAnalytics = response.data.scan_analytics.data;
+
+        // Create chart data from scan analytics
+        const chartData = Object.entries(scanAnalytics).map(([hour, value]) => {
+          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+          let formattedTime = hour;
+          if (hour.includes(':00 ')) {
+            const [time, period] = hour.split(' ');
+            const [hours] = time.split(':');
+            formattedTime = `${hours}${period.toLowerCase()}`;
+          }
+
+          return {
+            time: formattedTime,
+            value: value || 0
+          };
+        });
+
+        setScanAnalyticsData(chartData);
+        setScanAnalyticsTitle(`${scanType} Scans`);
+        setActiveScanAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching scan analytics for', scanType, error);
+    }
+  };
 
   const getSoldTicketsData = () => {
     const dataSource = dashboardStats?.data?.sold_tickets;
@@ -101,11 +197,31 @@ const StaffDashboard = () => {
         const sold = categoryData?.sold_tickets || 0;
         const total = categoryData?.total_tickets || 0;
 
+        // Create subitems from the ticket_wise data for staff users
+        const subItems = [];
+        if (categoryData && typeof categoryData === 'object') {
+          Object.keys(categoryData).forEach(ticketName => {
+            if (ticketName !== 'total_tickets' && ticketName !== 'sold_tickets' && categoryData[ticketName]) {
+              const ticketInfo = categoryData[ticketName];
+              if (ticketInfo.total !== undefined && ticketInfo.sold !== undefined) {
+                subItems.push({
+                  label: ticketName,
+                  checkedIn: ticketInfo.sold,
+                  total: ticketInfo.total,
+                  percentage: ticketInfo.total > 0 ? Math.round((ticketInfo.sold / ticketInfo.total) * 100) : 0,
+                  ticketUuid: ticketInfo.ticket_uuid
+                });
+              }
+            }
+          });
+        }
+
         return {
           label: type,
           checkedIn: sold,
           total: total,
-          percentage: total ? Math.round((sold / total) * 100) : 0
+          percentage: total ? Math.round((sold / total) * 100) : 0,
+          subItems: subItems.length > 0 ? subItems : undefined
         };
       });
     }
@@ -135,6 +251,14 @@ const StaffDashboard = () => {
     }));
   }
 
+  function getCheckinAnalyticsChartData(checkinAnalytics) {
+    if (!checkinAnalytics?.data) return [];
+    return Object.entries(checkinAnalytics.data).map(([hour, value]) => ({
+      time: formatHourLabel(hour),
+      value,
+    }));
+  }
+
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
 
@@ -149,7 +273,12 @@ const StaffDashboard = () => {
 
       return (
         <>
-          <BoxOfficeSales stats={dashboardStats} />
+          <BoxOfficeSales 
+            stats={dashboardStats} 
+            onDebugData={(data) => {
+              console.log('BoxOfficeSales - Backend Data:', JSON.stringify(data, null, 2));
+            }}
+          />
           <CheckInSoldTicketsCard
             title="Sold Tickets"
             data={soldTicketsData}
@@ -157,12 +286,22 @@ const StaffDashboard = () => {
             showRemaining={true}
             userRole="STAFF"
             stats={dashboardStats}
+            onAnalyticsPress={handleAnalyticsPress}
+            activeAnalytics={activeAnalytics}
           />
-          <AnalyticsChart
-            title="Sold Tickets"
-            data={soldTicketsChartData}
-            dataType="sold"
-          />
+          {analyticsData && activeAnalytics ? (
+            <AnalyticsChart
+              title={analyticsTitle}
+              data={analyticsData}
+              dataType="sold"
+            />
+          ) : (
+            <AnalyticsChart
+              title="Sold Tickets"
+              data={soldTicketsChartData}
+              dataType="sold"
+            />
+          )}
         </>
       );
     } else if (selectedSaleScanTab === "Scans") {
@@ -170,12 +309,24 @@ const StaffDashboard = () => {
       return (
         <>
           <ScanCategories stats={dashboardStats} />
-          <ScanCategoriesDetails stats={dashboardStats} />
-          <ScanAnalytics
-            title="Scans"
-            data={[]} // You might need to implement scan analytics for staff
-            dataType="checked in"
+          <ScanCategoriesDetails 
+            stats={dashboardStats}
+            onScanAnalyticsPress={handleScanAnalyticsPress}
+            activeScanAnalytics={activeScanAnalytics}
           />
+          {scanAnalyticsData && activeScanAnalytics ? (
+            <ScanAnalytics
+              title={scanAnalyticsTitle}
+              data={scanAnalyticsData}
+              dataType="checked in"
+            />
+          ) : (
+            <ScanAnalytics
+              title="Scans"
+              data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)}
+              dataType="checked in"
+            />
+          )}
           <ScanListComponent eventInfo={currentEventInfo} staffUuid={staffUuid} />
         </>
       );
@@ -204,7 +355,6 @@ const StaffDashboard = () => {
             <Text style={styles.separator}>   </Text>
             <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.date || '28-12-2024'}</Text>
             <Text style={styles.separator}></Text>
-            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">at</Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.time || '7:00 PM'}</Text>
           </View>
@@ -220,6 +370,7 @@ const StaffDashboard = () => {
       </View>
 
       {/* Overall Statistics */}
+      <View style={styles.overallStatisticsContainer}>
       <OverallStatistics
         stats={dashboardStats}
         // onTotalTicketsPress={handleTotalTicketsPress}
@@ -228,6 +379,7 @@ const StaffDashboard = () => {
         // onAvailableTicketsPress={handleAvailableTicketsPress}
         showHeading={false}
       />
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.wrapper}>
@@ -283,7 +435,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: 20,
     flexGrow: 1
   },
   wrapper: {
@@ -388,7 +539,6 @@ const styles = StyleSheet.create({
   },
   saleScanTabContainer: {
     marginHorizontal: 16,
-    marginTop: 12,
     marginBottom: 8
   },
   saleScanTabRow: {
@@ -415,6 +565,9 @@ const styles = StyleSheet.create({
     borderColor: color.white_FFFFFF,
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
+  },
+  overallStatisticsContainer: {
+    marginBottom: 12,
   },
 });
 
