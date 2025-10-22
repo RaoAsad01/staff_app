@@ -204,9 +204,22 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
-      if (response?.data?.sold_tickets_analytics?.data) {
-        const analytics = response.data.sold_tickets_analytics.data;
-        const chartData = Object.entries(analytics).map(([hour, value]) => {
+      // Handle both sold tickets and check-in analytics
+      let analyticsData = null;
+      let analyticsTitle = '';
+
+      if (title === 'Check-Ins' && response?.data?.checkin_analytics?.data) {
+        // Handle Check-Ins analytics
+        analyticsData = response.data.checkin_analytics.data;
+        analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
+      } else if (response?.data?.sold_tickets_analytics?.data) {
+        // Handle Sold Tickets analytics
+        analyticsData = response.data.sold_tickets_analytics.data;
+        analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
+      }
+
+      if (analyticsData) {
+        const chartData = Object.entries(analyticsData).map(([hour, value]) => {
           // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
           let formattedTime = hour;
           if (hour.includes(':00 ')) {
@@ -222,7 +235,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         });
 
         setAnalyticsData(chartData);
-        setAnalyticsTitle(subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`);
+        setAnalyticsTitle(analyticsTitle);
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
@@ -629,14 +642,22 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 onAnalyticsPress={handleAnalyticsPress}
                 activeAnalytics={activeAnalytics}
               />
-              <AnalyticsChart
-                title="Check In"
-                data={getCheckinAnalyticsChartData(
-                  dashboardStats?.data?.checkin_analytics,
-                  highlightHour
-                )}
-                dataType="checked in"
-              />
+              {analyticsData && activeAnalytics ? (
+                <AnalyticsChart
+                  title={analyticsTitle}
+                  data={analyticsData}
+                  dataType="checked in"
+                />
+              ) : (
+                <AnalyticsChart
+                  title="Check In"
+                  data={getCheckinAnalyticsChartData(
+                    dashboardStats?.data?.checkin_analytics,
+                    highlightHour
+                  )}
+                  dataType="checked in"
+                />
+              )}
             </>
           )}
           {selectedTab === "Available" && (
@@ -841,25 +862,29 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                   selectedAdminTab === 'Dashboard' ? (
                     <>
                       {console.log('Rendering AdminOverallStatistics for role:', userRole)}
-                      <AdminOverallStatistics
+                      <View style={styles.overallStatisticsContainer}>
+                        <AdminOverallStatistics
+                          stats={dashboardStats}
+                          onTotalTicketsPress={handleTotalTicketsPress}
+                          onTotalScannedPress={handleTotalScannedPress}
+                          onTotalUnscannedPress={handleTotalUnscannedPress}
+                          onAvailableTicketsPress={handleAvailableTicketsPress}
+                        />
+                      </View>
+                    </>
+                  ) : null
+                ) : (
+                  <>
+                    {console.log('Rendering OverallStatistics for role:', userRole)}
+                    <View style={styles.overallStatisticsContainer}>
+                      <OverallStatistics
                         stats={dashboardStats}
                         onTotalTicketsPress={handleTotalTicketsPress}
                         onTotalScannedPress={handleTotalScannedPress}
                         onTotalUnscannedPress={handleTotalUnscannedPress}
                         onAvailableTicketsPress={handleAvailableTicketsPress}
                       />
-                    </>
-                  ) : null
-                ) : (
-                  <>
-                    {console.log('Rendering OverallStatistics for role:', userRole)}
-                    <OverallStatistics
-                      stats={dashboardStats}
-                      onTotalTicketsPress={handleTotalTicketsPress}
-                      onTotalScannedPress={handleTotalScannedPress}
-                      onTotalUnscannedPress={handleTotalUnscannedPress}
-                      onAvailableTicketsPress={handleAvailableTicketsPress}
-                    />
+                    </View>
                   </>
                 )}
 
@@ -1176,6 +1201,9 @@ const styles = StyleSheet.create({
     color: color.placeholderTxt_24282C,
     fontWeight: '500',
     fontSize: 14,
+  },
+  overallStatisticsContainer: {
+    marginTop: 4,
   },
 });
 

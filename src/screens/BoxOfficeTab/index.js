@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, TextInput, Platform, Dimensions, Modal, ActivityIndicator } from 'react-native';
 // import { boxofficetablist } from '../../constants/boxofficetablist';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [paymentError, setPaymentError] = useState('');
   const [ticketError, setTicketError] = useState('');
   const [showError, setShowError] = useState(false);
-  const formikRef = useRef(null);
 
   const resetData = () => {
     setSelectedTabState('');
@@ -238,11 +237,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setEmailError('');
     setPaymentError('');
     setTicketError('');
-    
-    // Reset Formik form values
-    if (formikRef.current) {
-      formikRef.current.resetForm();
-    }
 
     const category = ticketPricing.find(cat => cat.title === tab);
     console.log('BoxOfficeTab: Found category:', category);
@@ -643,7 +637,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
         {/* <View style={styles.lineView2}></View> */}
         <Formik
-          ref={formikRef}
           initialValues={{ name: '', email: '', purchaseCode: '' }}
           validationSchema={validationSchema}
           context={{ selectedTab: selectedTabState }}
@@ -651,6 +644,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={{ width: '100%' }}>
               {/* <Text style={styles.inputHeading}>Name</Text> */}
+              <View style={styles.whitebg}>
               <TextInput
                 style={[
                   styles.input,
@@ -707,7 +701,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               {emailError && (
                 <Text style={styles.errorText}>{emailError}</Text>
               )}
-
+</View>
               {selectedTabState === 'Members' && (
                 <>
                   <TextInput
@@ -772,6 +766,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           )}
         </Formik>
         <View style={styles.lineView3}></View>
+        <View style={styles.whitebgPayment}>
         <View style={styles.Paylabel}>
           <Text>Pay With</Text>
         </View>
@@ -862,6 +857,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               Mobile Money
             </Text>
           </TouchableOpacity>
+        </View>
         </View>
         {paymentError && (
           <Text style={styles.errorText}>{paymentError}</Text>
@@ -1037,17 +1033,15 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   paymentOptions: {
-    top: 40,
+    paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 12,
     gap: 10
   },
   paymentOptionsPOS: {
-    top: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingBottom: 35,
     gap: 10
   },
   paymentOption: {
@@ -1166,13 +1160,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     top: 15
   },
-  lineView3: {
-    borderColor: '#CEBCA0',
-    width: '100%',
-    borderWidth: 0.5,
-    marginBottom: 10,
-    top: 25
-  },
+  // lineView3: {
+  //   borderColor: '#CEBCA0',
+  //   width: '100%',
+  //   borderWidth: 0.5,
+  //   marginBottom: 10,
+  //   top: 25
+  // },
   input: {
     top: 20,
     width: '100%',
@@ -1210,7 +1204,9 @@ const styles = StyleSheet.create({
     color: color.red_FF0000,
   },
   Paylabel: {
-    top: 30,
+    paddingTop: 10,
+    fontSize: 14,
+    fontWeight: '500',
     color: color.brown_3C200A
   },
   cameraImage: {
@@ -1282,7 +1278,21 @@ const styles = StyleSheet.create({
     color: color.red_EF3E32,
     fontSize: 13,
     fontWeight: '400',
-  }
+  },
+  whitebg: {
+    backgroundColor: color.white_FFFFFF,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 26,
+    marginTop: 18,
+  },
+  whitebgPayment: {
+    backgroundColor: color.white_FFFFFF,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    marginTop: 18,
+  },
 });
 
 export default BoxOfficeTab;

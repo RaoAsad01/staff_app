@@ -98,12 +98,29 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
             </Text>
           </View>
           {hasSubItems && (
-            <View style={styles.chevronContainer}>
-              {isExpanded ? (
-                <SvgIcons.upArrow width={10} height={7} fill={color.black_544B45} />
-              ) : (
-                <SvgIcons.downArrow width={10} height={7} fill={color.black_544B45} />
+            <View style={styles.iconsContainer}>
+              {onScanAnalyticsPress && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onScanAnalyticsPress(item.label, item.label, null);
+                  }}
+                  style={styles.analyticsButton}
+                >
+                  {activeScanAnalytics === `Scan-${item.label}-${item.label}` ? (
+                    <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
+                  ) : (
+                    <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />
+                  )}
+                </TouchableOpacity>
               )}
+              <View style={styles.chevronContainer}>
+                {isExpanded ? (
+                  <SvgIcons.upArrow width={10} height={7} fill={color.black_544B45} />
+                ) : (
+                  <SvgIcons.downArrow width={10} height={7} fill={color.black_544B45} />
+                )}
+              </View>
             </View>
           )}
           {isSubItem && onScanAnalyticsPress && (
@@ -112,7 +129,7 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
                 e.stopPropagation();
                 onScanAnalyticsPress(item.label, parentCategory, item.ticketUuid);
               }}
-              style={styles.analyticsButton}
+              style={styles.analyticsButtonSubItem}
             >
               {activeScanAnalytics === `Scan-${parentCategory}-${item.label}` ? (
                 <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
@@ -174,9 +191,25 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
 
   const listData = transformData();
 
+  // Calculate total scanned tickets
+  const totalScanned = listData.reduce((sum, item) => sum + item.scanned, 0);
+  const totalTickets = listData.reduce((sum, item) => sum + item.total, 0);
+
   return (
     <View style={styles.card}>
-      {/* <Text style={styles.title}>Scan Categories Details</Text> */}
+      {/* Total Scanned Tickets Row */}
+      <TouchableOpacity style={styles.totalRow}>
+        <CircularProgress value={totalScanned} total={totalTickets} percentage={totalTickets > 0 ? Math.round((totalScanned / totalTickets) * 100) : 0} />
+        <View style={styles.textContainer}>
+          <Text style={styles.totalLabel}>Total Scanned Tickets</Text>
+          <Text style={styles.value}>
+            <Text style={styles.valueResult}>{totalScanned}</Text>
+            <Text> / </Text>
+            <Text style={styles.valueTotal}>{totalTickets}</Text>
+          </Text>
+        </View>
+      </TouchableOpacity>
+      
       {listData.map((item, idx) => renderItem(item, idx))}
     </View>
   );
@@ -229,6 +262,25 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: color.brown_3C200A,
   },
+  totalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8,
+    paddingVertical: 8,
+    padding: 15,
+    borderBottomColor: '#F0F0F0',
+  },
+  totalLabel: {
+    fontSize: 15,
+    color: color.black_544B45,
+    fontWeight: "500",
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    padding: 4,
+  },
   chevronContainer: {
     padding: 8,
     marginRight: 5,
@@ -239,8 +291,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7E4B660',
   },
   analyticsButton: {
-    padding: 8,
+    padding: 4,
     marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  analyticsButtonSubItem: {
+    padding: 4,
+    marginRight: 38,
     justifyContent: 'center',
     alignItems: 'center',
   },

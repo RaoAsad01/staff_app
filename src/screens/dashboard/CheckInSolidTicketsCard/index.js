@@ -106,13 +106,28 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
     // For other titles (Sold Tickets, Check-Ins), analytics are handled by the analytics button
   };
 
-  // Get sub-items for ADMIN and STAFF users from sold_tickets.by_category
+  // Get sub-items for ADMIN and STAFF users from the appropriate data source
   const getSubItems = (item, itemIndex) => {
-    if ((userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'ORGANIZER') || !stats?.data?.sold_tickets?.by_category) {
+    if (userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'ORGANIZER') {
       return null;
     }
 
-    const byCategory = stats.data.sold_tickets.by_category;
+    let byCategory = null;
+    let dataSource = null;
+
+    // Determine the correct data source based on title
+    if (title === 'Check-Ins' && stats?.data?.check_ins?.by_category) {
+      byCategory = stats.data.check_ins.by_category;
+      dataSource = 'check_ins';
+    } else if (stats?.data?.sold_tickets?.by_category) {
+      byCategory = stats.data.sold_tickets.by_category;
+      dataSource = 'sold_tickets';
+    }
+
+    if (!byCategory) {
+      return null;
+    }
+
     const categoryData = byCategory[item.label];
 
     if (!categoryData || Object.keys(categoryData).length === 0) {
@@ -122,14 +137,27 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
     // Extract sub-items (like "Standard" from VIP Ticket category)
     const subItems = [];
     Object.keys(categoryData).forEach(key => {
-      if (key !== 'total_tickets' && key !== 'sold_tickets' && categoryData[key]) {
+      if (key !== 'total_tickets' && key !== 'sold_tickets' && key !== 'scanned_tickets' && categoryData[key]) {
         const subData = categoryData[key];
-        if (subData.total !== undefined && subData.sold !== undefined) {
+        
+        // Use the correct field based on data source
+        let checkedInValue = 0;
+        let totalValue = 0;
+        
+        if (dataSource === 'check_ins') {
+          checkedInValue = subData.scanned || 0;
+          totalValue = subData.total || 0;
+        } else if (dataSource === 'sold_tickets') {
+          checkedInValue = subData.sold || 0;
+          totalValue = subData.total || 0;
+        }
+
+        if (totalValue !== undefined && checkedInValue !== undefined) {
           subItems.push({
             label: key,
-            checkedIn: subData.sold,
-            total: subData.total,
-            percentage: subData.total > 0 ? Math.round((subData.sold / subData.total) * 100) : 0,
+            checkedIn: checkedInValue,
+            total: totalValue,
+            percentage: totalValue > 0 ? Math.round((checkedInValue / totalValue) * 100) : 0,
             ticketUuid: subData.ticket_uuid
           });
         }

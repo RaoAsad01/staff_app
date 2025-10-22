@@ -105,9 +105,22 @@ const StaffDashboard = () => {
 
       const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, ticketType, ticketUuid, staffUuid);
 
-      if (response?.data?.sold_tickets_analytics?.data) {
-        const analytics = response.data.sold_tickets_analytics.data;
-        const chartData = Object.entries(analytics).map(([hour, value]) => {
+      // Handle both sold tickets and check-in analytics
+      let analyticsData = null;
+      let analyticsTitle = '';
+
+      if (title === 'Check-Ins' && response?.data?.checkin_analytics?.data) {
+        // Handle Check-Ins analytics
+        analyticsData = response.data.checkin_analytics.data;
+        analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
+      } else if (response?.data?.sold_tickets_analytics?.data) {
+        // Handle Sold Tickets analytics
+        analyticsData = response.data.sold_tickets_analytics.data;
+        analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
+      }
+
+      if (analyticsData) {
+        const chartData = Object.entries(analyticsData).map(([hour, value]) => {
           // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
           let formattedTime = hour;
           if (hour.includes(':00 ')) {
@@ -123,7 +136,7 @@ const StaffDashboard = () => {
         });
 
         setAnalyticsData(chartData);
-        setAnalyticsTitle(subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`);
+        setAnalyticsTitle(analyticsTitle);
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
@@ -570,6 +583,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.white_FFFFFF,
   },
   overallStatisticsContainer: {
+    marginTop: 16,
     marginBottom: 12,
   },
 });

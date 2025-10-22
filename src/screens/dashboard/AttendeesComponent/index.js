@@ -289,14 +289,14 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       )}
 
       <Modal visible={isModalVisible} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
           onPress={() => setModalVisible(false)}
         >
-          <TouchableOpacity 
-            style={styles.modalContainer} 
-            activeOpacity={1} 
+          <TouchableOpacity
+            style={styles.modalContainer}
+            activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.modalHeader}>
