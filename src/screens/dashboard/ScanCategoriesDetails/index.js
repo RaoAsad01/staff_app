@@ -215,9 +215,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   textContainer: {
-    marginLeft: 20,
+    marginBottom: 2,
+    marginLeft: 16,
     flex: 1,
-    justifyContent: "center",
   },
   label: {
     fontSize: 15,
@@ -225,10 +225,9 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   value: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "500",
     color: color.brown_3C200A,
-    marginTop: 2,
   },
   chevronContainer: {
     padding: 8,

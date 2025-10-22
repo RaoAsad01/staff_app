@@ -328,7 +328,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>Standard Pricing</Text>
+                  <Text style={styles.filterOptionText}>Standard</Text>
                 </View>
               </TouchableOpacity>
 
@@ -351,7 +351,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>Early Bird Pricing</Text>
+                  <Text style={styles.filterOptionText}>Early Bird</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity
@@ -373,7 +373,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
                       <SvgIcons.tickIcon width={15} height={15} />
                     )}
                   </View>
-                  <Text style={styles.filterOptionText}>Members Only Pricing</Text>
+                  <Text style={styles.filterOptionText}>Members Only</Text>
                 </View>
               </TouchableOpacity>
 
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     padding: 8,
-    marginHorizontal: 5,
+    marginHorizontal: 3,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#F7E4B680',
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   searchFilterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 6,
   },
   searchBar: {
     flex: 1,

@@ -48,6 +48,9 @@ const StaffDashboard = () => {
           setDashboardStats(stats);
           console.log('StaffDashboard - Full Backend Response:', JSON.stringify(stats, null, 2));
           console.log('StaffDashboard - BoxOffice Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+          console.log('StaffDashboard - Terminal Statistics:', JSON.stringify(stats?.data?.terminal_statistics, null, 2));
+          console.log('StaffDashboard - Available Tickets Raw:', stats?.data?.terminal_statistics?.available_tickets);
+          console.log('StaffDashboard - Total Scanned Raw:', stats?.data?.terminal_statistics?.total_scanned);
           setError(null);
         }
       } catch (err) {
