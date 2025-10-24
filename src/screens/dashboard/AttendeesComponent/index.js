@@ -56,6 +56,9 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
           lastScannedOn: ticket.last_scanned_on || 'N/A',
           qrCodeUrl: qrCodeUrl,
           currency: ticket.currency || 'N/A',
+          category: ticket.category || 'N/A',
+          ticketClass: ticket.ticket_class || 'N/A',
+          name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
         };
       });
 
@@ -81,7 +84,12 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
         (ticket) =>
           ticket.id.toLowerCase().includes(searchText.toLowerCase()) ||
           ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-          ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase())
+          ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase()) ||
+          ticket.name.toLowerCase().includes(searchText.toLowerCase()) ||
+          (ticket.userfirstname && ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase())) ||
+          (ticket.userlastname && ticket.userlastname.toLowerCase().includes(searchText.toLowerCase())) ||
+          ticket.category.toLowerCase().includes(searchText.toLowerCase()) ||
+          ticket.ticketClass.toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
@@ -118,6 +126,9 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       scan_count: ticket.scanCount || 0,
       note: ticket.note || 'No note added',
       qrCodeUrl: ticket.qrCodeUrl,
+      category: ticket.category || 'N/A',
+      ticketClass: ticket.ticketClass || 'N/A',
+      name: ticket.name || 'N/A',
     };
 
     navigation.navigate('TicketScanned', {
@@ -236,12 +247,12 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
           >
             <View style={styles.cardContent}>
               <View>
-                <Text style={styles.label}>Email</Text>
-                <Text style={styles.value}>{item.ticketHolder}</Text>
-                <Text style={styles.label}>Ticket ID</Text>
-                <Text style={styles.value}>#{item.id}</Text>
-                <Text style={styles.label}>{item.type}</Text>
-                <Text style={styles.value}>{item.currency} {item.price}</Text>
+                <Text style={styles.label}>Name</Text>
+                <Text style={styles.value}>{item.name}</Text>
+                <Text style={styles.label}>Category</Text>
+                <Text style={styles.value}>{item.category}</Text>
+                <Text style={styles.label}>Class</Text>
+                <Text style={styles.value}>{item.ticketClass}</Text>
               </View>
               <View style={styles.qrCode}>
                 {item.qrCodeUrl && (
@@ -271,6 +282,9 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
               >
                 {item.status}
               </Text>
+            </View>
+            <View style={styles.statusContainer}>
+              <Text style={styles.valueID}>Tic ID: {item.id}</Text>
             </View>
           </TouchableOpacity>
         ))
@@ -695,6 +709,22 @@ const styles = StyleSheet.create({
   },
   searchBarFocused: {
     borderColor: color.placeholderTxt_24282C,
+  },
+  valueID: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: color.black_544B45,
+    marginTop: 10,
+  },
+  statusContainer: {
+    position: 'absolute',
+    top: 35,
+    right: 18,
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

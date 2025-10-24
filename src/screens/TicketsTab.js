@@ -66,6 +66,9 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                     currency: ticket.currency || 'N/A',
                     email: ticket.user_email || 'N/A',
                     name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
+                    category: ticket.category || 'N/A',
+                    ticketClass: ticket.ticket_class || 'N/A',
+
                 };
             });
 
@@ -100,7 +103,9 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 (ticket) =>
                     ticket.id.includes(searchText) ||
                     ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.date.includes(searchText)
+                    ticket.date.includes(searchText) ||
+                    ticket.category.toLowerCase().includes(searchText.toLowerCase()) ||
+                    ticket.ticketClass.toLowerCase().includes(searchText.toLowerCase())
             );
         }
 
@@ -134,6 +139,8 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             name: ticket.name || 'N/A',
             date: ticket.date || 'N/A',
             user_email: ticket.email || 'N/A',
+            ticketClass: ticket.ticketClass || 'N/A',
+            category: ticket.category || 'N/A',
         };
 
         navigation.navigate('TicketScanned', {
@@ -153,15 +160,15 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             <View>
                 <Text style={styles.label}>Name</Text>
                 <Text style={styles.value}>{item.name}</Text>
-                <Text style={styles.label}>Ticket ID</Text>
-                <Text style={styles.value}>{item.id}</Text>
+                <Text style={styles.label}>Category</Text>
+                <Text style={styles.value}>{item.category}</Text>
                 {/* <Text style={styles.ticketType}>{item.type}</Text> */}
                 {/* <View style={styles.priceContainer}>
                     <Text style={styles.priceCurrency}>GHS</Text>
                     <Text style={styles.ticketPrice}>{item.price}</Text>
                 </View> */}
-                <Text style={styles.label}>Date</Text>
-                <Text style={styles.value}>{item.date}</Text>
+                <Text style={styles.label}>Class</Text>
+                <Text style={styles.value}>{item.ticketClass}</Text>
             </View>
             <View style={styles.statusBtn} >
                 <TouchableOpacity
@@ -181,6 +188,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                         {item.status}
                     </Text>
                 </TouchableOpacity>
+                <Text style={styles.valueID}>Tic ID: {item.id}</Text>
             </View>
             <View style={styles.imageContainer}>
                 {item.qrCodeUrl && ( // Display QR code if URL is available
@@ -289,6 +297,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                     data={filteredTickets}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.flatListContent}
                     ListEmptyComponent={() =>
                         !isLoading ? (
                             <NoResults message={getNoResultsMessage()} />
@@ -376,6 +385,12 @@ const styles = StyleSheet.create({
         color: color.black_544B45,
         marginBottom: 10,
     },
+    valueID: {
+        fontSize: 12,
+        fontWeight: '400',
+        color: color.black_544B45,
+        marginTop: 10,
+    },
     ticketDate: {
         fontSize: 14,
         color: color.black_544B45,
@@ -424,7 +439,7 @@ const styles = StyleSheet.create({
     statusBtn: {
         position: 'absolute',
         right: 18,
-        top: 15,
+        top: 12,
 
     },
     searchContainer: {
@@ -534,7 +549,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     flatListContainer: {
-        top: 6
+        top: 6,
+        paddingBottom: 50,
+    },
+    flatListContent: {
+        paddingBottom: 50,
     }
 });
 

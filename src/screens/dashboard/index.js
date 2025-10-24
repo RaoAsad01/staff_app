@@ -47,6 +47,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsTitle, setAnalyticsTitle] = useState('');
   const [activeAnalytics, setActiveAnalytics] = useState(null);
+  
+  // Separate analytics states for Check-Ins
+  const [checkInAnalyticsData, setCheckInAnalyticsData] = useState(null);
+  const [checkInAnalyticsTitle, setCheckInAnalyticsTitle] = useState('');
+  const [activeCheckInAnalytics, setActiveCheckInAnalytics] = useState(null);
   const [scanAnalyticsData, setScanAnalyticsData] = useState(null);
   const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
   const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
@@ -202,44 +207,99 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
 
+      console.log('handleAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
+
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
-      // Handle both sold tickets and check-in analytics
-      let analyticsData = null;
-      let analyticsTitle = '';
+      // Handle sold tickets analytics only
+      if (response?.data?.sold_tickets_analytics?.data) {
+        const analyticsData = response.data.sold_tickets_analytics.data;
+        const analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
 
-      if (title === 'Check-Ins' && response?.data?.checkin_analytics?.data) {
-        // Handle Check-Ins analytics
-        analyticsData = response.data.checkin_analytics.data;
-        analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
-      } else if (response?.data?.sold_tickets_analytics?.data) {
-        // Handle Sold Tickets analytics
-        analyticsData = response.data.sold_tickets_analytics.data;
-        analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
-      }
+        console.log('Sold Tickets Analytics Data:', analyticsData);
+        console.log('Sold Tickets Analytics Response:', response.data.sold_tickets_analytics);
 
-      if (analyticsData) {
-        const chartData = Object.entries(analyticsData).map(([hour, value]) => {
-          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
-          let formattedTime = hour;
-          if (hour.includes(':00 ')) {
-            const [time, period] = hour.split(' ');
-            const [hours] = time.split(':');
-            formattedTime = `${hours}${period.toLowerCase()}`;
-          }
+        const chartData = Object.entries(analyticsData)
+          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .map(([hour, value]) => {
+            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+            let formattedTime = hour;
+            if (hour.includes(':00 ')) {
+              const [time, period] = hour.split(' ');
+              const [hours] = time.split(':');
+              formattedTime = `${hours}${period.toLowerCase()}`;
+            }
 
-          return {
-            time: formattedTime,
-            value: value || 0
-          };
-        });
+            return {
+              time: formattedTime,
+              value: value || 0
+            };
+          });
 
+        console.log('Formatted Sold Tickets Chart Data:', chartData);
         setAnalyticsData(chartData);
         setAnalyticsTitle(analyticsTitle);
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
       console.error('Error fetching analytics for', ticketType, error);
+    }
+  };
+
+  // Separate handler for Check-Ins analytics
+  const handleCheckInAnalyticsPress = async (ticketType, title, ticketUuid = null, subitemLabel = null) => {
+    if (!eventInfo?.eventUuid || (userRole !== 'ADMIN' && userRole !== 'ORGANIZER' && userRole !== 'STAFF')) return;
+
+    const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
+
+    // If already active, deactivate
+    if (activeCheckInAnalytics === analyticsKey) {
+      setActiveCheckInAnalytics(null);
+      setCheckInAnalyticsData(null);
+      setCheckInAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
+      let salesParam = null;
+
+      console.log('handleCheckInAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
+
+      const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
+
+      // Handle Check-Ins analytics only
+      if (response?.data?.checkin_analytics?.data) {
+        const analyticsData = response.data.checkin_analytics.data;
+        const analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
+
+        console.log('Check-In Analytics Data:', analyticsData);
+        console.log('Check-In Analytics Response:', response.data.checkin_analytics);
+
+        const chartData = Object.entries(analyticsData)
+          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .map(([hour, value]) => {
+            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+            let formattedTime = hour;
+            if (hour.includes(':00 ')) {
+              const [time, period] = hour.split(' ');
+              const [hours] = time.split(':');
+              formattedTime = `${hours}${period.toLowerCase()}`;
+            }
+
+            return {
+              time: formattedTime,
+              value: value || 0
+            };
+          });
+
+        console.log('Formatted Chart Data:', chartData);
+        setCheckInAnalyticsData(chartData);
+        setCheckInAnalyticsTitle(analyticsTitle);
+        setActiveCheckInAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching check-in analytics for', ticketType, error);
     }
   };
 
@@ -262,20 +322,22 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         const scanAnalytics = dashboardStats.data.scan_analytics.data;
 
         // Create chart data from scan analytics
-        const chartData = Object.entries(scanAnalytics).map(([hour, value]) => {
-          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
-          let formattedTime = hour;
-          if (hour.includes(':00 ')) {
-            const [time, period] = hour.split(' ');
-            const [hours] = time.split(':');
-            formattedTime = `${hours}${period.toLowerCase()}`;
-          }
+        const chartData = Object.entries(scanAnalytics)
+          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .map(([hour, value]) => {
+            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+            let formattedTime = hour;
+            if (hour.includes(':00 ')) {
+              const [time, period] = hour.split(' ');
+              const [hours] = time.split(':');
+              formattedTime = `${hours}${period.toLowerCase()}`;
+            }
 
-          return {
-            time: formattedTime,
-            value: value || 0
-          };
-        });
+            return {
+              time: formattedTime,
+              value: value || 0
+            };
+          });
 
         setScanAnalyticsData(chartData);
         setScanAnalyticsTitle(`${scanType} Scans`);
@@ -639,13 +701,13 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                 showRemaining={false}
                 userRole={userRole}
                 stats={dashboardStats}
-                onAnalyticsPress={handleAnalyticsPress}
-                activeAnalytics={activeAnalytics}
+                onAnalyticsPress={handleCheckInAnalyticsPress}
+                activeAnalytics={activeCheckInAnalytics}
               />
-              {analyticsData && activeAnalytics ? (
+              {checkInAnalyticsData && activeCheckInAnalytics ? (
                 <AnalyticsChart
-                  title={analyticsTitle}
-                  data={analyticsData}
+                  title={checkInAnalyticsTitle}
+                  data={checkInAnalyticsData}
                   dataType="checked in"
                 />
               ) : (
@@ -724,15 +786,41 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             showRemaining={selectedTab === "Sold Tickets"}
             userRole={userRole}
             stats={dashboardStats}
-            onAnalyticsPress={handleAnalyticsPress}
-            activeAnalytics={activeAnalytics}
+            onAnalyticsPress={selectedTab === "Check-Ins" ? handleCheckInAnalyticsPress : handleAnalyticsPress}
+            activeAnalytics={selectedTab === "Check-Ins" ? activeCheckInAnalytics : activeAnalytics}
           />
           {selectedTab !== "Available" && (
-            <AnalyticsChart
-              title={selectedTab}
-              data={selectedTab === "Check-Ins" ? checkedInChartData : soldTicketsChartData}
-              dataType={selectedTab === "Check-Ins" ? "checked in" : "sold"}
-            />
+            <>
+              {selectedTab === "Check-Ins" ? (
+                checkInAnalyticsData && activeCheckInAnalytics ? (
+                  <AnalyticsChart
+                    title={checkInAnalyticsTitle}
+                    data={checkInAnalyticsData}
+                    dataType="checked in"
+                  />
+                ) : (
+                  <AnalyticsChart
+                    title="Check In"
+                    data={checkedInChartData}
+                    dataType="checked in"
+                  />
+                )
+              ) : (
+                analyticsData && activeAnalytics ? (
+                  <AnalyticsChart
+                    title={analyticsTitle}
+                    data={analyticsData}
+                    dataType="sold"
+                  />
+                ) : (
+                  <AnalyticsChart
+                    title="Sold Tickets"
+                    data={soldTicketsChartData}
+                    dataType="sold"
+                  />
+                )
+              )}
+            </>
           )}
         </>
       );

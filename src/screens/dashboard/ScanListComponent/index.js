@@ -49,6 +49,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                     userfirstname: ticket.user_first_name,
                     name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
                     user_email: ticket.user_email || 'N/A',
+                    category: ticket.category || 'N/A',
+                    ticketClass: ticket.ticket_class || 'N/A',
                 };
             });
 
@@ -73,7 +75,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                     (ticket.id && ticket.id.toLowerCase().includes(searchText.toLowerCase())) ||
                     (ticket.type && ticket.type.toLowerCase().includes(searchText.toLowerCase())) ||
                     (ticket.ticketHolder && ticket.ticketHolder.toLowerCase().includes(searchText.toLowerCase())) ||
-                    (ticket.userfirstname && ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase()))
+                    (ticket.userfirstname && ticket.userfirstname.toLowerCase().includes(searchText.toLowerCase())) ||
+                    (ticket.category && ticket.category.toLowerCase().includes(searchText.toLowerCase())) ||
+                    (ticket.ticketClass && ticket.ticketClass.toLowerCase().includes(searchText.toLowerCase()))
             );
         }
 
@@ -96,6 +100,8 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             name: ticket.name,
             date: ticket.date,
             user_email: ticket.user_email,
+            category: ticket.category,
+            ticketClass: ticket.ticketClass,
         };
 
         navigation.navigate('TicketScanned', {
@@ -171,10 +177,10 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                             <View>
                                 <Text style={styles.label}>Name</Text>
                                 <Text style={styles.value}>{item.name || 'N/A'}</Text>
-                                <Text style={styles.label}>Ticket ID</Text>
-                                <Text style={styles.value}>{item.id}</Text>
-                                <Text style={styles.label}>{item.type}</Text>
-                                <Text style={styles.value}>{item.currency} {item.price}</Text>
+                                <Text style={styles.label}>Category</Text>
+                                <Text style={styles.value}>{item.category}</Text>
+                                <Text style={styles.label}>Class</Text>
+                                <Text style={styles.value}>{item.ticketClass}</Text>
                             </View>
                             <View style={styles.qrCode}>
                                 {item.qrCodeUrl && (
@@ -204,6 +210,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                             >
                                 {item.status === 'SCANNED' ? 'Scanned' : item.status}
                             </Text>
+                        </View>
+                        <View style={styles.statusContainer}>
+                            <Text style={styles.valueID}>Tic ID: {item.id}</Text>
                         </View>
                     </TouchableOpacity>
                 ))
@@ -332,6 +341,22 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: color.black_2F251D,
         alignSelf: "flex-start",
+    },
+    valueID: {
+        fontSize: 12,
+        fontWeight: '400',
+        color: color.black_544B45,
+        marginTop: 10,
+    },
+    statusContainer: {
+        position: 'absolute',
+        top: 35,
+        right: 18,
+        borderRadius: 5,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 
