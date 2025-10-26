@@ -154,8 +154,15 @@ const AvailableTicketsCard = ({ data, stats }) => {
     );
   };
 
+  // Calculate total available tickets
+  const totalAvailableTickets = listData.reduce((sum, item) => sum + (item.checkedIn || 0), 0);
+
   return (
     <View style={styles.card}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerText}>Total Available Tickets</Text>
+        <Text style={styles.headerValue}>{totalAvailableTickets}</Text>
+      </View>
       {listData.map((item, idx) => renderItem(item, idx))}
     </View>
   );
@@ -168,10 +175,25 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
   },
+  headerContainer: {
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  headerText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: color.black_544B45,
+  },
+  headerValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: color.brown_3C200A,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
     paddingVertical: 8,
     padding: 15,
   },

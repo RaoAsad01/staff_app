@@ -15,6 +15,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
     const [fetchedTickets, setFetchedTickets] = useState([]);
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [selectedFilter, setSelectedFilter] = useState(null);
+    const [availableTicketTypes, setAvailableTicketTypes] = useState([]);
 
     useEffect(() => {
         if (eventInfo?.eventUuid) {
@@ -55,6 +58,11 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             });
 
             setFetchedTickets(mappedTickets);
+
+            // Extract unique ticket types and remove "Pricing" from the end
+            const uniqueTypes = [...new Set(mappedTickets.map(ticket => ticket.type))].filter(type => type !== 'N/A');
+            const cleanedTypes = uniqueTypes.map(type => type.replace(/\s*Pricing$/, ''));
+            setAvailableTicketTypes(cleanedTypes);
         } catch (err) {
             console.error('Error fetching ticket list:', err);
         } finally {
@@ -79,6 +87,15 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                     (ticket.category && ticket.category.toLowerCase().includes(searchText.toLowerCase())) ||
                     (ticket.ticketClass && ticket.ticketClass.toLowerCase().includes(searchText.toLowerCase()))
             );
+        }
+
+        // Apply filter
+        if (selectedFilter) {
+            // Filter by matching ticket type, adding "Pricing" back for comparison
+            filteredTickets = filteredTickets.filter((ticket) => {
+                const ticketTypeDisplay = ticket.type.replace(/\s*Pricing$/, '');
+                return ticketTypeDisplay === selectedFilter;
+            });
         }
 
         return filteredTickets;
@@ -118,6 +135,13 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
         setSearchText('');
     };
 
+    const handleFilterButtonPress = () => {
+        setModalVisible(true);
+    };
+
+    const clearFilter = () => {
+        setSelectedFilter(null);
+    };
 
 
     const getNoResultsMessage = () => {
@@ -132,14 +156,6 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
     return (
         <ScrollView
             style={styles.container}
-            onScroll={({ nativeEvent }) => {
-                const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-                const paddingToBottom = 20;
-                if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-                    loadMoreTickets();
-                }
-            }}
-            scrollEventThrottle={400}
         >
             <View><Text style={styles.title}>Scans</Text></View>
             <View style={styles.searchFilterContainer}>
@@ -164,6 +180,10 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                         <SvgIcons.searchIcon width={20} height={20} fill="transparent" />
                     </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity style={styles.filterButton} onPress={handleFilterButtonPress}>
+                    <SvgIcons.filterIcon width={20} height={20} />
+                </TouchableOpacity>
             </View>
 
             {filteredTickets.length > 0 ? (
@@ -229,6 +249,71 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                     <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
                 </View>
             )}
+
+            <Modal visible={isModalVisible} transparent animationType="fade">
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setModalVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.modalContainer}
+                        activeOpacity={1}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Filters</Text>
+                            <TouchableOpacity onPress={clearFilter}>
+                                <Text style={styles.clearAllText}>Clear all</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.filterOptionsContainer}>
+                            <View style={styles.lineView} />
+                            <Text style={styles.tickettype}>Ticket Type</Text>
+                            {availableTicketTypes.map((ticketType, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.filterOption}
+                                    onPress={() =>
+                                        setSelectedFilter(
+                                            selectedFilter === ticketType ? null : ticketType
+                                        )
+                                    }
+                                >
+                                    <View style={styles.checkboxContainer}>
+                                        <View
+                                            style={[
+                                                styles.checkbox,
+                                                selectedFilter === ticketType && styles.checkedCheckbox,
+                                            ]}
+                                        >
+                                            {selectedFilter === ticketType && (
+                                                <SvgIcons.tickIcon width={15} height={15} />
+                                            )}
+                                        </View>
+                                        <Text style={styles.filterOptionText}>{ticketType}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.applyButton,
+                                !selectedFilter && styles.applyButtonDisabled
+                            ]}
+                            onPress={() => setModalVisible(false)}
+                            disabled={!selectedFilter}
+                        >
+                            <Text style={[
+                                styles.applyButtonText,
+                                !selectedFilter && styles.applyButtonTextDisabled
+                            ]}>Apply</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
         </ScrollView>
     );
 };
@@ -274,6 +359,17 @@ const styles = StyleSheet.create({
     },
     searchIcon: {
         marginRight: 5,
+    },
+    filterButton: {
+        backgroundColor: color.white_FFFFFF,
+        borderRadius: 10,
+        padding: 8,
+        borderWidth: 1,
+        borderColor: color.borderBrown_CEBCA0,
+        height: 45,
+        width: 46,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     card: {
         backgroundColor: 'white',
@@ -357,6 +453,106 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        width: '80%',
+        alignItems: 'center',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 15,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '500',
+        color: color.brown_3C200A,
+    },
+    clearAllText: {
+        color: color.btnBrown_AE6F28,
+        fontWeight: '400',
+        fontSize: 14,
+        textDecorationLine: 'underline',
+        textDecorationColor: color.btnBrown_AE6F28
+    },
+    filterOptionsContainer: {
+        width: '100%',
+        marginBottom: 15,
+    },
+    filterOption: {
+        paddingVertical: 8,
+        marginBottom: 5,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: color.borderBrown_CEBCA0,
+        marginRight: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkedCheckbox: {
+        backgroundColor: color.btnBrown_AE6F28,
+        borderColor: color.btnBrown_AE6F28
+    },
+    checkboxTick: {
+        color: color.red_FF0000,
+        fontSize: 14,
+    },
+    filterOptionText: {
+        color: color.black_544B45,
+        fontSize: 14,
+        fontWeight: '400'
+    },
+    applyButton: {
+        backgroundColor: color.btnBrown_AE6F28,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: 48
+    },
+    applyButtonText: {
+        color: color.btnTxt_FFF6DF,
+        fontSize: 16,
+        fontWeight: '700'
+    },
+    applyButtonDisabled: {
+        backgroundColor: '#E0E0E0',
+        borderColor: '#E0E0E0',
+    },
+    applyButtonTextDisabled: {
+        color: '#9E9E9E',
+    },
+    lineView: {
+        borderColor: '#F1F1F1',
+        width: '100%',
+        height: 1,
+        borderWidth: 0.5,
+    },
+    tickettype: {
+        fontWeight: '500',
+        fontSize: 16,
+        color: color.brown_3C200A,
+        marginTop: 10
     },
 });
 
