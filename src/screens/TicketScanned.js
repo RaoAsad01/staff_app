@@ -44,27 +44,42 @@ const TicketScanned = ({ route }) => {
                     <View style={styles.leftColumn}>
                         <View style={styles.row}>
                             <View style={styles.leftColumnContent}>
-                                <Text style={styles.values}>{scanResponse?.ticket || 'N/A'}</Text>
+                                <Text style={styles.values}>Category</Text>
                                 <Typography
                                     style={[styles.value, styles.marginTop10]}
                                     weight="400"
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'N/A'}
+                                    {scanResponse?.category || 'N/A'}
+                                </Typography>
+                                <Text style={[styles.values, styles.marginTop10]}>Class</Text>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
+                                    {scanResponse?.ticketClass || 'N/A'}
                                 </Typography>
                                 {/* <Text style={[styles.value, styles.marginTop10]}>
                                     {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'N/A'}
                                 </Text> */}
-                                <View style={styles.spacer} />
-                                <Text style={[styles.values, styles.marginTop20]}>Last Scanned On</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{scanResponse?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.values]}>Last Scanned On</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.last_scan) || 'N/A'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{scanResponse?.scanned_by || 'N/A'}</Text>
-                                <Text style={[styles.ticketNumber, styles.marginTop15]}>{scanResponse?.ticket_number || 'N/A'}</Text>
-                                <Text style={[styles.values, styles.marginTop3]}>Scan Count</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{scanResponse?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{scanResponse?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Price</Text>
+                                <Text style={[styles.value, styles.marginTop10]}>
+                                    {scanResponse?.currency || 'GHS'} {scanResponse?.ticket_price || 'N/A'}
+                                </Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop9]}>{scanResponse?.scan_count || 'N/A'}</Text>
                             </View>
                         </View>
@@ -146,16 +161,16 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     leftColumnContent: {
-        width: '50%',
+        width: '58%',
         alignItems: 'flex-start',
     },
     rightColumnContent: {
         width: '50%',
         alignItems: 'flex-start',
-        paddingLeft: 30,
+        paddingLeft: 50,
     },
     spacer: {
-        height: 35,
+        height: 5,
     },
     label: {
         fontSize: 16,
@@ -179,13 +194,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '400',
         color: color.black_544B45,
-        marginBottom: 15,
+        marginBottom: 10,
     },
     marginTop10: {
         marginTop: 10,
     },
     marginTop9: {
         marginTop: 9,
+    },
+    marginTop8: {
+        marginTop: 8,
     },
     marginTop15: {
         marginTop: 15,

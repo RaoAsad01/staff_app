@@ -60,9 +60,11 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             scanned_by_email: item.scanned_by_email || 'N/A',
             ticket_holder_email: item.ticket_holder_email || 'N/A',
             status: item.status || 'UNSCANNED',
-            name: item.name,
+            name: item.name || 'N/A',
             date: item.date,
-            user_email: userEmail
+            user_email: item.email || userEmail || 'N/A',
+            category: item.category || 'N/A',
+            ticketClass: item.ticketClass || 'N/A',
         };
 
         navigation.navigate('TicketScanned', {
@@ -79,11 +81,8 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             <View>
                 <Text style={styles.ticketheading}>Ticket ID</Text>
                 <Text style={styles.ticketId}>{item.ticket_number}</Text>
-                <Text style={styles.ticketType}>{item.type}</Text>
-                <View style={styles.priceContainer}>
-                    <Text style={styles.priceCurrency}>{item.currency} </Text>
-                    <Text style={styles.ticketPrice}>{item.price}</Text>
-                </View>
+                <Text style={styles.ticketType}>Category</Text>
+                <Text style={styles.ticketId}>{item.category}</Text>
             </View>
             <View style={styles.statusAndDateContainer}>
                 <TouchableOpacity
@@ -111,8 +110,9 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                         {item.status === 'SCANNED' ? 'Scanned' : 'Check-in'}
                     </Text>
                 </TouchableOpacity>
-                <Text style={styles.ticketDateheading}>Date</Text>
-                <Text style={styles.ticketDate}>{item.date}</Text>
+                <Text style={styles.ticketDateheading}>Class</Text>
+                <Text style={styles.ticketId}>{item.ticketClass}</Text>
+
             </View>
         </TouchableOpacity>
     );

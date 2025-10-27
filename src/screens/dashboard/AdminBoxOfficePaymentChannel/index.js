@@ -6,6 +6,14 @@ import Typography, { Body1, Heading5 } from '../../../components/Typography';
 import { formatValue } from '../../../constants/formatValue';
 
 const AdminBoxOfficePaymentChannel = ({ stats }) => {
+    // Log the raw stats data received from backend
+    console.log('================================================');
+    console.log('💰 AdminBoxOfficePaymentChannel - Raw Stats Data:', JSON.stringify(stats, null, 2));
+    console.log('💰 AdminBoxOfficePaymentChannel - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel, null, 2));
+    console.log('💰 AdminBoxOfficePaymentChannel - By Ticket Types:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel?.by_ticket_types, null, 2));
+    console.log('================================================');
+
     const boxOfficeSalesData = stats?.data?.box_office_sales || {};
     const paymentChannel = boxOfficeSalesData?.payment_channel || {};
     const byTicketTypes = paymentChannel?.by_ticket_types || {};

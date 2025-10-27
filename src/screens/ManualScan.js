@@ -92,7 +92,9 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
         orderNumber: item.order_number, // Pass order number
         eventUuid: eventInfo?.eventUuid, // Pass event UUID
         eventInfo: eventInfo,
-        onScanCountUpdate: onScanCountUpdate // Pass the callback
+        onScanCountUpdate: onScanCountUpdate, // Pass the callback
+        category: item.category || 'N/A',
+        ticketClass: item.ticketClass || 'N/A',
       })}
     >
       <View style={styles.ticketRow}>
@@ -117,11 +119,11 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
       <Header eventInfo={eventInfo} />
       <View style={styles.contentContainer}>
         <View style={[
-            styles.searchContainer,
-            isSearchFocused && styles.searchContainerFocused
+          styles.searchContainer,
+          isSearchFocused && styles.searchContainerFocused
         ]}>
           <TextInput
-             style={[
+            style={[
               styles.searchBar,
               searchText ? styles.searchInputWithText : styles.searchInputPlaceholder
             ]}
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   }
-  
+
 });
 
 export default ManualScan;

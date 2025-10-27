@@ -16,6 +16,7 @@ import OverallStatistics from '../OverallStatistics';
 import EventsModal from '../../../components/EventsModal';
 import { truncateCityName } from '../../../utils/stringUtils';
 import { truncateEventName } from '../../../utils/stringUtils';
+import { formatDateWithMonthName } from '../../../constants/dateAndTime';
 
 const StaffDashboard = () => {
   const navigation = useNavigation();
@@ -43,9 +44,27 @@ const StaffDashboard = () => {
       try {
         if (currentEventInfo?.eventUuid && staffUuid) {
           setLoading(true);
-          // Use the same API but with staff_uuid parameter
-          const stats = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, null, null, staffUuid);
+
+          // For staff, we need to pass 'box_office' as sales parameter
+          // This tells the backend to return box office sales data for this staff member
+          const salesParam = 'box_office';
+
+          // Log the parameters being sent
+          console.log('StaffDashboard - Fetching stats with params:', {
+            eventUuid: currentEventInfo.eventUuid,
+            sales: salesParam,
+            ticketType: null,
+            ticketUuid: null,
+            staffUuid: staffUuid
+          });
+
+          // Use the same API but with staff_uuid parameter and sales=box_office
+          const stats = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, null, null, staffUuid);
           setDashboardStats(stats);
+
+          console.log('StaffDashboard - Endpoint Used: /events/{event_uuid}/sales/');
+          console.log('StaffDashboard - Full URL: /events/' + currentEventInfo.eventUuid + '/sales/?staff_uuid=' + staffUuid + '&sales=' + salesParam);
+          console.log('StaffDashboard - HTTP Method: GET');
           console.log('StaffDashboard - Full Backend Response:', JSON.stringify(stats, null, 2));
           console.log('StaffDashboard - BoxOffice Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
           console.log('StaffDashboard - Terminal Statistics:', JSON.stringify(stats?.data?.terminal_statistics, null, 2));
@@ -147,7 +166,7 @@ const StaffDashboard = () => {
   const handleScanAnalyticsPress = async (scanType, parentCategory, ticketUuid = null) => {
     if (!currentEventInfo?.eventUuid) return;
 
-    const analyticsKey = `Scan-${parentCategory}-${scanType}`;
+    const analyticsKey = ticketUuid ? `Scan-${parentCategory}-${ticketUuid}` : `Scan-${parentCategory}-${scanType}`;
 
     // If already active, deactivate
     if (activeScanAnalytics === analyticsKey) {
@@ -158,34 +177,52 @@ const StaffDashboard = () => {
     }
 
     try {
-      // For scan analytics, we need to fetch fresh data with staffUuid for specific analytics
-      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, null, null, null, staffUuid);
-      
+      console.log('🔍 Fetching scan analytics for:', {
+        scanType,
+        parentCategory,
+        ticketUuid
+      });
+
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
+      let salesParam = null;
+
+      // Fetch fresh data with ticketType, ticketUuid, and staffUuid parameters
+      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, parentCategory, ticketUuid, staffUuid);
+
+      // Handle Scan analytics
       if (response?.data?.scan_analytics?.data) {
-        const scanAnalytics = response.data.scan_analytics.data;
+        const analyticsData = response.data.scan_analytics.data;
+        const analyticsTitle = ticketUuid ? `${scanType} Scans` : `${parentCategory} Scans`;
 
-        // Create chart data from scan analytics
-        const chartData = Object.entries(scanAnalytics).map(([hour, value]) => {
-          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
-          let formattedTime = hour;
-          if (hour.includes(':00 ')) {
-            const [time, period] = hour.split(' ');
-            const [hours] = time.split(':');
-            formattedTime = `${hours}${period.toLowerCase()}`;
-          }
+        console.log('Scan Analytics Data:', analyticsData);
+        console.log('Scan Analytics Response:', response.data.scan_analytics);
 
-          return {
-            time: formattedTime,
-            value: value || 0
-          };
-        });
+        const chartData = Object.entries(analyticsData)
+          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .map(([hour, value]) => {
+            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+            let formattedTime = hour;
+            if (hour.includes(':00 ')) {
+              const [time, period] = hour.split(' ');
+              const [hours] = time.split(':');
+              formattedTime = `${hours}${period.toLowerCase()}`;
+            }
 
+            return {
+              time: formattedTime,
+              value: value || 0
+            };
+          });
+
+        console.log('Formatted Scan Chart Data:', chartData);
         setScanAnalyticsData(chartData);
-        setScanAnalyticsTitle(`${scanType} Scans`);
+        setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
+      } else {
+        console.warn('⚠️ No scan analytics data found in response');
       }
     } catch (error) {
-      console.error('Error fetching scan analytics for', scanType, error);
+      console.error('❌ Error fetching scan analytics for', scanType, error);
     }
   };
 
@@ -254,8 +291,27 @@ const StaffDashboard = () => {
   };
 
   function formatHourLabel(hourStr) {
-    const [hour, minutePart] = hourStr.split(":");
-    const [minute, period] = minutePart.split(" ");
+    if (!hourStr || typeof hourStr !== 'string') {
+      console.warn('formatHourLabel: Invalid input', hourStr);
+      return '';
+    }
+
+    const parts = hourStr.split(":");
+    if (parts.length < 2) {
+      return hourStr; // Return as-is if format is unexpected
+    }
+
+    const [hour, minutePart] = parts;
+    if (!minutePart) {
+      return hour; // Return just the hour if no minute part
+    }
+
+    const minuteAndPeriod = minutePart.split(" ");
+    if (minuteAndPeriod.length < 2) {
+      return `${parseInt(hour, 10)}${hourStr.includes('PM') ? 'pm' : 'am'}`; // Default based on PM/AM
+    }
+
+    const [minute, period] = minuteAndPeriod;
     return `${parseInt(hour, 10)}${period.toLowerCase()}`;
   }
 
@@ -289,8 +345,8 @@ const StaffDashboard = () => {
 
       return (
         <>
-          <BoxOfficeSales 
-            stats={dashboardStats} 
+          <BoxOfficeSales
+            stats={dashboardStats}
             onDebugData={(data) => {
               console.log('BoxOfficeSales - Backend Data:', JSON.stringify(data, null, 2));
             }}
@@ -325,7 +381,7 @@ const StaffDashboard = () => {
       return (
         <>
           <ScanCategories stats={dashboardStats} />
-          <ScanCategoriesDetails 
+          <ScanCategoriesDetails
             stats={dashboardStats}
             onScanAnalyticsPress={handleScanAnalyticsPress}
             activeScanAnalytics={activeScanAnalytics}
@@ -369,7 +425,7 @@ const StaffDashboard = () => {
             <Text style={styles.separator}>   </Text>
             <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(currentEventInfo?.cityName) || 'Accra'}</Text>
             <Text style={styles.separator}>   </Text>
-            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(currentEventInfo?.date) || '30 Oct 2025'}</Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.time || '7:00 PM'}</Text>
@@ -387,14 +443,14 @@ const StaffDashboard = () => {
 
       {/* Overall Statistics */}
       <View style={styles.overallStatisticsContainer}>
-      <OverallStatistics
-        stats={dashboardStats}
-        // onTotalTicketsPress={handleTotalTicketsPress}
-        // onTotalScannedPress={handleTotalScannedPress}
-        // onTotalUnscannedPress={handleTotalUnscannedPress}
-        // onAvailableTicketsPress={handleAvailableTicketsPress}
-        showHeading={false}
-      />
+        <OverallStatistics
+          stats={dashboardStats}
+          // onTotalTicketsPress={handleTotalTicketsPress}
+          // onTotalScannedPress={handleTotalScannedPress}
+          // onTotalUnscannedPress={handleTotalUnscannedPress}
+          // onAvailableTicketsPress={handleAvailableTicketsPress}
+          showHeading={false}
+        />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -583,7 +639,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.white_FFFFFF,
   },
   overallStatisticsContainer: {
-    marginTop: 16,
+    marginTop: 4,
     marginBottom: 12,
   },
 });

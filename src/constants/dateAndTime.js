@@ -60,3 +60,91 @@ export const formatTimeOnly = (dateString) => {
 
   return `${formattedHours}:${minutes} ${ampm}`;
 };
+
+// Month abbreviations mapping
+const monthAbbreviations = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// 🔹 Format: DD MMM YYYY (e.g., "30 Oct 2025")
+export const formatDateWithMonthName = (dateString) => {
+  if (!dateString) return '';
+  
+  console.log('formatDateWithMonthName input:', dateString);
+  
+  // Try to parse the date string first to handle ISO format (2025-10-30T20:05:00Z or 2025-10-30)
+  let d;
+  
+  // Handle ISO format with time
+  if (dateString.includes('T')) {
+    d = new Date(dateString);
+    console.log('ISO format detected, parsed date:', d);
+  }
+  // Handle DD-MM-YYYY format (e.g., "11-09-2025")
+  else if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+    const [day, month, year] = dateString.split('-').map(Number);
+    d = new Date(year, month - 1, day); // Month is 0-indexed, creates local date
+    console.log('DD-MM-YYYY format detected, parsed date:', d);
+  }
+  // Handle YYYY-MM-DD format
+  else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    d = new Date(year, month - 1, day); // Month is 0-indexed, creates local date
+    console.log('YYYY-MM-DD format detected, parsed date:', d);
+  }
+  else {
+    d = new Date(dateString);
+    console.log('Default parsing, parsed date:', d);
+  }
+  
+  if (!isNaN(d.getTime())) {
+    // Valid date parsed successfully
+    // Use UTC methods for ISO format with timezone, local methods for other formats
+    let day, month, year;
+    if (dateString.includes('T')) {
+      // ISO format with timezone - use UTC
+      day = d.getUTCDate();
+      month = monthAbbreviations[d.getUTCMonth()];
+      year = d.getUTCFullYear();
+    } else {
+      // Local date formats - use local time
+      day = d.getDate();
+      month = monthAbbreviations[d.getMonth()];
+      year = d.getFullYear();
+    }
+    
+      
+    const formattedDate = `${day} ${month} ${year}`;
+    console.log('Formatted date:', formattedDate);
+    return formattedDate;
+  }
+  
+  console.log('Invalid date, returning original string');
+  
+  // Fallback: Try to parse DD-MM-YYYY format manually
+  const parts = dateString.split('-');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in Date
+    const year = parseInt(parts[2], 10);
+    
+    // Validate the parsed values
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+      return dateString; // Return original if parsing fails
+    }
+    
+    const d = new Date(year, month, day);
+    
+    // Check if the date is valid
+    if (isNaN(d.getTime())) {
+      return dateString; // Return original if invalid
+    }
+    
+    const formattedDay = d.getDate();
+    const formattedMonth = monthAbbreviations[d.getMonth()];
+    const formattedYear = d.getFullYear();
+    
+    return `${formattedDay} ${formattedMonth} ${formattedYear}`;
+  }
+  
+  // If all parsing fails, return original string
+  return dateString;
+};

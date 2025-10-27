@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   darkBackground: {
     flex: 1,
-    backgroundColor: color.drak_black_000000,
+    backgroundColor: color.btnBrown_AE6F28,
   },
   cameraContainer: {
     flex: 1,

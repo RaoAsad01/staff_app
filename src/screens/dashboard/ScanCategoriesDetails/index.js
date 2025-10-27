@@ -131,7 +131,7 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
               }}
               style={styles.analyticsButtonSubItem}
             >
-              {activeScanAnalytics === `Scan-${parentCategory}-${item.label}` ? (
+              {activeScanAnalytics === `Scan-${parentCategory}-${item.ticketUuid || item.label}` ? (
                 <SvgIcons.iconBarsActive width={24} height={24} fill={color.btnBrown_AE6F28} />
               ) : (
                 <SvgIcons.iconBarsInactive width={24} height={24} fill={color.black_544B45} />

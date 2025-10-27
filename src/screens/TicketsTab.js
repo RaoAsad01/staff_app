@@ -188,7 +188,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                         {item.status}
                     </Text>
                 </TouchableOpacity>
-                <Text style={styles.valueID}>Tic ID: {item.id}</Text>
+                <Text style={styles.valueID}>Tix ID: {item.id}</Text>
             </View>
             <View style={styles.imageContainer}>
                 {item.qrCodeUrl && ( // Display QR code if URL is available
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '400',
         color: color.black_544B45,
-        marginTop: 10,
+        marginTop: 14,
     },
     ticketDate: {
         fontSize: 14,

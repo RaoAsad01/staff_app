@@ -28,6 +28,7 @@ import { admindashboardterminaltab } from '../../constants/admindashboardtermina
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 import { truncateCityName } from '../../utils/stringUtils';
 import { truncateEventName } from '../../utils/stringUtils';
+import { formatDateWithMonthName } from '../../constants/dateAndTime';
 
 const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
@@ -47,7 +48,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [analyticsTitle, setAnalyticsTitle] = useState('');
   const [activeAnalytics, setActiveAnalytics] = useState(null);
-  
+
   // Separate analytics states for Check-Ins
   const [checkInAnalyticsData, setCheckInAnalyticsData] = useState(null);
   const [checkInAnalyticsTitle, setCheckInAnalyticsTitle] = useState('');
@@ -306,7 +307,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const handleScanAnalyticsPress = async (scanType, parentCategory, ticketUuid = null) => {
     if (!eventInfo?.eventUuid) return;
 
-    const analyticsKey = `Scan-${parentCategory}-${scanType}`;
+    const analyticsKey = ticketUuid ? `Scan-${parentCategory}-${ticketUuid}` : `Scan-${parentCategory}-${scanType}`;
 
     // If already active, deactivate
     if (activeScanAnalytics === analyticsKey) {
@@ -317,12 +318,27 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     }
 
     try {
-      // For scan analytics, we'll use the scan_analytics data and filter by category
-      if (dashboardStats?.data?.scan_analytics?.data) {
-        const scanAnalytics = dashboardStats.data.scan_analytics.data;
+      console.log('🔍 Fetching scan analytics for:', {
+        scanType,
+        parentCategory,
+        ticketUuid
+      });
 
-        // Create chart data from scan analytics
-        const chartData = Object.entries(scanAnalytics)
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
+      let salesParam = null;
+
+      // Fetch fresh data with ticketType and ticketUuid parameters
+      const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, parentCategory, ticketUuid);
+
+      // Handle Scan analytics
+      if (response?.data?.scan_analytics?.data) {
+        const analyticsData = response.data.scan_analytics.data;
+        const analyticsTitle = ticketUuid ? `${scanType} Scans` : `${parentCategory} Scans`;
+
+        console.log('Scan Analytics Data:', analyticsData);
+        console.log('Scan Analytics Response:', response.data.scan_analytics);
+
+        const chartData = Object.entries(analyticsData)
           .filter(([hour, value]) => value > 0) // Filter out zero values
           .map(([hour, value]) => {
             // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
@@ -339,12 +355,15 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             };
           });
 
+        console.log('Formatted Scan Chart Data:', chartData);
         setScanAnalyticsData(chartData);
-        setScanAnalyticsTitle(`${scanType} Scans`);
+        setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
+      } else {
+        console.warn('⚠️ No scan analytics data found in response');
       }
     } catch (error) {
-      console.error('Error fetching scan analytics for', scanType, error);
+      console.error('❌ Error fetching scan analytics for', scanType, error);
     }
   };
 
@@ -535,8 +554,27 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   };
 
   function formatHourLabel(hourStr) {
-    const [hour, minutePart] = hourStr.split(":");
-    const [minute, period] = minutePart.split(" ");
+    if (!hourStr || typeof hourStr !== 'string') {
+      console.warn('formatHourLabel: Invalid input', hourStr);
+      return '';
+    }
+
+    const parts = hourStr.split(":");
+    if (parts.length < 2) {
+      return hourStr; // Return as-is if format is unexpected
+    }
+
+    const [hour, minutePart] = parts;
+    if (!minutePart) {
+      return hour; // Return just the hour if no minute part
+    }
+
+    const minuteAndPeriod = minutePart.split(" ");
+    if (minuteAndPeriod.length < 2) {
+      return `${parseInt(hour, 10)}${hourStr.includes('PM') ? 'pm' : 'am'}`; // Default based on PM/AM
+    }
+
+    const [minute, period] = minuteAndPeriod;
     return `${parseInt(hour, 10)}${period.toLowerCase()}`;
   }
 
@@ -624,7 +662,6 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               {selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
                 <>
                   <AdminBoxOfficeSales stats={dashboardStats} />
-                  <AdminBoxOfficePaymentChannel stats={dashboardStats} />
                   <CheckInSoldTicketsCard
                     title="Sold Tickets"
                     data={soldTicketsData}
@@ -668,6 +705,12 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               dataType="sold"
             />
           )}
+
+          {/* Show AdminBoxOfficePaymentChannel for ADMIN users in Box Office tab after Analytics */}
+          {userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
+            <AdminBoxOfficePaymentChannel stats={dashboardStats} />
+          )}
+
           <View style={styles.tabContainer}>
             <View style={styles.tabRow}>
               {getTabList().map((item) => (
@@ -895,7 +938,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             <Text style={styles.separator}></Text>
             <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
             <Text style={styles.separator}>   </Text>
-            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.date || '28-12-2024'}</Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>

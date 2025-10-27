@@ -580,13 +580,36 @@ export const ticketService = {
         url += `?${params.toString()}`;
       }
       
+      // Log the API call details
+      console.log('================================================');
+      console.log('📡 API CALL - fetchDashboardStats');
+      console.log('Base URL:', BASE_URL);
+      console.log('Endpoint:', url);
+      console.log('Full URL:', BASE_URL + url);
+      console.log('HTTP Method: GET');
+      console.log('Parameters:', {
+        eventUuid,
+        sales,
+        ticketType,
+        ticketUuid,
+        staffUuid
+      });
+      console.log('================================================');
+      
       const response = await apiClient.get(url);
+      
+      console.log('✅ API Response received:', {
+        status: response.status,
+        hasData: !!response.data
+      });
+      
       return response.data;
     } catch (error) {
-      console.error('Fetch Dashboard Stats Error:', {
+      console.error('❌ Fetch Dashboard Stats Error:', {
         status: error.response?.status,
         data: error.response?.data,
-        message: error.message
+        message: error.message,
+        url: error.config?.url
       });
       if (error.response?.data) {
         throw {

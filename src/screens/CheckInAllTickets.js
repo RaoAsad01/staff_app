@@ -8,6 +8,7 @@ import { ticketService } from '../api/apiService';
 import { useNavigation } from '@react-navigation/native';
 import SuccessPopup from '../constants/SuccessPopup';
 import ErrorPopup from '../constants/ErrorPopup';
+import Typography from '../components/Typography';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo, name } = route.params;
@@ -112,14 +113,14 @@ const CheckInAllTickets = ({ route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-      
+
             <Header eventInfo={eventInfo} />
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     {totalTickets > 1 && <Text style={styles.labeltickets}>Ticket(s) Purchased</Text>}
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
-                    <Text style={styles.ticketOrderNum}>Order Number. {orderNumber}</Text>
+                    {/* <Text style={styles.ticketOrderNum}>Order Number. {orderNumber}</Text> */}
                     <Text style={styles.userName}>{name}</Text>
                     <Text style={styles.ticketEmail}>{email}</Text>
                     <Text style={styles.ticketHolder}>Purchase Date: {tickets[0]?.formatted_date}</Text>
@@ -136,6 +137,58 @@ const CheckInAllTickets = ({ route }) => {
                         </Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* Show ticket details for single ticket */}
+                {totalTickets === 1 && tickets.length === 1 && (
+                    <View style={styles.ticketContainer}>
+                        <View style={styles.row}>
+                            <View style={styles.leftColumnContent}>
+                                <Text style={styles.values}>Category</Text>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
+                                    {tickets[0]?.category || 'N/A'}
+                                </Typography>
+                                <Text style={[styles.values, styles.marginTop10]}>Class</Text>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
+                                    {tickets[0]?.ticket_class || 'N/A'}
+                                </Typography>
+                                <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{tickets[0]?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.values]}>Last Scanned On</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{tickets[0]?.last_scanned_on || 'N/A'}</Text>
+                            </View>
+                            <View style={styles.rightColumnContent}>
+                                <Text style={styles.values}>Scanned By</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{tickets[0]?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{tickets[0]?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Price</Text>
+                                <Text style={[styles.value, styles.marginTop10]}>
+                                    {tickets[0]?.currency || 'GHS'} {tickets[0]?.ticket_price || 'N/A'}
+                                </Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{tickets[0]?.scan_count || 'N/A'}</Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                {/* Note section for single ticket */}
+                {totalTickets === 1 && tickets.length === 1 && (
+                    <View style={styles.noteContainer}>
+                        <Text style={styles.LabelNote}>Note</Text>
+                        <Text style={styles.noteDescription}>{tickets[0]?.note || 'No note added'}</Text>
+                    </View>
+                )}
 
                 {/* Ticket List Section */}
                 {totalTickets > 1 && (
@@ -159,10 +212,15 @@ const CheckInAllTickets = ({ route }) => {
                                 currency: ticket.currency,
                                 eventInfo: eventInfo,
                                 eventUuid: ticket.event,
-                                ticket_number: ticket.ticket_number
+                                ticket_number: ticket.ticket_number,
+                                category: ticket.category || 'N/A',
+                                ticketClass: ticket.ticket_class || 'N/A',
+                                name: name || 'N/A',
+                                email: email || 'N/A',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}
+                            userEmail={email}
                         />
                     </View>
                 )}
@@ -258,6 +316,84 @@ const styles = StyleSheet.create({
     },
     successImageIcon: {
         marginTop: 20,
+    },
+    ticketContainer: {
+        borderWidth: 1,
+        borderColor: color.white_FFFFFF,
+        borderRadius: 10,
+        backgroundColor: color.white_FFFFFF,
+        padding: 16,
+        marginTop: 15,
+        marginBottom: 6,
+        width: '100%',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    leftColumnContent: {
+        width: '58%',
+        alignItems: 'flex-start',
+    },
+    rightColumnContent: {
+        width: '50%',
+        alignItems: 'flex-start',
+        paddingLeft: 50,
+    },
+    values: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D
+    },
+    value: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+    },
+    valueScanCount: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+    },
+    ticketNumber: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+        marginBottom: 10,
+    },
+    marginTop10: {
+        marginTop: 10,
+    },
+    marginTop9: {
+        marginTop: 9,
+    },
+    marginTop8: {
+        marginTop: 8,
+    },
+    noteContainer: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: color.brown_F7E4B6,
+        borderRadius: 10,
+        backgroundColor: color.brown_F7E4B6,
+        paddingHorizontal: 16,
+        paddingVertical: 5,
+        marginTop: 10,
+        marginBottom: 10,
+        width: '100%',
+    },
+    LabelNote: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D
+    },
+    noteDescription: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.brown_766F6A,
+        opacity: 0.7,
+        marginTop: 5
     },
 });
 

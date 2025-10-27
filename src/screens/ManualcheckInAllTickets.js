@@ -8,6 +8,7 @@ import { ticketService } from '../api/apiService'; // Import your ticket service
 import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct import path
 import SuccessPopup from '../constants/SuccessPopup';
 import ErrorPopup from '../constants/ErrorPopup';
+import Typography from '../components/Typography';
 
 const ManualCheckInAllTickets = () => {
     const route = useRoute();
@@ -42,6 +43,8 @@ const ManualCheckInAllTickets = () => {
                         firstName: response.data[0]?.user_first_name || '',
                         lastName: response.data[0]?.user_last_name || '',
                         fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
+                        category: response.data[0]?.category || 'N/A',
+                        ticketClass: response.data[0]?.ticket_class || 'N/A',
                     });
                 } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
                     //setError('No tickets found for this order.');
@@ -187,6 +190,58 @@ const ManualCheckInAllTickets = () => {
                     )}
                 </View>
 
+                {/* Show ticket details for single ticket */}
+                {total === 1 && ticketDetails.length === 1 && (
+                    <View style={styles.ticketContainer}>
+                        <View style={styles.row}>
+                            <View style={styles.leftColumnContent}>
+                                <Text style={styles.values}>Category</Text>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
+                                    {ticketDetails[0]?.category || 'N/A'}
+                                </Typography>
+                                <Text style={[styles.values, styles.marginTop10]}>Class</Text>
+                                <Typography
+                                    style={[styles.value, styles.marginTop10]}
+                                    weight="400"
+                                    size={14}
+                                    color={color.brown_3C200A}
+                                >
+                                    {ticketDetails[0]?.ticket_class || 'N/A'}
+                                </Typography>
+                                <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{ticketDetails[0]?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.values]}>Last Scanned On</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{ticketDetails[0]?.last_scanned_on || 'N/A'}</Text>
+                            </View>
+                            <View style={styles.rightColumnContent}>
+                                <Text style={styles.values}>Scanned By</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{ticketDetails[0]?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{ticketDetails[0]?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Price</Text>
+                                <Text style={[styles.value, styles.marginTop10]}>
+                                    {ticketDetails[0]?.currency || 'GHS'} {ticketDetails[0]?.ticket_price || 'N/A'}
+                                </Text>
+                                <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{ticketDetails[0]?.scan_count || 'N/A'}</Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                {/* Note section for single ticket */}
+                {total === 1 && ticketDetails.length === 1 && (
+                    <View style={styles.noteContainer}>
+                        <Text style={styles.LabelNote}>Note</Text>
+                        <Text style={styles.noteDescription}>{ticketDetails[0]?.note || 'No note added'}</Text>
+                    </View>
+                )}
+
                 {total > 1 && ticketDetails.length > 0 && (
                     <View style={styles.ticketsList}>
                         <CheckInAllPopup
@@ -209,6 +264,8 @@ const ManualCheckInAllTickets = () => {
                                 eventInfo: eventInfo,
                                 ticket_number: ticket.ticket_number,
                                 name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
+                                category: ticket.category || 'N/A',
+                                ticketClass: ticket.ticket_class || 'N/A',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}
@@ -316,6 +373,84 @@ const styles = StyleSheet.create({
     emptyText: {
         textAlign: 'center',
         color: '#999999',
+    },
+    ticketContainer: {
+        borderWidth: 1,
+        borderColor: color.white_FFFFFF,
+        borderRadius: 10,
+        backgroundColor: color.white_FFFFFF,
+        padding: 16,
+        marginTop: 15,
+        marginBottom: 6,
+        width: '100%',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    leftColumnContent: {
+        width: '58%',
+        alignItems: 'flex-start',
+    },
+    rightColumnContent: {
+        width: '50%',
+        alignItems: 'flex-start',
+        paddingLeft: 50,
+    },
+    values: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D
+    },
+    value: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+    },
+    valueScanCount: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+    },
+    ticketNumber: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.black_544B45,
+        marginBottom: 10,
+    },
+    marginTop10: {
+        marginTop: 10,
+    },
+    marginTop9: {
+        marginTop: 9,
+    },
+    marginTop8: {
+        marginTop: 8,
+    },
+    noteContainer: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: color.brown_F7E4B6,
+        borderRadius: 10,
+        backgroundColor: color.brown_F7E4B6,
+        paddingHorizontal: 16,
+        paddingVertical: 5,
+        marginTop: 10,
+        marginBottom: 10,
+        width: '100%',
+    },
+    LabelNote: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: color.black_2F251D
+    },
+    noteDescription: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: color.brown_766F6A,
+        opacity: 0.7,
+        marginTop: 5
     },
 });
 

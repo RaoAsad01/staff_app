@@ -8,7 +8,7 @@ import * as Yup from 'yup';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
-import { formatDateOnly } from '../../constants/dateAndTime';
+import { formatDateOnly, formatDateWithMonthName } from '../../constants/dateAndTime';
 
 const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigation = useNavigation();
@@ -36,6 +36,45 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [paymentError, setPaymentError] = useState('');
   const [ticketError, setTicketError] = useState('');
   const [showError, setShowError] = useState(false);
+
+  // Helper function to check if any ticket is selected
+  const hasSelectedTicket = () => {
+    return selectedTickets.some(ticket => ticket.quantity > 0);
+  };
+
+  // Helper function to check if name and email are filled
+  const isNameAndEmailFilled = () => {
+    return name.trim() && email.trim();
+  };
+
+  // Helper function to check if payment section should be enabled
+  const isPaymentSectionEnabled = () => {
+    return hasSelectedTicket() && isNameAndEmailFilled();
+  };
+
+  // Helper function to check if form fields should be enabled
+  const isFormFieldsEnabled = () => {
+    return hasSelectedTicket();
+  };
+
+  // Helper function to get border color for input fields
+  const getInputBorderColor = () => {
+    if (!isFormFieldsEnabled()) {
+      return color.brown_766F6A; // Placeholder color when disabled
+    }
+    return color.borderBrown_CEBCA0; // Normal border color when enabled
+  };
+
+  // Helper function to get border color for payment options
+  const getPaymentBorderColor = (isSelected) => {
+    if (!isPaymentSectionEnabled()) {
+      return color.brown_766F6A; // Placeholder color when disabled
+    }
+    if (isSelected) {
+      return color.btnBrown_AE6F28; // Selected color
+    }
+    return color.borderBrown_CEBCA0; // Normal border color
+  };
 
   const resetData = () => {
     setSelectedTabState('');
@@ -529,8 +568,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           )}
           {/* <Text style={styles.descriptionText}>{item.description}</Text> */}
           <View style={styles.validTillContainer}>
-            <Text style={styles.validTillText}>valid till</Text>
-            <Text style={styles.dateText}>{formatDateOnly(item.sale_end_date_time)}</Text>
+            <Text style={styles.validTillText}>valid until</Text>
+            <Text style={styles.dateText}>{formatDateWithMonthName(item.sale_end_date_time)}</Text>
           </View>
           <Text style={styles.descriptionText}>
             Join the excitement and be{'\n'}part of the crowd at our event!
@@ -633,205 +672,223 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             <View style={{ width: '100%' }}>
               {/* <Text style={styles.inputHeading}>Name</Text> */}
               <View style={styles.whitebg}>
-              <TextInput
-                style={[
-                  styles.input,
-                  touched.name && errors.name ? styles.inputError : null,
-                  values.name ? styles.inputWithText : styles.inputPlaceholder
-                ]}
-                placeholder="Enter Name"
-                placeholderTextColor={color.brown_766F6A}
-                onChangeText={(text) => {
-                  handleChange('name')(text);
-                  setName(text);
-                  // Clear name error when user starts typing
-                  if (nameError) {
-                    setNameError('');
-                  }
-                }}
-                onBlur={handleBlur('name')}
-                value={values.name}
-                keyboardType="default"
-                selectionColor={color.selectField_CEBCA0}
-              />
-              {touched.name && errors.name && (
-                <Text style={styles.errorText}>{errors.name}</Text>
-              )}
-              {nameError && (
-                <Text style={styles.errorText}>{nameError}</Text>
-              )}
+                <TextInput
+                  style={[
+                    styles.input,
+                    touched.name && errors.name ? styles.inputError : null,
+                    values.name ? styles.inputWithText : styles.inputPlaceholder,
+                    { borderColor: getInputBorderColor() },
+                    !isFormFieldsEnabled() && { opacity: 0.5 }
+                  ]}
+                  placeholder="Enter Name"
+                  placeholderTextColor={color.brown_766F6A}
+                  onChangeText={(text) => {
+                    handleChange('name')(text);
+                    setName(text);
+                    // Clear name error when user starts typing
+                    if (nameError) {
+                      setNameError('');
+                    }
+                  }}
+                  onBlur={handleBlur('name')}
+                  value={values.name}
+                  keyboardType="default"
+                  selectionColor={color.selectField_CEBCA0}
+                  editable={isFormFieldsEnabled()}
+                />
+                {touched.name && errors.name && (
+                  <Text style={styles.errorText}>{errors.name}</Text>
+                )}
+                {nameError && (
+                  <Text style={styles.errorText}>{nameError}</Text>
+                )}
 
-              {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
-              <TextInput
-                style={[
-                  styles.input,
-                  touched.email && errors.email ? styles.inputError : null,
-                  values.email ? styles.inputWithText : styles.inputPlaceholder
-                ]}
-                placeholder="Email or Phone Number"
-                placeholderTextColor={color.brown_766F6A}
-                onChangeText={(text) => {
-                  handleChange('email')(text);
-                  setEmail(text);
-                  // Clear email error when user starts typing
-                  if (emailError) {
-                    setEmailError('');
-                  }
-                }}
-                onBlur={handleBlur('email')}
-                value={values.email}
-                keyboardType="email-address"
-                selectionColor={color.selectField_CEBCA0}
-              />
-              {touched.email && errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
-              {emailError && (
-                <Text style={styles.errorText}>{emailError}</Text>
-              )}
-</View>
+                {/* <Text style={styles.inputHeading}>Email or Phone Number</Text> */}
+                <TextInput
+                  style={[
+                    styles.input,
+                    touched.email && errors.email ? styles.inputError : null,
+                    values.email ? styles.inputWithText : styles.inputPlaceholder,
+                    { borderColor: getInputBorderColor() },
+                    !isFormFieldsEnabled() && { opacity: 0.6 }
+                  ]}
+                  placeholder="Email or Phone Number"
+                  placeholderTextColor={color.brown_766F6A}
+                  onChangeText={(text) => {
+                    handleChange('email')(text);
+                    setEmail(text);
+                    // Clear email error when user starts typing
+                    if (emailError) {
+                      setEmailError('');
+                    }
+                  }}
+                  onBlur={handleBlur('email')}
+                  value={values.email}
+                  keyboardType="email-address"
+                  selectionColor={color.selectField_CEBCA0}
+                  editable={isFormFieldsEnabled()}
+                />
+                {touched.email && errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                )}
+                {emailError && (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                )}
+              </View>
             </View>
           )}
         </Formik>
         <View style={styles.lineView3}></View>
         <View style={styles.whitebgPayment}>
-        <View style={styles.Paylabel}>
-          <Text>Pay With</Text>
-        </View>
+          <View style={styles.Paylabel}>
+            <Text>Pay With</Text>
+          </View>
 
-        <View style={styles.paymentOptions}>
-          {/* Cash Button */}
-          <TouchableOpacity
-            style={[styles.paymentOption,
-            paymentOption === 'CASH' && { borderColor: '#AE6F28' }
-            ]}
-            onPress={() => {
-              if (selectedTabState === 'Members') {
-                setPaymentOption('CASH');
-                // Clear any previous errors when opening modal
-                setWrongPurchaseCodeError('');
-                setPurchaseError('');
-                setPurchaseCodeModalVisible(true);
-              } else {
-                setPaymentOption('CASH');
-              }
-              if (paymentError) {
-                setPaymentError('');
-              }
-            }}
-          >
-            {paymentOption === 'CASH' ? (
-              <SvgIcons.cameraIconActive width={24} height={24} />
-            ) : (
-              <SvgIcons.cameraIconInActive width={24} height={24} />
-            )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'CASH' && { color: '#5A2F0E' }]}>
-              Cash
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.paymentOptions}>
+            {/* Cash Button */}
+            <TouchableOpacity
+              style={[styles.paymentOption,
+              { borderColor: getPaymentBorderColor(paymentOption === 'CASH') },
+              !isPaymentSectionEnabled() && { opacity: 0.5 }
+              ]}
+              onPress={() => {
+                if (!isPaymentSectionEnabled()) return;
+                if (selectedTabState === 'Members') {
+                  setPaymentOption('CASH');
+                  // Clear any previous errors when opening modal
+                  setWrongPurchaseCodeError('');
+                  setPurchaseError('');
+                  setPurchaseCodeModalVisible(true);
+                } else {
+                  setPaymentOption('CASH');
+                }
+                if (paymentError) {
+                  setPaymentError('');
+                }
+              }}
+              disabled={!isPaymentSectionEnabled()}
+            >
+              {paymentOption === 'CASH' ? (
+                <SvgIcons.cameraIconActive width={24} height={24} />
+              ) : (
+                <SvgIcons.cameraIconInActive width={24} height={24} />
+              )}
+              <Text style={[styles.paymentOptionText, paymentOption === 'CASH' && { color: '#5A2F0E' }]}>
+                Cash
+              </Text>
+            </TouchableOpacity>
 
-          {/* Debit/Credit Card Button */}
-          <TouchableOpacity
-            style={[styles.paymentOption,
-            paymentOption === 'BANK' && { borderColor: '#AE6F28' }
-            ]}
-            onPress={() => {
-              if (selectedTabState === 'Members') {
-                setPaymentOption('BANK');
-                // Clear any previous errors when opening modal
-                setWrongPurchaseCodeError('');
-                setPurchaseError('');
-                setPurchaseCodeModalVisible(true);
-              } else {
-                setPaymentOption('BANK');
-              }
-              if (paymentError) {
-                setPaymentError('');
-              }
-            }}
-          >
-            {paymentOption === 'BANK' ? (
-              <SvgIcons.cardIconActive width={24} height={24} />
-            ) : (
-              <SvgIcons.cardIconInActive width={24} height={24} />
-            )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'BANK' && { color: '#5A2F0E' }]}>
-              Bank Card
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.paymentOptionsPOS}>
-          <TouchableOpacity
-            style={[styles.paymentOption,
-            paymentOption === 'P.O.S' && { borderColor: '#AE6F28' }
-            ]}
-            onPress={() => {
-              // Validate that tickets are selected and form is completed
-              if (!selectedTickets.some(ticket => ticket.quantity > 0)) {
-                setTicketError('Please select at least one ticket.');
-                return;
-              }
-              if (!name.trim()) {
-                setNameError('Please enter a valid name.');
-                return;
-              }
-              if (!email) {
-                setEmailError('Please enter a valid email or phone number.');
-                return;
-              }
-              
-              if (selectedTabState === 'Members') {
-                setPaymentOption('P.O.S');
-                // Clear any previous errors when opening modal
-                setWrongPurchaseCodeError('');
-                setPurchaseError('');
-                setPurchaseCodeModalVisible(true);
-              } else {
-                setPaymentOption('P.O.S');
-                setPOSModalVisible(true);
-              }
-              if (paymentError) {
-                setPaymentError('');
-              }
-            }}
-          >
-            {paymentOption === 'P.O.S' ? (
-              <SvgIcons.mobMoneyIconActive width={24} height={24} />
-            ) : (
-              <SvgIcons.mobMoneyIconActive width={24} height={24} />
-            )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'P.O.S' && { color: '#5A2F0E' }]}>P.O.S.
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.paymentOption,
-            paymentOption === 'MOBILE_MONEY' && { borderColor: '#AE6F28' }
-            ]}
-            onPress={() => {
-              if (selectedTabState === 'Members') {
-                setPaymentOption('MOBILE_MONEY');
-                // Clear any previous errors when opening modal
-                setWrongPurchaseCodeError('');
-                setPurchaseError('');
-                setPurchaseCodeModalVisible(true);
-              } else {
-                setPaymentOption('MOBILE_MONEY');
-              }
-              if (paymentError) {
-                setPaymentError('');
-              }
-            }}
-          >
-            {paymentOption === 'MOBILE_MONEY' ? (
-              <SvgIcons.mobMoneyIconActive width={24} height={24} />
-            ) : (
-              <SvgIcons.mobMoneyIconInActive width={24} height={24} />
-            )}
-            <Text style={[styles.paymentOptionText, paymentOption === 'MOBILE_MONEY' && { color: '#5A2F0E' }]}>
-              Mobile Money
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {/* Debit/Credit Card Button */}
+            <TouchableOpacity
+              style={[styles.paymentOption,
+              { borderColor: getPaymentBorderColor(paymentOption === 'BANK') },
+              !isPaymentSectionEnabled() && { opacity: 0.5 }
+              ]}
+              onPress={() => {
+                if (!isPaymentSectionEnabled()) return;
+                if (selectedTabState === 'Members') {
+                  setPaymentOption('BANK');
+                  // Clear any previous errors when opening modal
+                  setWrongPurchaseCodeError('');
+                  setPurchaseError('');
+                  setPurchaseCodeModalVisible(true);
+                } else {
+                  setPaymentOption('BANK');
+                }
+                if (paymentError) {
+                  setPaymentError('');
+                }
+              }}
+              disabled={!isPaymentSectionEnabled()}
+            >
+              {paymentOption === 'BANK' ? (
+                <SvgIcons.cardIconActive width={24} height={24} />
+              ) : (
+                <SvgIcons.cardIconInActive width={24} height={24} />
+              )}
+              <Text style={[styles.paymentOptionText, paymentOption === 'BANK' && { color: '#5A2F0E' }]}>
+                Bank Card
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.paymentOptionsPOS}>
+            <TouchableOpacity
+              style={[styles.paymentOption,
+              { borderColor: getPaymentBorderColor(paymentOption === 'P.O.S') },
+              !isPaymentSectionEnabled() && { opacity: 0.5 }
+              ]}
+              onPress={() => {
+                if (!isPaymentSectionEnabled()) return;
+                // Validate that tickets are selected and form is completed
+                if (!selectedTickets.some(ticket => ticket.quantity > 0)) {
+                  setTicketError('Please select at least one ticket.');
+                  return;
+                }
+                if (!name.trim()) {
+                  setNameError('Please enter a valid name.');
+                  return;
+                }
+                if (!email) {
+                  setEmailError('Please enter a valid email or phone number.');
+                  return;
+                }
+
+                if (selectedTabState === 'Members') {
+                  setPaymentOption('P.O.S');
+                  // Clear any previous errors when opening modal
+                  setWrongPurchaseCodeError('');
+                  setPurchaseError('');
+                  setPurchaseCodeModalVisible(true);
+                } else {
+                  setPaymentOption('P.O.S');
+                  setPOSModalVisible(true);
+                }
+                if (paymentError) {
+                  setPaymentError('');
+                }
+              }}
+              disabled={!isPaymentSectionEnabled()}
+            >
+              {paymentOption === 'P.O.S' ? (
+                <SvgIcons.mobMoneyIconActive width={24} height={24} />
+              ) : (
+                <SvgIcons.mobMoneyIconActive width={24} height={24} />
+              )}
+              <Text style={[styles.paymentOptionText, paymentOption === 'P.O.S' && { color: '#5A2F0E' }]}>P.O.S.
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.paymentOption,
+              { borderColor: getPaymentBorderColor(paymentOption === 'MOBILE_MONEY') },
+              !isPaymentSectionEnabled() && { opacity: 0.5 }
+              ]}
+              onPress={() => {
+                if (!isPaymentSectionEnabled()) return;
+                if (selectedTabState === 'Members') {
+                  setPaymentOption('MOBILE_MONEY');
+                  // Clear any previous errors when opening modal
+                  setWrongPurchaseCodeError('');
+                  setPurchaseError('');
+                  setPurchaseCodeModalVisible(true);
+                } else {
+                  setPaymentOption('MOBILE_MONEY');
+                }
+                if (paymentError) {
+                  setPaymentError('');
+                }
+              }}
+              disabled={!isPaymentSectionEnabled()}
+            >
+              {paymentOption === 'MOBILE_MONEY' ? (
+                <SvgIcons.mobMoneyIconActive width={24} height={24} />
+              ) : (
+                <SvgIcons.mobMoneyIconInActive width={24} height={24} />
+              )}
+              <Text style={[styles.paymentOptionText, paymentOption === 'MOBILE_MONEY' && { color: '#5A2F0E' }]}>
+                Mobile Money
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {paymentError && (
           <Text style={styles.errorText}>{paymentError}</Text>
@@ -876,10 +933,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
             )}
             <TouchableOpacity style={[
               styles.getTicketsButtonPOS,
-              !selectedTickets.some(ticket => ticket.quantity > 0) && { backgroundColor: '#AE6F28A0' },
+              (!selectedTickets.some(ticket => ticket.quantity > 0) || !transactionNumber.trim()) && { backgroundColor: '#AE6F28A0' },
             ]}
               onPress={handlePOSPayment}
-              disabled={!selectedTickets.some(ticket => ticket.quantity > 0)}
+              disabled={!selectedTickets.some(ticket => ticket.quantity > 0) || !transactionNumber.trim()}
             >
               <Text style={styles.getTicketsButtonTextPOS}>Get Ticket(s)</Text>
             </TouchableOpacity>
@@ -889,7 +946,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           </View>
         </View>
       </Modal>
-      
+
       {/* Purchase Code Modal */}
       <Modal visible={isPurchaseCodeModalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
@@ -921,17 +978,17 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               <Text style={styles.errorTextTransaction}>{purchaseError}</Text>
             )}
             {wrongPurchaseCodeError && (
-               <View style={styles.wrongPurchaseCodeErrorContainer}>
-               <TouchableOpacity onPress={dismissError}>
-                 <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
-               </TouchableOpacity>
-               <Text style={styles.wrongPurchaseCodeErrorText}>
-                 {wrongPurchaseCodeError}
-               </Text>
-             </View>
+              <View style={styles.wrongPurchaseCodeErrorContainer}>
+                <TouchableOpacity onPress={dismissError}>
+                  <SvgIcons.crossIconRed width={20} height={20} fill={color.red_FF3B30} />
+                </TouchableOpacity>
+                <Text style={styles.wrongPurchaseCodeErrorText}>
+                  {wrongPurchaseCodeError}
+                </Text>
+              </View>
 
             )}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.getTicketsButtonPOS,
                 !purchaseCodeModal.trim() && { backgroundColor: '#AE6F28A0' },
@@ -941,7 +998,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                   setPurchaseError('Please enter a valid purchase code.');
                   return;
                 }
-                
+
                 try {
                   // Validate purchase code with backend
                   const items = selectedTickets
@@ -972,11 +1029,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                   // If successful, set the purchase code and proceed
                   setPurchaseCode(purchaseCodeModal);
                   setPurchaseCodeModalVisible(false);
-                  
+
                   // Extract order number from response
                   const orderNumber = response?.data?.order_number;
                   const ticketNumber = response?.data?.ticket_number;
-                  
+
                   // If it's POS payment, show the transaction ID modal
                   if (paymentOption === 'P.O.S') {
                     setPOSModalVisible(true);
@@ -1010,8 +1067,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 {paymentOption === 'P.O.S' ? 'Continue' : 'Get Ticket(s)'}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => setPurchaseCodeModalVisible(false)} 
+            <TouchableOpacity
+              onPress={() => setPurchaseCodeModalVisible(false)}
               style={styles.cancelButtonContainer}
             >
               <Text style={styles.cancelText}>Cancel</Text>
@@ -1151,7 +1208,7 @@ const styles = StyleSheet.create({
   paymentOption: {
     flexDirection: 'row',
     padding: 15,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: '#CEBCA0',
     borderRadius: 10,
     justifyContent: 'center',
@@ -1276,7 +1333,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     borderColor: color.borderBrown_CEBCA0,
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderRadius: 10,
     paddingHorizontal: 10,
     marginBottom: 10,
@@ -1395,6 +1452,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     marginTop: 18,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 
