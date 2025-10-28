@@ -68,31 +68,25 @@ const monthAbbreviations = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Au
 export const formatDateWithMonthName = (dateString) => {
   if (!dateString) return '';
   
-  console.log('formatDateWithMonthName input:', dateString);
-  
   // Try to parse the date string first to handle ISO format (2025-10-30T20:05:00Z or 2025-10-30)
   let d;
   
   // Handle ISO format with time
   if (dateString.includes('T')) {
     d = new Date(dateString);
-    console.log('ISO format detected, parsed date:', d);
   }
   // Handle DD-MM-YYYY format (e.g., "11-09-2025")
   else if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
     const [day, month, year] = dateString.split('-').map(Number);
     d = new Date(year, month - 1, day); // Month is 0-indexed, creates local date
-    console.log('DD-MM-YYYY format detected, parsed date:', d);
   }
   // Handle YYYY-MM-DD format
   else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     const [year, month, day] = dateString.split('-').map(Number);
     d = new Date(year, month - 1, day); // Month is 0-indexed, creates local date
-    console.log('YYYY-MM-DD format detected, parsed date:', d);
   }
   else {
     d = new Date(dateString);
-    console.log('Default parsing, parsed date:', d);
   }
   
   if (!isNaN(d.getTime())) {
@@ -113,11 +107,9 @@ export const formatDateWithMonthName = (dateString) => {
     
       
     const formattedDate = `${day} ${month} ${year}`;
-    console.log('Formatted date:', formattedDate);
     return formattedDate;
   }
   
-  console.log('Invalid date, returning original string');
   
   // Fallback: Try to parse DD-MM-YYYY format manually
   const parts = dateString.split('-');

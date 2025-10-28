@@ -123,6 +123,16 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           }
 
           const stats = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam);
+          
+          // Log for debugging ORGANIZER payment channels
+          if (userRole === 'ORGANIZER') {
+            console.log('📊 Dashboard Stats for ORGANIZER:', JSON.stringify(stats, null, 2));
+            console.log('📊 payment_channels location check:');
+            console.log('  - stats?.data?.payment_channels:', stats?.data?.payment_channels);
+            console.log('  - stats?.data?.box_office_sales?.payment_channels:', stats?.data?.box_office_sales?.payment_channels);
+            console.log('  - stats?.data?.box_office_sales?.payment_channel:', stats?.data?.box_office_sales?.payment_channel);
+          }
+          
           setDashboardStats(stats);
           setCurrentSalesType(salesParam);
           setError(null);
@@ -710,9 +720,35 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           {userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
             <AdminBoxOfficePaymentChannel stats={dashboardStats} />
           )}
-           {userRole === 'ORGANIZER' && (
-            <AdminBoxOfficePaymentChannel stats={dashboardStats} />
-          )}
+           {userRole === 'ORGANIZER' && (() => {
+            console.log('🔍 ORGANIZER Payment Channels Debug:');
+            console.log('dashboardStats?.data?.payment_channels:', dashboardStats?.data?.payment_channels);
+            console.log('dashboardStats?.data?.payment_channel:', dashboardStats?.data?.payment_channel);
+            console.log('dashboardStats?.data?.box_office_sales:', dashboardStats?.data?.box_office_sales);
+            console.log('Full dashboardStats.data keys:', Object.keys(dashboardStats?.data || {}));
+            
+            // Determine the payment channel data from various possible locations
+            const paymentChannelData = dashboardStats?.data?.payment_channels 
+              || dashboardStats?.data?.payment_channel
+              || dashboardStats?.data?.box_office_sales?.payment_channels
+              || dashboardStats?.data?.box_office_sales?.payment_channel;
+            
+            console.log(' Resolved paymentChannelData:', paymentChannelData);
+            
+            return (
+              <AdminBoxOfficePaymentChannel stats={{
+                ...dashboardStats,
+                data: {
+                  ...dashboardStats?.data,
+                  box_office_sales: {
+                    ...dashboardStats?.data?.box_office_sales,
+                    // Map payment_channels (plural) to payment_channel (singular) for compatibility
+                    payment_channel: paymentChannelData
+                  }
+                }
+              }} />
+            );
+          })()}
 
           <View style={styles.tabContainer}>
             <View style={styles.tabRow}>

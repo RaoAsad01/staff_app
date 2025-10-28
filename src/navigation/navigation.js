@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import MyTabs from '../screens/MyTabs';
@@ -9,9 +9,8 @@ import CheckInAllTickets from '../screens/CheckInAllTickets';
 import ManualCheckInAllTickets from '../screens/ManualcheckInAllTickets';
 import TicketScanned from '../screens/TicketScanned';
 import SplashScreenComponent from '../screens/SplashScreen';
+import InitialScreen from '../screens/InitialScreen';
 import StaffDashboard from '../screens/dashboard/StaffDashboard';
-import * as SecureStore from 'expo-secure-store';
-import { View, Text, ActivityIndicator } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,42 +18,21 @@ function LoggedInScreen() {
   return <MyTabs />;
 }
 
-function LoadingScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="#AE6F28" />
-      <Text style={{ marginTop: 10 }}>Loading...</Text>
-    </View>
-  );
-}
-
 function Navigation({ route }) {
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuthToken = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('accessToken');
-        setHasCheckedAuth(true);
-        // We'll handle navigation from the SplashScreen component
-      } catch (error) {
-        console.error('Error checking auth token:', error);
-        setHasCheckedAuth(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuthToken();
-  }, []);
-
-  if (isLoading || !hasCheckedAuth) {
-    return <LoadingScreen />;
-  }
-
   return (
-    <Stack.Navigator initialRouteName="Splash">
+    <Stack.Navigator initialRouteName="Initial">
+      <Stack.Screen 
+        name="Initial" 
+        component={InitialScreen} 
+        options={{ 
+          headerShown: false,
+          unmountOnBlur: false,
+          statusBarHidden: true,
+          statusBarStyle: 'light',
+          statusBarTranslucent: true,
+          animation: 'none'
+        }} 
+      />
       <Stack.Screen 
         name="Splash" 
         component={SplashScreenComponent} 

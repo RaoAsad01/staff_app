@@ -23,18 +23,14 @@ const SplashScreenComponent = () => {
 
   const handleGetStarted = async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      // Mark that the user has seen the onboarding
+      await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
       
-      if (token) {
-        // User has a token, go to main app (Check In screen)
-        navigation.replace('LoggedIn');
-      } else {
-        // No token or logged out, go to login
-        navigation.replace('Login');
-      }
+      // After onboarding, go to login
+      navigation.replace('Login');
     } catch (error) {
-      console.error('Error checking auth token:', error);
-      // On error, go to login
+      console.error('Error saving onboarding status:', error);
+      // On error, still go to login
       navigation.replace('Login');
     }
   };
