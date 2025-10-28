@@ -14,6 +14,8 @@ import ScanCategoriesDetails from '../ScanCategoriesDetails';
 import ScanListComponent from '../ScanListComponent';
 import OverallStatistics from '../OverallStatistics';
 import EventsModal from '../../../components/EventsModal';
+import AdminBoxOfficePaymentChannel from '../AdminBoxOfficePaymentChannel';
+import AvailableTicketsCard from '../AvailableTicketsCard';
 import { truncateCityName } from '../../../utils/stringUtils';
 import { truncateEventName } from '../../../utils/stringUtils';
 import { formatDateWithMonthName } from '../../../constants/dateAndTime';
@@ -38,6 +40,10 @@ const StaffDashboard = () => {
   const [scanAnalyticsData, setScanAnalyticsData] = useState(null);
   const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
   const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
+  const [checkInAnalyticsData, setCheckInAnalyticsData] = useState(null);
+  const [checkInAnalyticsTitle, setCheckInAnalyticsTitle] = useState('');
+  const [activeCheckInAnalytics, setActiveCheckInAnalytics] = useState(null);
+  const [selectedSubTab, setSelectedSubTab] = useState('Check-Ins'); // For Sales tab sub-navigation
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -61,15 +67,6 @@ const StaffDashboard = () => {
           // Use the same API but with staff_uuid parameter and sales=box_office
           const stats = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, null, null, staffUuid);
           setDashboardStats(stats);
-
-          console.log('StaffDashboard - Endpoint Used: /events/{event_uuid}/sales/');
-          console.log('StaffDashboard - Full URL: /events/' + currentEventInfo.eventUuid + '/sales/?staff_uuid=' + staffUuid + '&sales=' + salesParam);
-          console.log('StaffDashboard - HTTP Method: GET');
-          console.log('StaffDashboard - Full Backend Response:', JSON.stringify(stats, null, 2));
-          console.log('StaffDashboard - BoxOffice Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
-          console.log('StaffDashboard - Terminal Statistics:', JSON.stringify(stats?.data?.terminal_statistics, null, 2));
-          console.log('StaffDashboard - Available Tickets Raw:', stats?.data?.terminal_statistics?.available_tickets);
-          console.log('StaffDashboard - Total Scanned Raw:', stats?.data?.terminal_statistics?.total_scanned);
           setError(null);
         }
       } catch (err) {
@@ -85,6 +82,10 @@ const StaffDashboard = () => {
 
   const handleSaleScanTabPress = (tab) => {
     setSelectedSaleScanTab(tab);
+  };
+
+  const handleSubTabPress = (tab) => {
+    setSelectedSubTab(tab);
   };
 
   const handleEventSelect = (event) => {
@@ -219,10 +220,58 @@ const StaffDashboard = () => {
         setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
       } else {
-        console.warn('⚠️ No scan analytics data found in response');
+        console.warn('No scan analytics data found in response');
       }
     } catch (error) {
-      console.error('❌ Error fetching scan analytics for', scanType, error);
+      console.error('Error fetching scan analytics for', scanType, error);
+    }
+  };
+
+  const handleCheckInAnalyticsPress = async (ticketType, title, ticketUuid = null, subitemLabel = null) => {
+    if (!currentEventInfo?.eventUuid) return;
+
+    const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
+
+    // If already active, deactivate
+    if (activeCheckInAnalytics === analyticsKey) {
+      setActiveCheckInAnalytics(null);
+      setCheckInAnalyticsData(null);
+      setCheckInAnalyticsTitle('');
+      return;
+    }
+
+    try {
+      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
+      let salesParam = null;
+
+      const response = await ticketService.fetchDashboardStats(currentEventInfo.eventUuid, salesParam, ticketType, ticketUuid, staffUuid);
+
+      // Handle Check-Ins analytics
+      if (response?.data?.checkin_analytics?.data) {
+        const analyticsData = response.data.checkin_analytics.data;
+        const analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
+
+        const chartData = Object.entries(analyticsData).map(([hour, value]) => {
+          // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
+          let formattedTime = hour;
+          if (hour.includes(':00 ')) {
+            const [time, period] = hour.split(' ');
+            const [hours] = time.split(':');
+            formattedTime = `${hours}${period.toLowerCase()}`;
+          }
+
+          return {
+            time: formattedTime,
+            value: value || 0
+          };
+        });
+
+        setCheckInAnalyticsData(chartData);
+        setCheckInAnalyticsTitle(analyticsTitle);
+        setActiveCheckInAnalytics(analyticsKey);
+      }
+    } catch (error) {
+      console.error('Error fetching check-in analytics for', ticketType, error);
     }
   };
 
@@ -331,6 +380,169 @@ const StaffDashboard = () => {
     }));
   }
 
+  const getCheckInData = () => {
+    const dataSource = dashboardStats?.data?.check_ins;
+
+    if (dataSource?.total_checkins === undefined) {
+      return [{
+        label: "Total Check-Ins",
+        checkedIn: 0,
+        total: 0,
+        percentage: 0
+      }];
+    }
+
+    const totalCheckedIn = dataSource.total_checkins || 0;
+    const totalTickets = dashboardStats?.data?.sold_tickets?.total_tickets || 0;
+
+    const byCategory = dataSource.by_category;
+    let typeRows = [];
+    if (byCategory) {
+      const types = Object.keys(byCategory || {});
+      typeRows = types.map(type => {
+        const categoryData = byCategory[type];
+        const checkedIn = categoryData?.total_checkins || 0;
+        const total = categoryData?.total_tickets || 0;
+
+        // Create subitems from the ticket_wise data for staff users
+        const subItems = [];
+        if (categoryData && typeof categoryData === 'object') {
+          Object.keys(categoryData).forEach(ticketName => {
+            if (ticketName !== 'total_tickets' && ticketName !== 'total_checkins' && categoryData[ticketName]) {
+              const ticketInfo = categoryData[ticketName];
+              if (ticketInfo.total !== undefined && ticketInfo.checked_in !== undefined) {
+                subItems.push({
+                  label: ticketName,
+                  checkedIn: ticketInfo.checked_in,
+                  total: ticketInfo.total,
+                  percentage: ticketInfo.total > 0 ? Math.round((ticketInfo.checked_in / ticketInfo.total) * 100) : 0,
+                  ticketUuid: ticketInfo.ticket_uuid
+                });
+              }
+            }
+          });
+        }
+
+        return {
+          label: type,
+          checkedIn: checkedIn,
+          total: total,
+          percentage: total ? Math.round((checkedIn / total) * 100) : 0,
+          subItems: subItems.length > 0 ? subItems : undefined
+        };
+      });
+    }
+
+    return [
+      {
+        label: "Total Check-Ins",
+        checkedIn: totalCheckedIn,
+        total: totalTickets,
+        percentage: totalTickets ? Math.round((totalCheckedIn / totalTickets) * 100) : 0
+      },
+      ...typeRows
+    ];
+  };
+
+  const getAvailableTicketsData = () => {
+    if (!dashboardStats?.data?.available_tickets) {
+      return [{
+        label: "Available",
+        checkedIn: 0,
+        total: 0,
+        percentage: 0
+      }];
+    }
+
+    const availableTickets = dashboardStats?.data?.available_tickets;
+    const byCategory = availableTickets;
+
+    let typeRows = [];
+    if (byCategory) {
+      const types = Object.keys(byCategory || {});
+      typeRows = types.map(type => {
+        const categoryData = byCategory[type];
+        const available = categoryData?.available_tickets || 0;
+        const total = categoryData?.total_tickets || 0;
+
+        // Create subitems from the ticket_wise data for staff users
+        const subItems = [];
+        if (categoryData && typeof categoryData === 'object') {
+          Object.keys(categoryData).forEach(ticketName => {
+            if (ticketName !== 'total_tickets' && ticketName !== 'available_tickets' && categoryData[ticketName]) {
+              const ticketInfo = categoryData[ticketName];
+              if (ticketInfo.total !== undefined && ticketInfo.available !== undefined) {
+                subItems.push({
+                  label: ticketName,
+                  checkedIn: ticketInfo.available,
+                  total: ticketInfo.total,
+                  percentage: ticketInfo.total > 0 ? Math.round((ticketInfo.available / ticketInfo.total) * 100) : 0,
+                  ticketUuid: ticketInfo.ticket_uuid
+                });
+              }
+            }
+          });
+        }
+
+        return {
+          label: type,
+          checkedIn: available,
+          total: total,
+          percentage: total > 0 ? Math.round((available / total) * 100) : 0,
+          subItems: subItems.length > 0 ? subItems : undefined
+        };
+      });
+    }
+
+    return typeRows;
+  };
+
+  const renderSubTabContent = () => {
+    if (selectedSubTab === "Check-Ins") {
+      const checkInData = getCheckInData();
+      const checkInChartData = getCheckinAnalyticsChartData(dashboardStats?.data?.checkin_analytics);
+
+      return (
+        <>
+          <CheckInSoldTicketsCard
+            title="Check-Ins"
+            data={checkInData}
+            showRemaining={false}
+            userRole="STAFF"
+            stats={dashboardStats}
+            onAnalyticsPress={handleCheckInAnalyticsPress}
+            activeAnalytics={activeCheckInAnalytics}
+          />
+          {checkInAnalyticsData && activeCheckInAnalytics ? (
+            <AnalyticsChart
+              title={checkInAnalyticsTitle}
+              data={checkInAnalyticsData}
+              dataType="checked in"
+            />
+          ) : (
+            <AnalyticsChart
+              title="Check-Ins"
+              data={checkInChartData}
+              dataType="checked in"
+            />
+          )}
+        </>
+      );
+    } else if (selectedSubTab === "Available") {
+      const availableTicketsData = getAvailableTicketsData();
+
+      return (
+        <>
+          <AvailableTicketsCard
+            data={availableTicketsData}
+            stats={dashboardStats}
+          />
+        </>
+      );
+    }
+    return null;
+  };
+
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
 
@@ -374,6 +586,57 @@ const StaffDashboard = () => {
               dataType="sold"
             />
           )}
+          <AdminBoxOfficePaymentChannel stats={{
+            ...dashboardStats,
+            data: {
+              ...dashboardStats?.data,
+              box_office_sales: {
+                ...dashboardStats?.data?.box_office_sales,
+                // Map payment_channels (plural) to payment_channel (singular) for compatibility
+                payment_channel: dashboardStats?.data?.payment_channels || dashboardStats?.data?.payment_channel
+              }
+            }
+          }} />
+
+          {/* Sub-tabs for Check-Ins and Available */}
+          <View style={styles.subTabContainer}>
+            <View style={styles.subTabRow}>
+              <TouchableOpacity
+                style={[
+                  styles.subTabButton,
+                  selectedSubTab === "Check-Ins" && styles.selectedSubTabButton,
+                ]}
+                onPress={() => handleSubTabPress("Check-Ins")}
+              >
+                <Text
+                  style={[
+                    styles.subTabButtonText,
+                    selectedSubTab === "Check-Ins" && styles.selectedSubTabButtonText,
+                  ]}
+                >
+                  Check-Ins
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.subTabButton,
+                  selectedSubTab === "Available" && styles.selectedSubTabButton,
+                ]}
+                onPress={() => handleSubTabPress("Available")}
+              >
+                <Text
+                  style={[
+                    styles.subTabButtonText,
+                    selectedSubTab === "Available" && styles.selectedSubTabButtonText,
+                  ]}
+                >
+                  Available
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {renderSubTabContent()}
         </>
       );
     } else if (selectedSaleScanTab === "Scans") {
@@ -641,6 +904,45 @@ const styles = StyleSheet.create({
   overallStatisticsContainer: {
     marginTop: 4,
     marginBottom: 12,
+  },
+  subTabContainer: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  subTabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  subTabButton: {
+    padding: 10,
+    width: '50%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 40,
+  },
+  subTabButtonText: {
+    color: color.black_544B45,
+    fontSize: 14,
+    fontWeight: '400',
+    textAlign: 'center',
+  },
+  selectedSubTabButton: {
+    width: '50%',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: color.white_FFFFFF,
+    borderRadius: 7,
+    backgroundColor: color.white_FFFFFF,
+  },
+  selectedSubTabButtonText: {
+    color: color.placeholderTxt_24282C,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

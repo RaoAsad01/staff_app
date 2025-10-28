@@ -10,51 +10,90 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
     console.log('================================================');
     console.log('💰 AdminBoxOfficePaymentChannel - Raw Stats Data:', JSON.stringify(stats, null, 2));
     console.log('💰 AdminBoxOfficePaymentChannel - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
-    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel, null, 2));
-    console.log('💰 AdminBoxOfficePaymentChannel - By Ticket Types:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel?.by_ticket_types, null, 2));
+    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channels:', JSON.stringify(stats?.data?.box_office_sales?.payment_channels, null, 2));
     console.log('================================================');
 
     const boxOfficeSalesData = stats?.data?.box_office_sales || {};
-    const paymentChannel = boxOfficeSalesData?.payment_channel || {};
-    const byTicketTypes = paymentChannel?.by_ticket_types || {};
-    const total = Object.values(byTicketTypes).reduce((sum, value) => sum + parseFloat(value || 0), 0);
-
-    // Map ticket types to colors
-    const ticketTypeColors = {
-        "Early Bird": "#945F22",
-        "VIP Ticket": "#87807C",
-        "Members": "#EDB58A",
-        "Standard": "#AE6F28",
-        "Premium": "#F4A261"
+    // Try both payment_channels (plural) and payment_channel (singular) for backward compatibility
+    const paymentChannel = boxOfficeSalesData?.payment_channels || boxOfficeSalesData?.payment_channel || {};
+    
+    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Keys:', Object.keys(paymentChannel));
+    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Values:', paymentChannel);
+    
+    // Map payment methods to colors
+    const paymentMethodColors = {
+        "Cash": "#AE6F28",
+        "Card": "#87807C",
+        "MoMo": "#EDB58A",
+        "Mobile Money": "#EDB58A",
+        "P.O.S.": "#945F22",
+        "POS": "#945F22",
+        "Wallet": "#F4A261",
+        "Bank Transfer": "#CEBCA0",
+        "Free": "#2A9D8F"
     };
 
     // Transform the data into the required format for pie chart
-    const values = Object.keys(byTicketTypes).length > 0
-        ? Object.entries(byTicketTypes).map(([key, value], index) => ({
-            label: key,
-            value: parseFloat(value) || 0,
-            color: ticketTypeColors[key] || "#AE6F28" // Fallback color
-        }))
-        : [
-            {
-                label: "No Data",
-                value: 0,
-                color: "#AE6F28"
-            }
-        ];
+    let values = [];
+    
+    if (Object.keys(paymentChannel).length > 0) {
+        values = Object.entries(paymentChannel)
+            .filter(([key, value]) => {
+                // Filter out unwanted payment methods or zero values
+                const lowerKey = key.toLowerCase();
+                const shouldExclude = ['wallet', 'bank_transfer', 'free'].includes(lowerKey);
+                const hasValue = parseFloat(value) > 0;
+                console.log(`💰 Checking ${key}: value=${value}, exclude=${shouldExclude}, hasValue=${hasValue}`);
+                return !shouldExclude && hasValue;
+            })
+            .map(([key, value], index) => {
+                const label = key === 'mobile_money' ? 'MoMo' :
+                    key === 'pos' ? 'P.O.S.' :
+                        key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '); // Capitalize and replace underscore
 
-    const totalValue = values.reduce((sum, item) => sum + item.value, 0);
+                return {
+                    label: label,
+                    value: parseFloat(value) || 0,
+                    color: paymentMethodColors[label] || "#87807C" // Fallback color
+                };
+            });
+    }
+    
+    // If no values after filtering, show "No Data"
+    if (values.length === 0) {
+        console.log('💰 No payment channel data found, showing No Data');
+        values = [{
+            label: "No Data",
+            value: 0,
+            color: "#87807C"
+        }];
+    }
+    
+    console.log('💰 Final values array:', values);
+
+    // Sort values in desired order
+    const paymentOrder = ["Cash", "P.O.S.", "Card", "MoMo"];
+    const sortedValues = paymentOrder
+        .map(type => values.find(v => v.label === type))
+        .filter(Boolean);
+    
+    // Add any remaining values not in the order list
+    const remainingValues = values.filter(v => !paymentOrder.includes(v.label));
+    const allValues = [...sortedValues, ...remainingValues];
+    
+    const total = allValues.reduce((sum, item) => sum + item.value, 0);
+
     const radius = 50;
     const strokeWidth = 10;
     const circumference = 2 * Math.PI * radius;
     const gapSize = 15;
-    const totalGap = gapSize * values.length;
+    const totalGap = gapSize * allValues.length;
 
     // Calculate segments for the circle with visible gaps and no overlap
     const calculateSegments = () => {
         let currentOffset = 0;
-        return values.map((item) => {
-            const percentage = totalValue > 0 ? item.value / totalValue : 0;
+        return allValues.map((item) => {
+            const percentage = total > 0 ? item.value / total : 0;
             // Distribute the circumference minus total gap among the arcs
             const dashLength = (circumference - totalGap) * percentage;
             const segment = {
@@ -105,7 +144,7 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
                         </View>
                     </View>
                     <View style={styles.paymentMethod}>
-                        {values.map((item, index) => (
+                        {allValues.map((item, index) => (
                             <View style={styles.paymentItem} key={index}>
                                 <View style={styles.colorBoxWrapper}>
                                     <View style={[styles.colorBox, { backgroundColor: item.color }]} />

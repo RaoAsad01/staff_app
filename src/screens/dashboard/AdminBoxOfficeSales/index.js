@@ -17,35 +17,27 @@ const AdminBoxOfficeSales = ({ stats }) => {
   const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};
   const total = boxOfficeSalesData?.total || 0;
 
-  // Map payment methods to colors (same as BoxOfficeSales)
-  const paymentMethodColors = {
-    "Cash": "#AE6F28",
-    "Card": "#87807C",
-    "Mobile Money": "#EDB58A",
-    "Bank Transfer": "#CEBCA0",
-    "Wallet": "#F4A261",
-    "P.O.S.": "#945F22",
-    "Free": "#2A9D8F",
-    "MoMo": "#EDB58A",
+  // Map ticket types to colors (by_payment_methods contains ticket types)
+  const ticketTypeColors = {
+    "VIP": "#87807C",
+    "General": "#CEBCA0",
+    "Early Bird": "#945F22",
+    "VIP Ticket": "#87807C",
+    "Members": "#EDB58A",
+    "Standard": "#AE6F28",
+    "Premium": "#F4A261"
   };
 
   // Transform the data into the required format for pie chart
+  // by_payment_methods actually contains ticket types and their sales amounts
   const values = Object.keys(byPaymentMethods).length > 0
     ? Object.entries(byPaymentMethods)
-      .filter(([key, value]) => {
-        // Filter out unwanted payment methods
-        const lowerKey = key.toLowerCase();
-        return !['wallet', 'bank_transfer', 'free'].includes(lowerKey);
-      })
+      .filter(([key, value]) => parseFloat(value) > 0) // Only show non-zero values
       .map(([key, value], index) => {
-        const label = key === 'mobile_money' ? 'MoMo' :
-          key === 'pos' ? 'P.O.S.' :
-            key.charAt(0).toUpperCase() + key.slice(1); // Capitalize first letter
-
         return {
-          label: label,
+          label: key,
           value: parseFloat(value) || 0,
-          color: paymentMethodColors[label] || "#87807C" // Fallback color
+          color: ticketTypeColors[key] || "#87807C" // Fallback color
         };
       })
     : [
@@ -56,10 +48,8 @@ const AdminBoxOfficeSales = ({ stats }) => {
       }
     ];
 
-  const paymentOrder = ["Cash", "Card", "MoMo", "P.O.S."];
-  const sortedValues = paymentOrder
-    .map(type => values.find(v => v.label === type))
-    .filter(Boolean);
+  // Sort by value (highest first) or keep original order
+  const sortedValues = values.sort((a, b) => b.value - a.value);
 
   const totalValue = values.reduce((sum, item) => sum + item.value, 0);
   const radius = 50;

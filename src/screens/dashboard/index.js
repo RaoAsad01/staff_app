@@ -710,6 +710,9 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           {userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
             <AdminBoxOfficePaymentChannel stats={dashboardStats} />
           )}
+           {userRole === 'ORGANIZER' && (
+            <AdminBoxOfficePaymentChannel stats={dashboardStats} />
+          )}
 
           <View style={styles.tabContainer}>
             <View style={styles.tabRow}>
