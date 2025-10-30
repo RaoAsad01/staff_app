@@ -15,6 +15,8 @@ import ScanListComponent from '../ScanListComponent';
 import OverallStatistics from '../OverallStatistics';
 import EventsModal from '../../../components/EventsModal';
 import AdminBoxOfficePaymentChannel from '../AdminBoxOfficePaymentChannel';
+import TotalPaymentChannelCard from '../TotalPaymentChannelCard';
+import PaymentChannelAnalytics from '../PaymentChannelAnalytics';
 import AvailableTicketsCard from '../AvailableTicketsCard';
 import { truncateCityName } from '../../../utils/stringUtils';
 import { truncateEventName } from '../../../utils/stringUtils';
@@ -43,7 +45,7 @@ const StaffDashboard = () => {
   const [checkInAnalyticsData, setCheckInAnalyticsData] = useState(null);
   const [checkInAnalyticsTitle, setCheckInAnalyticsTitle] = useState('');
   const [activeCheckInAnalytics, setActiveCheckInAnalytics] = useState(null);
-  const [selectedSubTab, setSelectedSubTab] = useState('Check-Ins'); // For Sales tab sub-navigation
+  const [activePaymentChannel, setActivePaymentChannel] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -84,8 +86,15 @@ const StaffDashboard = () => {
     setSelectedSaleScanTab(tab);
   };
 
-  const handleSubTabPress = (tab) => {
-    setSelectedSubTab(tab);
+
+  const handlePaymentChannelPress = (paymentChannel) => {
+    console.log('Payment channel pressed:', paymentChannel);
+    // Toggle active payment channel
+    if (activePaymentChannel === paymentChannel) {
+      setActivePaymentChannel(null);
+    } else {
+      setActivePaymentChannel(paymentChannel);
+    }
   };
 
   const handleEventSelect = (event) => {
@@ -497,51 +506,6 @@ const StaffDashboard = () => {
     return typeRows;
   };
 
-  const renderSubTabContent = () => {
-    if (selectedSubTab === "Check-Ins") {
-      const checkInData = getCheckInData();
-      const checkInChartData = getCheckinAnalyticsChartData(dashboardStats?.data?.checkin_analytics);
-
-      return (
-        <>
-          <CheckInSoldTicketsCard
-            title="Check-Ins"
-            data={checkInData}
-            showRemaining={false}
-            userRole="STAFF"
-            stats={dashboardStats}
-            onAnalyticsPress={handleCheckInAnalyticsPress}
-            activeAnalytics={activeCheckInAnalytics}
-          />
-          {checkInAnalyticsData && activeCheckInAnalytics ? (
-            <AnalyticsChart
-              title={checkInAnalyticsTitle}
-              data={checkInAnalyticsData}
-              dataType="checked in"
-            />
-          ) : (
-            <AnalyticsChart
-              title="Check-Ins"
-              data={checkInChartData}
-              dataType="checked in"
-            />
-          )}
-        </>
-      );
-    } else if (selectedSubTab === "Available") {
-      const availableTicketsData = getAvailableTicketsData();
-
-      return (
-        <>
-          <AvailableTicketsCard
-            data={availableTicketsData}
-            stats={dashboardStats}
-          />
-        </>
-      );
-    }
-    return null;
-  };
 
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
@@ -598,45 +562,22 @@ const StaffDashboard = () => {
             }
           }} />
 
-          {/* Sub-tabs for Check-Ins and Available */}
-          <View style={styles.subTabContainer}>
-            <View style={styles.subTabRow}>
-              <TouchableOpacity
-                style={[
-                  styles.subTabButton,
-                  selectedSubTab === "Check-Ins" && styles.selectedSubTabButton,
-                ]}
-                onPress={() => handleSubTabPress("Check-Ins")}
-              >
-                <Text
-                  style={[
-                    styles.subTabButtonText,
-                    selectedSubTab === "Check-Ins" && styles.selectedSubTabButtonText,
-                  ]}
-                >
-                  Check-Ins
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.subTabButton,
-                  selectedSubTab === "Available" && styles.selectedSubTabButton,
-                ]}
-                onPress={() => handleSubTabPress("Available")}
-              >
-                <Text
-                  style={[
-                    styles.subTabButtonText,
-                    selectedSubTab === "Available" && styles.selectedSubTabButtonText,
-                  ]}
-                >
-                  Available
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          {/* Total Payment Channel Card */}
+          <TotalPaymentChannelCard 
+            stats={dashboardStats} 
+            onPaymentChannelPress={handlePaymentChannelPress}
+            activePaymentChannel={activePaymentChannel}
+          />
 
-          {renderSubTabContent()}
+          {/* Payment Channel Analytics */}
+          <PaymentChannelAnalytics 
+            stats={dashboardStats} 
+            selectedPaymentChannel={activePaymentChannel}
+            eventInfo={currentEventInfo}
+            userRole="STAFF"
+            staffUuid={staffUuid}
+          />
+
         </>
       );
     } else if (selectedSaleScanTab === "Scans") {
@@ -904,45 +845,6 @@ const styles = StyleSheet.create({
   overallStatisticsContainer: {
     marginTop: 4,
     marginBottom: 12,
-  },
-  subTabContainer: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  subTabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  subTabButton: {
-    padding: 10,
-    width: '50%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 40,
-  },
-  subTabButtonText: {
-    color: color.black_544B45,
-    fontSize: 14,
-    fontWeight: '400',
-    textAlign: 'center',
-  },
-  selectedSubTabButton: {
-    width: '50%',
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: color.white_FFFFFF,
-    borderRadius: 7,
-    backgroundColor: color.white_FFFFFF,
-  },
-  selectedSubTabButtonText: {
-    color: color.placeholderTxt_24282C,
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 });
 

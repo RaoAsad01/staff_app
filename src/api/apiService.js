@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Base URL configuration
-const BASE_URL = 'https://dev-api.hexallo.com/';
+const BASE_URL = 'https://d1-admin.hexallo.com/';
 //for dev const BASE_URL = 'https://dev-api.hexallo.com/';
 //for production  const BASE_URL = 'https://api.hexallo.com/';
 // Create axios instance with default config
@@ -550,7 +550,7 @@ export const ticketService = {
     }
   },
 
-  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, ticketUuid = null, staffUuid = null) => {
+  fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, ticketUuid = null, staffUuid = null, paymentChannel = null) => {
     try {
       let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
       
@@ -576,6 +576,11 @@ export const ticketService = {
         params.append('staff_uuid', staffUuid);
       }
       
+      // Add payment_channel query parameter for filtering by payment channel
+      if (paymentChannel) {
+        params.append('payment_channel', paymentChannel);
+      }
+      
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -592,7 +597,8 @@ export const ticketService = {
         sales,
         ticketType,
         ticketUuid,
-        staffUuid
+        staffUuid,
+        paymentChannel
       });
       console.log('================================================');
       

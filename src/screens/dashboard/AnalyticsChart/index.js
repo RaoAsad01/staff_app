@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { color } from "../../../color/color";
 
+// Utility function to format large numbers
+function formatNumber(num) {
+    if (num >= 1000) {
+        const formatted = (num / 1000).toFixed(1);
+        return formatted.endsWith('.0') ? formatted.slice(0, -2) + 'k' : formatted + 'k';
+    }
+    return num.toString();
+}
+
 const CHART_HEIGHT = 140;
 const BAR_WIDTH = 10;
 const BAR_SPACING = 48;
@@ -84,7 +93,7 @@ const AnalyticsChart = ({ title, data, dataType }) => {
                                         },
                                     ]}
                                 >
-                                    {label}
+                                    {formatNumber(label)}
                                 </Text>
                             </React.Fragment>
                         );
@@ -123,7 +132,7 @@ const AnalyticsChart = ({ title, data, dataType }) => {
                                                         <View style={styles.tooltip}>
                                                             <Text style={styles.tooltipTime}>{item.time}</Text>
                                                             <Text style={styles.tooltipValue}>
-                                                                {item.value} {dataType === 'sold' ? 'sold' : 'checked in'}
+                                                                {formatNumber(item.value)} {dataType === 'sold' ? 'sold' : dataType === 'payment' ? 'GHS' : 'checked in'}
                                                             </Text>
                                                             <View style={styles.tooltipArrow} />
                                                         </View>
@@ -243,7 +252,7 @@ const styles = StyleSheet.create({
     },
     tooltipContainer: {
         position: "absolute",
-        bottom: "100%",
+        bottom: "70%",
         left: "50%",
         transform: [{ translateX: -70 }], // Center the tooltip properly (half of tooltip width)
         zIndex: 10,

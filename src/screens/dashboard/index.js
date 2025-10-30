@@ -24,6 +24,8 @@ import AdminAllSales from './AdminAllSales';
 import AdminOnlineSales from './AdminOnlineSales';
 import AdminBoxOfficeSales from './AdminBoxOfficeSales';
 import AdminBoxOfficePaymentChannel from './AdminBoxOfficePaymentChannel';
+import TotalPaymentChannelCard from './TotalPaymentChannelCard';
+import PaymentChannelAnalytics from './PaymentChannelAnalytics';
 import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 import { truncateCityName } from '../../utils/stringUtils';
@@ -56,6 +58,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const [scanAnalyticsData, setScanAnalyticsData] = useState(null);
   const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
   const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
+  const [activePaymentChannel, setActivePaymentChannel] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -154,6 +157,16 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   // Add navigation handlers for statistics
   const handleTotalTicketsPress = () => {
     navigation.navigate('Tickets', { initialTab: 'All', eventInfo });
+  };
+
+  const handlePaymentChannelPress = (paymentChannel) => {
+    console.log('Payment channel pressed:', paymentChannel);
+    // Toggle active payment channel
+    if (activePaymentChannel === paymentChannel) {
+      setActivePaymentChannel(null);
+    } else {
+      setActivePaymentChannel(paymentChannel);
+    }
   };
 
   const handleTotalScannedPress = () => {
@@ -749,6 +762,25 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               }} />
             );
           })()}
+
+          {/* Total Payment Channel Card - Show for ADMIN Box Office and ORGANIZER */}
+          {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
+            <TotalPaymentChannelCard 
+              stats={dashboardStats} 
+              onPaymentChannelPress={handlePaymentChannelPress}
+              activePaymentChannel={activePaymentChannel}
+            />
+          )}
+
+          {/* Payment Channel Analytics - Show for ADMIN Box Office and ORGANIZER */}
+          {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
+            <PaymentChannelAnalytics 
+              stats={dashboardStats} 
+              selectedPaymentChannel={activePaymentChannel}
+              eventInfo={eventInfo}
+              userRole={userRole}
+            />
+          )}
 
           <View style={styles.tabContainer}>
             <View style={styles.tabRow}>

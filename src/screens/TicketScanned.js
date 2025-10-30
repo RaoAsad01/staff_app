@@ -5,12 +5,34 @@ import SvgIcons from '../../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
 import { formatDateTime } from '../constants/dateAndTime';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
+import { useEffect } from 'react';
 
 const TicketScanned = ({ route }) => {
     const { scanResponse, eventInfo, note, status } = route.params;
     const navigation = useNavigation();
 
     const displayedNote = note || scanResponse?.note || 'No note added';
+
+    useEffect(() => {
+        console.log('================================================');
+        console.log('🎫 TICKET SCANNED SCREEN - URL INFORMATION');
+        console.log('================================================');
+        console.log('Base URL: https://d1-admin.hexallo.com/');
+        console.log('Full URL Path:', JSON.stringify({
+            eventUuid: eventInfo?.eventUuid,
+            ticketCode: scanResponse?.code || scanResponse?.ticket_number,
+            scanResponseKeys: Object.keys(scanResponse || {}),
+            eventInfoKeys: Object.keys(eventInfo || {})
+        }, null, 2));
+        console.log('Scan Response Full Data:', JSON.stringify(scanResponse, null, 2));
+        console.log('Event Info Full Data:', JSON.stringify(eventInfo, null, 2));
+        console.log('Scanned By Details:', JSON.stringify({
+            name: scanResponse?.scanned_by?.name,
+            staff_id: scanResponse?.scanned_by?.staff_id,
+            full_scanned_by: scanResponse?.scanned_by
+        }, null, 2));
+        console.log('================================================');
+    }, []);
 
     console.log('Scanned Data:', scanResponse);
     console.log('Event Info:', eventInfo);
@@ -72,9 +94,13 @@ const TicketScanned = ({ route }) => {
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{scanResponse?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>
+                                    {scanResponse?.scanned_by?.name || 'N/A'}
+                                </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{scanResponse?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>
+                                    {scanResponse?.scanned_by?.staff_id || 'N/A'}
+                                </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
                                     {scanResponse?.currency || 'GHS'} {scanResponse?.ticket_price || 'N/A'}

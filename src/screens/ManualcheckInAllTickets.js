@@ -31,12 +31,7 @@ const ManualCheckInAllTickets = () => {
                 const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
                 console.log('Ticket Details Response:', JSON.stringify(response, null, 2));
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
-                    console.log('📋 First ticket data:', response.data[0]);
-                    console.log('📋 scanned_by field:', response.data[0]?.scanned_by);
-                    console.log('📋 staff_id field:', response.data[0]?.staff_id);
-                    console.log('📋 last_scanned_by_name field:', response.data[0]?.last_scanned_by_name);
-                    console.log('📋 All ticket keys:', Object.keys(response.data[0] || {}));
-
+                    console.log('📋First ticket data:', response.data[0]);
                     setTicketDetails(response.data);
 
                     // Check if the first ticket is already scanned, and set the success state accordingly
@@ -52,8 +47,8 @@ const ManualCheckInAllTickets = () => {
                         fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
                         category: response.data[0]?.category || 'N/A',
                         ticketClass: response.data[0]?.ticket_class || 'N/A',
-                        scannedBy: response.data[0]?.scanned_by || 'N/A',
-                        staffId: response.data[0]?.staff_id || 'N/A',
+                        scannedBy: response.data[0]?.scanned_by?.name || 'N/A',
+                        staffId: response.data[0]?.scanned_by?.staff_id || 'N/A',
                     });
                 } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
                     //setError('No tickets found for this order.');
@@ -99,7 +94,8 @@ const ManualCheckInAllTickets = () => {
                 if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
                     console.log('Check-in successful according to response.');
                     console.log('Response scanned_by:', response?.data?.scanned_by);
-                    console.log('Response staff_id:', response?.data?.staff_id);
+                    console.log('Response scanned_by.name:', response?.data?.scanned_by?.name);
+                    console.log('Response scanned_by.staff_id:', response?.data?.scanned_by?.staff_id);
                     console.log('Response scan_count:', response?.data?.scan_count);
                     console.log('Response last_scanned_on:', response?.data?.last_scanned_on);
                     console.log('Response last_scanned_by_name:', response?.data?.last_scanned_by_name);
@@ -109,15 +105,13 @@ const ManualCheckInAllTickets = () => {
                     setShowSuccessPopup(true);
 
                     // Update ticket details with all relevant fields from the response
-                    // Try both possible field name variations
                     setTicketDetails([{
                         ...ticket,
                         checkin_status: 'SCANNED',
-                        scanned_by: response?.data?.scanned_by || response?.data?.last_scanned_by_name || ticket.scanned_by,
-                        staff_id: response?.data?.staff_id || ticket.staff_id,
+                        scanned_by: response?.data?.scanned_by || ticket.scanned_by,
                         scan_count: response?.data?.scan_count || (ticket.scan_count ? ticket.scan_count + 1 : 1),
-                        last_scanned_on: response?.data?.last_scanned_on || new Date().toISOString(),
-                        last_scanned_by_name: response?.data?.last_scanned_by_name || response?.data?.scanned_by || ticket.last_scanned_by_name
+                        last_scanned_on: response?.data?.scanned_by?.scanned_on || response?.data?.last_scanned_on || new Date().toISOString(),
+                        last_scanned_by_name: response?.data?.scanned_by?.name || ticket.last_scanned_by_name
                     }]);
 
                     // Update scan count when ticket is successfully checked in
@@ -260,10 +254,12 @@ const ManualCheckInAllTickets = () => {
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {ticketDetails[0]?.scanned_by || ticketDetails[0]?.last_scanned_by_name || 'N/A'}
+                                    {ticketDetails[0]?.scanned_by?.name || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{ticketDetails[0]?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>
+                                    {ticketDetails[0]?.scanned_by?.staff_id || 'N/A'}
+                                </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
                                     {ticketDetails[0]?.currency || 'GHS'} {ticketDetails[0]?.ticket_price || 'N/A'}

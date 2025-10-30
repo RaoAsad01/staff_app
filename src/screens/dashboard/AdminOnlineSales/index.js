@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Svg, Circle } from "react-native-svg";
+import Svg, { Defs, ClipPath, Circle, Path, G, Stop, RadialGradient } from "react-native-svg";
 import { color } from '../../../color/color';
 import Typography, { Body1, Heading5 } from '../../../components/Typography';
 import { formatValue } from '../../../constants/formatValue';
@@ -68,14 +68,49 @@ const AdminOnlineSales = ({ stats }) => {
         <View style={styles.row}>
           <View style={styles.chartContainer}>
             <Svg height="140" width="140" viewBox="0 0 120 120">
+              <Defs>
+                {/* 1. Define a single, light radial gradient for the entire inner area */}
+                <RadialGradient
+                  id="lightInnerGlow"
+                  cx="50%"
+                  cy="50%"
+                  r="70%"
+                >
+                  {/* Using a light, slightly warm color for the center glow */}
+                  <Stop offset="0%" stopColor="#FAEBD7" stopOpacity="0.8" />
+                  {/* Fading to white/off-white towards the edge */}
+                  <Stop offset="100%" stopColor="#F5F5DC" stopOpacity="0.9" />
+                </RadialGradient>
+
+                {/* 2. ClipPath logic removed (was for multi-colored inner glows) */}
+              </Defs>
+
+              {/* 3. Single inner circle using the new light gradient */}
               <Circle
                 cx="60"
                 cy="60"
-                r={radius}
-                stroke="#EFEFEF"
-                strokeWidth={strokeWidth}
-                fill="none"
+                r={radius} // Use full radius to fill the space
+                fill="url(#lightInnerGlow)"
               />
+
+              {/* Base circle outline (might be removed or changed to a background disc) */}
+              {/* Based on the image, the outer edge of the inner fill is not a distinct line. 
+                                We'll keep the full circle fill above and remove the base circle outline to 
+                                match the desired look where the arcs sit directly on top of the gradient. 
+                                However, if you want a light grey line, uncomment the next block. */}
+
+              {/* Optional: Add a subtle light stroke underneath the arcs if needed. */}
+              {/* <Circle
+                                cx="60"
+                                cy="60"
+                                r={radius}
+                                stroke="#EFEFEF" // Very light gray stroke
+                                strokeWidth={strokeWidth}
+                                fill="none"
+                            />
+                            */}
+
+              {/* Colored arcs - remains the same */}
               {segments.map((segment, index) => (
                 <Circle
                   key={index}

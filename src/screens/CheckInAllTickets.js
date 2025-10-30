@@ -168,9 +168,13 @@ const CheckInAllTickets = ({ route }) => {
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{tickets[0]?.scanned_by || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>
+                                    {tickets[0]?.scanned_by?.name || 'N/A'}
+                                </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop8]}>{tickets[0]?.staff_id || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop8]}>
+                                    {tickets[0]?.scanned_by?.staff_id || 'N/A'}
+                                </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
                                     {tickets[0]?.currency || 'GHS'} {tickets[0]?.ticket_price || 'N/A'}

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Svg, Circle } from "react-native-svg";
+import Svg, { Defs, ClipPath, Circle, Path, G, Stop, RadialGradient } from "react-native-svg";
 import { color } from "../../../color/color";
 import { formatValue } from "../../../constants/formatValue";
 
@@ -10,13 +10,6 @@ const BoxOfficeSales = ({ stats, onDebugData }) => {
     const paymentWise = boxOfficeData?.payment_wise || {};
     const total = paymentWise?.total || 0;
     const byMethods = paymentWise?.by_methods || {};
-
-    // Debug logging
-    console.log('BoxOfficeSales - Received stats:', JSON.stringify(stats, null, 2));
-    console.log('BoxOfficeSales - BoxOffice Data:', JSON.stringify(boxOfficeData, null, 2));
-    console.log('BoxOfficeSales - Payment Wise:', JSON.stringify(paymentWise, null, 2));
-    console.log('BoxOfficeSales - By Methods:', JSON.stringify(byMethods, null, 2));
-    console.log('BoxOfficeSales - Total:', total);
 
     // Call debug callback if provided
     if (onDebugData) {
@@ -63,6 +56,7 @@ const BoxOfficeSales = ({ stats, onDebugData }) => {
 
     const radius = 50;
     const strokeWidth = 10;
+    const innerRadius = radius - strokeWidth / 2 - 2; // Adjusted for a better fit
     const circumference = 2 * Math.PI * radius;
     const gapSize = 15;
     const totalGap = gapSize * sortedValues.length;
@@ -86,6 +80,8 @@ const BoxOfficeSales = ({ stats, onDebugData }) => {
 
     const segments = calculateSegments();
 
+    // NOTE: polarToCartesian function is no longer needed since ClipPaths are removed
+
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
@@ -93,14 +89,49 @@ const BoxOfficeSales = ({ stats, onDebugData }) => {
                 <View style={styles.row}>
                     <View style={styles.chartContainer}>
                         <Svg height="140" width="140" viewBox="0 0 120 120">
+                            <Defs>
+                                {/* 1. Define a single, light radial gradient for the entire inner area */}
+                                <RadialGradient
+                                    id="lightInnerGlow"
+                                    cx="50%"
+                                    cy="50%"
+                                    r="70%"
+                                >
+                                    {/* Using a light, slightly warm color for the center glow */}
+                                    <Stop offset="0%" stopColor="#FAEBD7" stopOpacity="0.8" />
+                                    {/* Fading to white/off-white towards the edge */}
+                                    <Stop offset="100%" stopColor="#F5F5DC" stopOpacity="0.9" />
+                                </RadialGradient>
+
+                                {/* 2. ClipPath logic removed (was for multi-colored inner glows) */}
+                            </Defs>
+
+                            {/* 3. Single inner circle using the new light gradient */}
                             <Circle
                                 cx="60"
                                 cy="60"
+                                r={radius} // Use full radius to fill the space
+                                fill="url(#lightInnerGlow)"
+                            />
+
+                            {/* Base circle outline (might be removed or changed to a background disc) */}
+                            {/* Based on the image, the outer edge of the inner fill is not a distinct line. 
+                                We'll keep the full circle fill above and remove the base circle outline to 
+                                match the desired look where the arcs sit directly on top of the gradient. 
+                                However, if you want a light grey line, uncomment the next block. */}
+
+                            {/* Optional: Add a subtle light stroke underneath the arcs if needed. */}
+                            {/* <Circle
+                                cx="60"
+                                cy="60"
                                 r={radius}
-                                stroke="#EFEFEF"
+                                stroke="#EFEFEF" // Very light gray stroke
                                 strokeWidth={strokeWidth}
                                 fill="none"
                             />
+                            */}
+
+                            {/* Colored arcs - remains the same */}
                             {segments.map((segment, index) => (
                                 <Circle
                                     key={index}
