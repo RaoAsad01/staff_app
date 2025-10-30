@@ -1,17 +1,17 @@
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/header';
 import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
 import SvgIcons from '../../components/SvgIcons';
-import { ticketService } from '../api/apiService';
+import { ticketService, eventService } from '../api/apiService';
 import { useNavigation } from '@react-navigation/native';
 import SuccessPopup from '../constants/SuccessPopup';
 import ErrorPopup from '../constants/ErrorPopup';
 import Typography from '../components/Typography';
 
 const CheckInAllTickets = ({ route }) => {
-    const { totalTickets, email, orderData, eventInfo, name } = route.params;
+    const { totalTickets, email, orderData, eventInfo, name, scanned_by, staff_id, staff_name } = route.params;
     const initialTickets = orderData?.data?.data || [];
     const [tickets, setTickets] = useState(initialTickets);
     const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -20,11 +20,73 @@ const CheckInAllTickets = ({ route }) => {
     const [error, setError] = useState(null);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [fallbackStaffName, setFallbackStaffName] = useState(null);
+    const [fallbackStaffId, setFallbackStaffId] = useState(null);
     const extractResponse = tickets[0];
     const code = extractResponse?.code;
     const eventUuid = extractResponse?.event;
     const orderNumber = extractResponse?.order_number;
     const ticketNumber = extractResponse?.ticket_number;
+    const scanned_by_name = (
+        extractResponse?.scanned_by?.name ||
+        scanned_by ||
+        staff_name ||
+        eventInfo?.staff_name ||
+        eventInfo?.data?.staff_name ||
+        fallbackStaffName ||
+        orderData?.data?.scanned_by?.name ||
+        'N/A'
+    );
+    const scanned_by_staff_id = (
+        extractResponse?.scanned_by?.staff_id ||
+        staff_id ||
+        eventInfo?.staff_id ||
+        eventInfo?.data?.staff_id ||
+        fallbackStaffId ||
+        orderData?.data?.scanned_by?.staff_id ||
+        'N/A'
+    );
+    console.log('scanned_by (resolved)', scanned_by_name);
+    console.log('staff_id (resolved)', scanned_by_staff_id);
+    console.log('staff_id sources:', {
+        ticket: extractResponse?.scanned_by?.staff_id,
+        route: staff_id,
+        eventInfoRoot: eventInfo?.staff_id,
+        eventInfoData: eventInfo?.data?.staff_id,
+        fetched: fallbackStaffId,
+        orderDataScanned: orderData?.data?.scanned_by?.staff_id,
+    });
+
+    useEffect(() => {
+        const shouldFetch = !extractResponse?.scanned_by && !scanned_by && !staff_id && !eventInfo?.staff_name && !eventInfo?.staff_id;
+        if (shouldFetch && eventUuid) {
+            (async () => {
+                try {
+                    const info = await eventService.fetchEventInfo(eventUuid);
+                    const staffFromInfo = info?.data;
+                    if (staffFromInfo?.staff_name) setFallbackStaffName(staffFromInfo.staff_name);
+                    if (staffFromInfo?.staff_id) setFallbackStaffId(staffFromInfo.staff_id);
+                    // If ticket(s) lack scanned_by, inject from fetched event info
+                    if ((staffFromInfo?.staff_name || staffFromInfo?.staff_id) && Array.isArray(tickets) && tickets.length > 0) {
+                        setTickets(prev => prev.map((t, idx) => {
+                            if (idx === 0 && !t?.scanned_by) {
+                                return {
+                                    ...t,
+                                    scanned_by: {
+                                        name: t?.scanned_by?.name || staffFromInfo?.staff_name || scanned_by_name,
+                                        staff_id: t?.scanned_by?.staff_id || staffFromInfo?.staff_id || staff_id
+                                    }
+                                };
+                            }
+                            return t;
+                        }));
+                    }
+                } catch (e) {
+                    // swallow
+                }
+            })();
+        }
+    }, [extractResponse?.scanned_by, scanned_by, staff_id, eventUuid, eventInfo?.staff_name, eventInfo?.staff_id]);
 
     const handleSingleCheckIn = async () => {
         if (totalTickets === 1) {
@@ -169,11 +231,11 @@ const CheckInAllTickets = ({ route }) => {
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop10]}>
-                                    {tickets[0]?.scanned_by?.name || 'N/A'}
+                                    {tickets[0]?.scanned_by?.name || scanned_by_name || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {tickets[0]?.scanned_by?.staff_id || 'N/A'}
+                                    {tickets[0]?.scanned_by?.staff_id || scanned_by_staff_id || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "staffapp",
-    "slug": "staffapp",
+    "name": "Hexallo Hub",
+    "slug": "hexallohub",
     "jsEngine": "hermes",
     "version": "1.0.0",
     "orientation": "portrait",

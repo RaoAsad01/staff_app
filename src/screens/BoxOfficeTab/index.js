@@ -375,6 +375,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
       const ticketNumber = response?.data?.ticket_number;
+      const scanned_by = response?.data?.scanned_by?.name;
+      const staff_id = response?.data?.scanned_by?.staff_id;
       navigation.navigate('CheckInAllTickets', {
         ticketNumber: ticketNumber,
         totalTickets: totalQuantity,
@@ -385,7 +387,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         orderData: response,
         eventInfo: eventInfo,
         orderNumber: orderNumber, // Add order number to navigation params
-        onScanCountUpdate: onScanCountUpdate // Pass the callback
+        onScanCountUpdate: onScanCountUpdate, // Pass the callback
+        scanned_by: scanned_by,
+        staff_id: staff_id,
       });
     } catch (error) {
       if (error.isPurchaseCodeError) {
@@ -446,7 +450,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
-
+      const scanned_by = response?.data?.scanned_by?.name;
+      const staff_id = response?.data?.scanned_by?.staff_id;
       setPOSModalVisible(false);
       navigation.navigate('CheckInAllTickets', {
         totalTickets: totalQuantity,
@@ -457,7 +462,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         orderData: response,
         eventInfo: eventInfo,
         orderNumber: orderNumber, // Add order number to navigation params
-        onScanCountUpdate: onScanCountUpdate // Pass the callback
+        onScanCountUpdate: onScanCountUpdate, // Pass the callback
+        scanned_by: scanned_by,
+        staff_id: staff_id,
       });
     } catch (error) {
       if (error.isPurchaseCodeError) {
@@ -1033,6 +1040,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                   // Extract order number from response
                   const orderNumber = response?.data?.order_number;
                   const ticketNumber = response?.data?.ticket_number;
+                  const scanned_by = response?.data?.scanned_by?.name;
+                  const staff_id = response?.data?.scanned_by?.staff_id;
 
                   // If it's POS payment, show the transaction ID modal
                   if (paymentOption === 'P.O.S') {
@@ -1049,7 +1058,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                       orderData: response,
                       eventInfo: eventInfo,
                       orderNumber: orderNumber,
-                      onScanCountUpdate: onScanCountUpdate
+                      onScanCountUpdate: onScanCountUpdate,
+                      scanned_by: scanned_by,
+                      staff_id: staff_id,
                     });
                   }
                 } catch (error) {

@@ -108,7 +108,8 @@ const ManualCheckInAllTickets = () => {
                     setTicketDetails([{
                         ...ticket,
                         checkin_status: 'SCANNED',
-                        scanned_by: response?.data?.scanned_by || ticket.scanned_by,
+                        scanned_by: response?.data?.scanned_by?.name || ticket.scanned_by,
+                        staff_id: response?.data?.scanned_by?.staff_id,
                         scan_count: response?.data?.scan_count || (ticket.scan_count ? ticket.scan_count + 1 : 1),
                         last_scanned_on: response?.data?.scanned_by?.scanned_on || response?.data?.last_scanned_on || new Date().toISOString(),
                         last_scanned_by_name: response?.data?.scanned_by?.name || ticket.last_scanned_by_name
@@ -303,6 +304,8 @@ const ManualCheckInAllTickets = () => {
                                 name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
                                 category: ticket.category || 'N/A',
                                 ticketClass: ticket.ticket_class || 'N/A',
+                                scanned_by: ticket.scanned_by?.name || 'N/A',
+                                staff_id: ticket.scanned_by?.staff_id || 'N/A',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}

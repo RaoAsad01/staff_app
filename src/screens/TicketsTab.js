@@ -48,7 +48,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             const list = res?.data || [];
 
             const mappedTickets = list.map((ticket) => {
-                const qrCodeUrl = `${BASE_URL}/ticket/scan/${ticket.event}/${ticket.code}/`;
+                const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
                     id: ticket.ticket_number || 'N/A',
                     type: ticket.ticket_type || 'N/A',
@@ -75,7 +75,16 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
             setFetchedTickets(mappedTickets);
         } catch (err) {
-            console.error('Error fetching ticket list:', err);
+            console.error('Error fetching ticket list:', {
+                message: err?.message,
+                status: err?.response?.status,
+                statusText: err?.response?.statusText,
+                data: err?.response?.data,
+                url: err?.config?.url,
+                method: err?.config?.method,
+                headers: err?.config?.headers,
+                params: err?.config?.params,
+            });
         } finally {
             setIsLoading(false);
         }
@@ -91,7 +100,16 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 unscanned: statsData.unscanned || 0,
             });
         } catch (err) {
-            console.error('Error fetching ticket stats:', err);
+            console.error('Error fetching ticket stats:', {
+                message: err?.message,
+                status: err?.response?.status,
+                statusText: err?.response?.statusText,
+                data: err?.response?.data,
+                url: err?.config?.url,
+                method: err?.config?.method,
+                headers: err?.config?.headers,
+                params: err?.config?.params,
+            });
         }
     };
 
