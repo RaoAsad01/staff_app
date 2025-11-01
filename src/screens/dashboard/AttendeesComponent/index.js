@@ -36,7 +36,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const fetchTicketList = async (eventUuid) => {
     try {
       setIsLoading(true);
-      const res = await ticketService.ticketStatsListing(eventUuid);
+      const res = await ticketService.ticketStatsListing(eventUuid,'PAID');
       const list = res?.data || [];
       const mappedTickets = list.map((ticket) => {
         const qrCodeUrl = `${BASE_URL}/ticket/scan/${ticket.event}/${ticket.code}/`;

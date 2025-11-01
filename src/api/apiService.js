@@ -51,14 +51,14 @@ apiClient.interceptors.response.use(
         // Clear the invalid token
         await SecureStore.deleteItemAsync('accessToken');
         console.log('Token expired or invalid, cleared from storage');
-        
+
         // You could also dispatch a logout action here if using Redux
         // or trigger a navigation to login screen
       } catch (clearError) {
         console.error('Error clearing token:', clearError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -369,15 +369,20 @@ export const ticketService = {
     }
   },
 
-  ticketStatsListing: async (event_uuid, page = 1, staffUuid = null) => {
+  ticketStatsListing: async (event_uuid, page = 1, staffUuid = null, status = 'PAID') => {
     try {
       let url = `${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}&page_size=-1`;
       
+      // Add status filter
+      if (status) {
+        url += `&status=${status}`;
+      }
+
       // Add staff_uuid parameter if provided
       if (staffUuid) {
         url += `&staff_uuid=${staffUuid}`;
       }
-      
+
       const response = await apiClient.get(url);
       console.log('Ticket Tab listing Response:', response.data);
       return response.data;
@@ -522,7 +527,7 @@ export const ticketService = {
       });
       if (error.response?.data) {
         console.log('BoxOffice Response:', error.response?.data);
-        
+
         // Handle specific validation errors
         if (error.response.status === 400 && error.response.data?.data?.purchase_code) {
           const purchaseCodeErrors = error.response.data.data.purchase_code;
@@ -539,7 +544,7 @@ export const ticketService = {
             };
           }
         }
-        
+
         throw {
           message: error.response.data.message || 'Failed to fetch get box office ticket',
           response: error.response
@@ -555,38 +560,38 @@ export const ticketService = {
   fetchDashboardStats: async (eventUuid, sales = null, ticketType = null, ticketUuid = null, staffUuid = null, paymentChannel = null) => {
     try {
       let url = endpoints.dashboardStats.replace('{event_uuid}', eventUuid);
-      
+
       const params = new URLSearchParams();
-      
+
       // Add sales query parameter for ADMIN users
       if (sales) {
         params.append('sales', sales);
       }
-      
+
       // Add ticket_type query parameter for filtering by category
       if (ticketType) {
         params.append('ticket_type', ticketType);
       }
-      
+
       // Add ticket_uuid query parameter for filtering specific ticket analytics
       if (ticketUuid) {
         params.append('ticket_uuid', ticketUuid);
       }
-      
+
       // Add staff_uuid query parameter for staff-specific data
       if (staffUuid) {
         params.append('staff_uuid', staffUuid);
       }
-      
+
       // Add payment_channel query parameter for filtering by payment channel
       if (paymentChannel) {
         params.append('payment_channel', paymentChannel);
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       // Log the API call details
       console.log('================================================');
       console.log('📡 API CALL - fetchDashboardStats');
@@ -603,14 +608,14 @@ export const ticketService = {
         paymentChannel
       });
       console.log('================================================');
-      
+
       const response = await apiClient.get(url);
-      
+
       console.log('✅ API Response received:', {
         status: response.status,
         hasData: !!response.data
       });
-      
+
       return response.data;
     } catch (error) {
       console.error('❌ Fetch Dashboard Stats Error:', {
@@ -639,7 +644,7 @@ export const eventService = {
     try {
       const response = await apiClient.get(endpoints.staffEvents);
       console.log('Fetch Staff Events Response:', response.data);
-      
+
       // Handle the new response structure
       if (response.data?.success && response.data?.data && response.data.data.length > 0) {
         // Extract events from the first staff member's events array
@@ -656,14 +661,14 @@ export const eventService = {
             time: '7:00 PM', // Default time
             eventUuid: event.uuid
           }));
-          
+
           // Return in the expected format
           return {
             data: transformedEvents
           };
         }
       }
-      
+
       // Return empty array if no events found
       return { data: [] };
     } catch (error) {
@@ -677,58 +682,58 @@ export const eventService = {
       const response = await apiClient.get(`${endpoints.eventInfo}${eventUuid}/info/`);
       console.log('Fetch Event Info Response:', response.data);
       return response.data;
-          } catch (error) {
-        console.error('Fetch Event Info Error:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          message: error.message,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers
-          }
-        });
-        
-        // Handle 403 Forbidden error specifically
-        if (error.response?.status === 403) {
-          const errorMessage = error.response?.data?.message || error.response?.data?.data?.detail;
-          
-          // Check if it's a business logic error (like "Event is not published")
-          if (errorMessage && errorMessage.includes('not published')) {
-            console.error('403 Forbidden - Business logic error:', errorMessage);
-            throw {
-              message: errorMessage || 'Event is not available.',
-              status: 403,
-              isBusinessError: true,
-              response: error.response
-            };
-          } else {
-            // This might be an authentication error
-            console.error('403 Forbidden - Possible authentication issue detected');
-            // Clear the stored token as it might be invalid
-            await SecureStore.deleteItemAsync('accessToken');
-            throw {
-              message: 'Authentication failed. Please login again.',
-              status: 403,
-              isAuthError: true,
-              response: error.response
-            };
-          }
+    } catch (error) {
+      console.error('Fetch Event Info Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
         }
-        
-        if (error.response?.data) {
+      });
+
+      // Handle 403 Forbidden error specifically
+      if (error.response?.status === 403) {
+        const errorMessage = error.response?.data?.message || error.response?.data?.data?.detail;
+
+        // Check if it's a business logic error (like "Event is not published")
+        if (errorMessage && errorMessage.includes('not published')) {
+          console.error('403 Forbidden - Business logic error:', errorMessage);
           throw {
-            message: error.response.data.message || 'Failed to fetch event info',
+            message: errorMessage || 'Event is not available.',
+            status: 403,
+            isBusinessError: true,
+            response: error.response
+          };
+        } else {
+          // This might be an authentication error
+          console.error('403 Forbidden - Possible authentication issue detected');
+          // Clear the stored token as it might be invalid
+          await SecureStore.deleteItemAsync('accessToken');
+          throw {
+            message: 'Authentication failed. Please login again.',
+            status: 403,
+            isAuthError: true,
             response: error.response
           };
         }
-        
+      }
+
+      if (error.response?.data) {
         throw {
-          message: 'Network error. Please check your connection.',
-          error: error
+          message: error.response.data.message || 'Failed to fetch event info',
+          response: error.response
         };
       }
+
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
+    }
   },
 
 }

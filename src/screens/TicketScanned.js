@@ -66,16 +66,20 @@ const TicketScanned = ({ route }) => {
                                 <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
                                 <Text style={[styles.ticketNumber, styles.marginTop10]}>{scanResponse?.ticket_number || 'N/A'}</Text>
                                 <Text style={[styles.values]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.last_scan) || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.scanned_on) || 'N/A'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {scanResponse?.scanned_by || 'N/A'}
+                                    {typeof scanResponse?.scanned_by === 'object' 
+                                        ? scanResponse?.scanned_by?.name 
+                                        : scanResponse?.scanned_by || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {scanResponse?.staff_id || 'N/A'}
+                                    {typeof scanResponse?.scanned_by === 'object'
+                                        ? scanResponse?.scanned_by?.staff_id
+                                        : scanResponse?.staff_id || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>

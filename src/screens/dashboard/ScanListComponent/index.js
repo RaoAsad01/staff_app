@@ -29,7 +29,7 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
         try {
             setIsLoading(true);
             // If staffUuid is provided, we need to filter tickets for that specific staff
-            const res = await ticketService.ticketStatsListing(eventUuid, staffUuid);
+            const res = await ticketService.ticketStatsListing(eventUuid, staffUuid,'PAID');
             const list = res?.data || [];
             const mappedTickets = list.map((ticket) => {
                 const qrCodeUrl = `${BASE_URL}/ticket/scan/${ticket.event}/${ticket.code}/`;

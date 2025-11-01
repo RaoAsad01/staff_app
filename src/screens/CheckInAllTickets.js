@@ -11,7 +11,7 @@ import ErrorPopup from '../constants/ErrorPopup';
 import Typography from '../components/Typography';
 
 const CheckInAllTickets = ({ route }) => {
-    const { totalTickets, email, orderData, eventInfo, name, scanned_by, staff_id, staff_name } = route.params;
+    const { totalTickets, email, orderData, eventInfo, name, scanned_by} = route.params;
     const initialTickets = orderData?.data?.data || [];
     const [tickets, setTickets] = useState(initialTickets);
     const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -27,67 +27,8 @@ const CheckInAllTickets = ({ route }) => {
     const eventUuid = extractResponse?.event;
     const orderNumber = extractResponse?.order_number;
     const ticketNumber = extractResponse?.ticket_number;
-    const scanned_by_name = (
-        extractResponse?.scanned_by?.name ||
-        scanned_by ||
-        staff_name ||
-        eventInfo?.staff_name ||
-        eventInfo?.data?.staff_name ||
-        fallbackStaffName ||
-        orderData?.data?.scanned_by?.name ||
-        'N/A'
-    );
-    const scanned_by_staff_id = (
-        extractResponse?.scanned_by?.staff_id ||
-        staff_id ||
-        eventInfo?.staff_id ||
-        eventInfo?.data?.staff_id ||
-        fallbackStaffId ||
-        orderData?.data?.scanned_by?.staff_id ||
-        'N/A'
-    );
-    console.log('scanned_by (resolved)', scanned_by_name);
-    console.log('staff_id (resolved)', scanned_by_staff_id);
-    console.log('staff_id sources:', {
-        ticket: extractResponse?.scanned_by?.staff_id,
-        route: staff_id,
-        eventInfoRoot: eventInfo?.staff_id,
-        eventInfoData: eventInfo?.data?.staff_id,
-        fetched: fallbackStaffId,
-        orderDataScanned: orderData?.data?.scanned_by?.staff_id,
-    });
 
-    useEffect(() => {
-        const shouldFetch = !extractResponse?.scanned_by && !scanned_by && !staff_id && !eventInfo?.staff_name && !eventInfo?.staff_id;
-        if (shouldFetch && eventUuid) {
-            (async () => {
-                try {
-                    const info = await eventService.fetchEventInfo(eventUuid);
-                    const staffFromInfo = info?.data;
-                    if (staffFromInfo?.staff_name) setFallbackStaffName(staffFromInfo.staff_name);
-                    if (staffFromInfo?.staff_id) setFallbackStaffId(staffFromInfo.staff_id);
-                    // If ticket(s) lack scanned_by, inject from fetched event info
-                    if ((staffFromInfo?.staff_name || staffFromInfo?.staff_id) && Array.isArray(tickets) && tickets.length > 0) {
-                        setTickets(prev => prev.map((t, idx) => {
-                            if (idx === 0 && !t?.scanned_by) {
-                                return {
-                                    ...t,
-                                    scanned_by: {
-                                        name: t?.scanned_by?.name || staffFromInfo?.staff_name || scanned_by_name,
-                                        staff_id: t?.scanned_by?.staff_id || staffFromInfo?.staff_id || staff_id
-                                    }
-                                };
-                            }
-                            return t;
-                        }));
-                    }
-                } catch (e) {
-                    // swallow
-                }
-            })();
-        }
-    }, [extractResponse?.scanned_by, scanned_by, staff_id, eventUuid, eventInfo?.staff_name, eventInfo?.staff_id]);
-
+    
     const handleSingleCheckIn = async () => {
         if (totalTickets === 1) {
             setIsCheckingIn(true);
@@ -99,8 +40,35 @@ const CheckInAllTickets = ({ route }) => {
                 if (response?.data?.status === 'SCANNED') {
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
-                    // Update the ticket status
-                    setTickets([{ ...tickets[0], checkin_status: 'SCANNED', status: 'SCANNED' }]);
+                    
+                    // Extract scanned_by information from check-in response
+                    const scannedByFromResponse = response?.data?.scanned_by;
+                    console.log('Single Ticket Check-in - scanned_by from response:', scannedByFromResponse);
+                    
+                    // Update the ticket status and scanned_by information immediately
+                    const updatedTicket = { 
+                        ...tickets[0], 
+                        checkin_status: 'SCANNED', 
+                        status: 'SCANNED',
+                    };
+                    
+                    // Map scanned_by object from response
+                    if (scannedByFromResponse) {
+                        updatedTicket.scanned_by = {
+                            name: scannedByFromResponse.name || 'N/A',
+                            staff_id: scannedByFromResponse.staff_id || 'N/A'
+                        };
+                    }
+                    
+                    // Also update other fields from response if available
+                    if (response?.data?.scan_count !== undefined) {
+                        updatedTicket.scan_count = response.data.scan_count;
+                    }
+                    if (response?.data?.scanned_by?.scanned_on) {
+                        updatedTicket.scanned_on = response.data.scanned_by.scanned_on;
+                    }
+                    
+                    setTickets([updatedTicket]);
 
                     // Update scan count when ticket is successfully checked in
                     if (route.params?.onScanCountUpdate) {
@@ -130,12 +98,44 @@ const CheckInAllTickets = ({ route }) => {
                 if (response?.success && response?.status === 200) {
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
+                    
+                    // Extract scanned_by information from check-in response
+                    // The response might have scanned_by at root data level or in each ticket
+                    const scannedByFromResponse = response?.data?.scanned_by || response?.scanned_by;
+                    console.log('Check-in All - scanned_by from response:', scannedByFromResponse);
+                    
+                    // Also check if response has updated tickets array with scanned_by info
+                    const responseTickets = response?.data?.data || response?.data?.tickets || null;
+                    
                     // Update all tickets in the list to show as scanned using state
-                    const updatedTickets = tickets.map(ticket => ({
-                        ...ticket,
-                        checkin_status: 'SCANNED',
-                        status: 'SCANNED'
-                    }));
+                    const updatedTickets = tickets.map((ticket, index) => {
+                        const updatedTicket = {
+                            ...ticket,
+                            checkin_status: 'SCANNED',
+                            status: 'SCANNED'
+                        };
+                        
+                        // First, try to get scanned_by from response tickets array if available
+                        const responseTicket = responseTickets?.find(t => t.code === ticket.code || t.uuid === ticket.uuid) || 
+                                              (responseTickets && responseTickets[index]);
+                        
+                        if (responseTicket?.scanned_by) {
+                            // Use scanned_by from individual ticket in response
+                            updatedTicket.scanned_by = {
+                                name: responseTicket.scanned_by.name || 'N/A',
+                                staff_id: responseTicket.scanned_by.staff_id || 'N/A'
+                            };
+                        } else if (scannedByFromResponse) {
+                            // Use root level scanned_by if available
+                            updatedTicket.scanned_by = {
+                                name: scannedByFromResponse.name || ticket?.scanned_by?.name || 'N/A',
+                                staff_id: scannedByFromResponse.staff_id || ticket?.scanned_by?.staff_id || 'N/A'
+                            };
+                        }
+                        
+                        return updatedTicket;
+                    });
+                    
                     setTickets(updatedTickets);
 
                     // Update scan count when tickets are successfully checked in
@@ -155,11 +155,19 @@ const CheckInAllTickets = ({ route }) => {
         }
     };
 
-    const handleTicketStatusChange = (ticketUuid, newStatus) => {
+    const handleTicketStatusChange = (ticketUuid, newStatus, scannedByInfo = null) => {
         setTickets(prevTickets =>
             prevTickets.map(ticket =>
                 ticket.uuid === ticketUuid
-                    ? { ...ticket, status: newStatus, checkin_status: newStatus }
+                    ? { 
+                        ...ticket, 
+                        status: newStatus, 
+                        checkin_status: newStatus,
+                        scanned_by: scannedByInfo ? {
+                            name: scannedByInfo.name || ticket.scanned_by?.name || 'N/A',
+                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'N/A'
+                        } : ticket.scanned_by
+                    }
                     : ticket
             )
         );
@@ -231,11 +239,11 @@ const CheckInAllTickets = ({ route }) => {
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop10]}>
-                                    {tickets[0]?.scanned_by?.name || scanned_by_name || 'N/A'}
+                                    {tickets[0]?.scanned_by?.name  || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {tickets[0]?.scanned_by?.staff_id || scanned_by_staff_id || 'N/A'}
+                                    {tickets[0]?.scanned_by?.staff_id  || 'N/A'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
@@ -283,6 +291,7 @@ const CheckInAllTickets = ({ route }) => {
                                 ticketClass: ticket.ticket_class || 'N/A',
                                 name: name || 'N/A',
                                 email: email || 'N/A',
+                                scanned_by: ticket.scanned_by,
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}

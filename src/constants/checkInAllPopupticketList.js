@@ -19,9 +19,20 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             console.log("API Response:", response);
 
             if (response?.data?.status === 'SCANNED') {
-                // Notify parent component about the status change
+                // Extract scanned_by information from response
+                const scannedByFromResponse = response?.data?.scanned_by;
+                console.log('CheckInAllPopup - scanned_by from response:', scannedByFromResponse);
+                
+                // Notify parent component about the status change with scanned_by info
                 if (onTicketStatusChange) {
-                    onTicketStatusChange(ticketToCheckIn.uuid, 'SCANNED');
+                    onTicketStatusChange(
+                        ticketToCheckIn.uuid, 
+                        'SCANNED',
+                        scannedByFromResponse ? {
+                            name: scannedByFromResponse.name,
+                            staff_id: scannedByFromResponse.staff_id
+                        } : null
+                    );
                 }
 
                 // Update scan count when ticket is successfully checked in
@@ -52,8 +63,8 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             currency: item.currency,
             ticket_price: item.ticket_price || item.price,
             last_scan: item.last_scan || item.last_scanned_on,
-            scanned_by: item.scanned_by || item.scanned_by?.name,
-            staff_id: item.staff_id || item.scanned_by?.staff_id,
+            scanned_by: typeof item.scanned_by === 'object' ? item.scanned_by?.name : (item.scanned_by || 'N/A'),
+            staff_id: typeof item.scanned_by === 'object' ? item.scanned_by?.staff_id : (item.staff_id || 'N/A'),
             ticket_number: item.ticket_number,
             scan_count: item.scan_count || item.scanCount || 0,
             note: item.note || 'No note added',
@@ -66,6 +77,8 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             user_email: item.email || userEmail || 'N/A',
             category: item.category || 'N/A',
             ticketClass: item.ticketClass || 'N/A',
+            scanned_on: item?.scanned_on || 'N/A',
+
         };
 
         navigation.navigate('TicketScanned', {

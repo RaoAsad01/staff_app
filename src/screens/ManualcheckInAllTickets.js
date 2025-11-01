@@ -49,6 +49,7 @@ const ManualCheckInAllTickets = () => {
                         ticketClass: response.data[0]?.ticket_class || 'N/A',
                         scannedBy: response.data[0]?.scanned_by?.name || 'N/A',
                         staffId: response.data[0]?.scanned_by?.staff_id || 'N/A',
+                        scannedOn: response.data[0]?.scanned_by?.scanned_on || 'N/A',
                     });
                 } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
                     //setError('No tickets found for this order.');
@@ -100,20 +101,35 @@ const ManualCheckInAllTickets = () => {
                     console.log('Response last_scanned_on:', response?.data?.last_scanned_on);
                     console.log('Response last_scanned_by_name:', response?.data?.last_scanned_by_name);
                     console.log('Full response.data keys:', Object.keys(response?.data || {}));
+                    console.log('Response scanned_by.scanned_on:', response?.data?.scanned_by?.scanned_on);
 
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
 
+                    // Extract scanned_by information from check-in response
+                    const scannedByFromResponse = response?.data?.scanned_by;
+                    console.log('Manual Check-in - scanned_by from response:', scannedByFromResponse);
+                    
                     // Update ticket details with all relevant fields from the response
-                    setTicketDetails([{
+                    const updatedTicket = {
                         ...ticket,
                         checkin_status: 'SCANNED',
-                        scanned_by: response?.data?.scanned_by?.name || ticket.scanned_by,
-                        staff_id: response?.data?.scanned_by?.staff_id,
                         scan_count: response?.data?.scan_count || (ticket.scan_count ? ticket.scan_count + 1 : 1),
-                        last_scanned_on: response?.data?.scanned_by?.scanned_on || response?.data?.last_scanned_on || new Date().toISOString(),
-                        last_scanned_by_name: response?.data?.scanned_by?.name || ticket.last_scanned_by_name
-                    }]);
+                        last_scanned_on: scannedByFromResponse?.scanned_on || response?.data?.last_scanned_on || new Date().toISOString(),
+                        last_scanned_by_name: scannedByFromResponse?.name || ticket.last_scanned_by_name,
+                        scanned_on: scannedByFromResponse?.scanned_on || 'N/A',
+                    };
+                    
+                    // Map scanned_by object from response (full object with name and staff_id)
+                    if (scannedByFromResponse) {
+                        updatedTicket.scanned_by = {
+                            name: scannedByFromResponse.name || 'N/A',
+                            staff_id: scannedByFromResponse.staff_id || 'N/A',
+                            scanned_on: scannedByFromResponse?.scanned_on || 'N/A',
+                        };
+                    }
+                    
+                    setTicketDetails([updatedTicket]);
 
                     // Update scan count when ticket is successfully checked in
                     if (route.params?.onScanCountUpdate) {
@@ -146,11 +162,19 @@ const ManualCheckInAllTickets = () => {
     };
 
     // Add handleTicketStatusChange function
-    const handleTicketStatusChange = (ticketUuid, newStatus) => {
+    const handleTicketStatusChange = (ticketUuid, newStatus, scannedByInfo = null) => {
         setTicketDetails(prevTickets =>
             prevTickets.map(ticket =>
                 ticket.uuid === ticketUuid
-                    ? { ...ticket, checkin_status: newStatus }
+                    ? { 
+                        ...ticket, 
+                        checkin_status: newStatus,
+                        scanned_by: scannedByInfo ? {
+                            name: scannedByInfo.name || ticket.scanned_by?.name || 'N/A',
+                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'N/A',
+                            scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'N/A',
+                        } : ticket.scanned_by
+                    }
                     : ticket
             )
         );
@@ -250,7 +274,7 @@ const ManualCheckInAllTickets = () => {
                                 <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
                                 <Text style={[styles.ticketNumber, styles.marginTop10]}>{ticketDetails[0]?.ticket_number || 'N/A'}</Text>
                                 <Text style={[styles.values]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(ticketDetails[0]?.last_scanned_on) || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(ticketDetails[0]?.scanned_by?.scanned_on) || 'N/A'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
@@ -304,8 +328,8 @@ const ManualCheckInAllTickets = () => {
                                 name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
                                 category: ticket.category || 'N/A',
                                 ticketClass: ticket.ticket_class || 'N/A',
-                                scanned_by: ticket.scanned_by?.name || 'N/A',
-                                staff_id: ticket.scanned_by?.staff_id || 'N/A',
+                                scanned_by: ticket.scanned_by,
+                                scanned_on: ticket.scanned_by?.scanned_on || 'N/A',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}
