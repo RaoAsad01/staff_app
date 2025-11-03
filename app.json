@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "Hexallo Hub",
-    "slug": "hexallohub",
+    "slug": "staffapp",
     "jsEngine": "hermes",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "myapp",
-    "icon": "./assets/images/icon_logo.png",
+    "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/splash_logo.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },

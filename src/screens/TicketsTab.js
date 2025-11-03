@@ -48,7 +48,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             const list = res?.data || [];
 
             const mappedTickets = list.map((ticket) => {
-                const qrCodeUrl = `${BASE_URL}/ticket/scan/${ticket.event}/${ticket.code}/`;
+                const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
                     id: ticket.ticket_number || 'N/A',
                     type: ticket.ticket_type || 'N/A',
