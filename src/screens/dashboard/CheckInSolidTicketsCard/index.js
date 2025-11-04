@@ -186,11 +186,13 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                 <CircularProgress value={item.checkedIn} total={item.total} percentage={item.percentage} />
                 <View style={styles.textContainer}>
                   <Text style={styles.label}>{item.label}</Text>
-                  <Text style={styles.value}>
-                    <Text style={styles.valueResult}>{item.checkedIn}</Text>
-                    <Text> / </Text>
-                    <Text style={styles.valueTotal}>{item.total}</Text>
-                  </Text>
+                  <View style={styles.valueContainer}>
+                    <View style={styles.valueResultContainer}>
+                      <Text style={styles.valueResult}>{String(item.checkedIn).padStart(2, '0')}</Text>
+                    </View>
+                    <View style={styles.separatorLine} />
+                    <Text style={styles.valueTotal}>{String(item.total).padStart(2, '0')}</Text>
+                  </View>
                 </View>
                 {hasSubItems && (
                   <View style={styles.dropdownButton}>
@@ -245,11 +247,13 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                       />
                       <View style={styles.textContainer}>
                         <Text style={styles.subItemLabel}>{subItem.label}</Text>
-                        <Text style={styles.value}>
-                          <Text style={styles.valueResult}>{subItem.checkedIn}</Text>
-                          <Text> / </Text>
-                          <Text style={styles.valueTotal}>{subItem.total}</Text>
-                        </Text>
+                        <View style={styles.valueContainer}>
+                          <View style={styles.valueResultContainer}>
+                            <Text style={styles.valueResult}>{String(subItem.checkedIn).padStart(2, '0')}</Text>
+                          </View>
+                          <View style={styles.separatorLine} />
+                          <Text style={styles.valueTotal}>{String(subItem.total).padStart(2, '0')}</Text>
+                        </View>
                       </View>
                       {(userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (
                         <TouchableOpacity
@@ -334,6 +338,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: color.brown_3C200A,
+  },
+  valueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  valueResultContainer: {
+    minWidth: 24,
+    alignItems: "flex-end",
+  },
+  separatorLine: {
+    width: 1,
+    height: 10,
+    marginTop: 1,
+    backgroundColor: color.black_544B45,
   },
   dropdownButton: {
     padding: 8,

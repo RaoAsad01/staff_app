@@ -1,84 +1,82 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Defs, ClipPath, Circle, Path, G, Stop, RadialGradient } from "react-native-svg";
-import { color } from "../../../color/color";
-import { formatValue } from "../../../constants/formatValue";
+import { color } from '../../../color/color';
+import Typography, { Body1, Heading5 } from '../../../components/Typography';
+import { formatValue } from '../../../constants/formatValue';
 
-const BoxOfficeSales = ({ stats, onDebugData }) => {
-    // Extract box office sales data with default values
-    const boxOfficeData = stats?.data?.box_office_sales || {};
-    const paymentWise = boxOfficeData?.payment_wise || {};
-    const total = paymentWise?.total || 0;
-    const byMethods = paymentWise?.by_methods || {};
+const BoxOfficeSales = ({ stats }) => {
+  // Log the raw stats data received from backend
+  console.log('================================================');
+  console.log('📊 AdminBoxOfficeSales - Raw Stats Data:', JSON.stringify(stats, null, 2));
+  console.log('📊 AdminBoxOfficeSales - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+  console.log('📊 AdminBoxOfficeSales - By Payment Methods:', JSON.stringify(stats?.data?.box_office_sales?.by_payment_methods, null, 2));
+  console.log('================================================');
 
-    // Call debug callback if provided
-    if (onDebugData) {
-        onDebugData({
-            stats,
-            boxOfficeData,
-            paymentWise,
-            total,
-            byMethods
-        });
-    }
+  const boxOfficeSalesData = stats?.data?.box_office_sales || {};
+  const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};
+  const total = boxOfficeSalesData?.total || 0;
 
-    // Map payment methods to colors
-    const paymentMethodColors = {
-        "Cash": "#AE6F28",
-        "Card": "#87807C",
-        "MoMo": "#EDB58A",
-        "P.O.S.": "#945F22"
-    };
+  // Map ticket types to colors (by_payment_methods contains ticket types)
+  const ticketTypeColors = {
+    "VIP": "#87807C",
+    "General": "#CEBCA0",
+    "Early Bird": "#945F22",
+    "VIP Ticket": "#87807C",
+    "Members": "#EDB58A",
+    "Standard": "#AE6F28",
+    "Premium": "#F4A261"
+  };
 
-    // Transform the data into the required format
-    const values = Object.entries(byMethods).map(([label, value]) => {
-        // Handle cases where value might be an object
-        const numericValue = typeof value === 'object' ? (value.total || value.amount || 0) : (value || 0);
-
+  // Transform the data into the required format for pie chart
+  // by_payment_methods actually contains ticket types and their sales amounts
+  const values = Object.keys(byPaymentMethods).length > 0
+    ? Object.entries(byPaymentMethods)
+      .filter(([key, value]) => parseFloat(value) > 0) // Only show non-zero values
+      .map(([key, value], index) => {
         return {
-            label: label === "cash" ? "Cash" :
-                label === "card" ? "Card" :
-                    label === "mobile_money" ? "MoMo" :
-                        label === "pos" ? "P.O.S." : label,
-            value: numericValue,
-            color: paymentMethodColors[label === "cash" ? "Cash" :
-                label === "card" ? "Card" :
-                    label === "mobile_money" ? "MoMo" :
-                        label === "pos" ? "P.O.S." : label] || "#AE6F28"
+          label: key,
+          value: parseFloat(value) || 0,
+          color: ticketTypeColors[key] || "#87807C" // Fallback color
         };
+      })
+    : [
+      {
+        label: "No Data",
+        value: 0,
+        color: "#87807C"
+      }
+    ];
+
+  // Sort by value (highest first) or keep original order
+  const sortedValues = values.sort((a, b) => b.value - a.value);
+
+  const totalValue = values.reduce((sum, item) => sum + item.value, 0);
+  const radius = 50;
+  const strokeWidth = 10;
+  const circumference = 2 * Math.PI * radius;
+  const gapSize = 15;
+  const totalGap = gapSize * sortedValues.length;
+
+  // Calculate segments for the circle with visible gaps and no overlap
+  const calculateSegments = () => {
+    let currentOffset = 0;
+    return sortedValues.map((item) => {
+      const percentage = totalValue > 0 ? item.value / totalValue : 0;
+      // Distribute the circumference minus total gap among the arcs
+      const dashLength = (circumference - totalGap) * percentage;
+      const segment = {
+        ...item,
+        dashLength: dashLength > 0 ? dashLength : 0,
+        dashOffset: currentOffset
+      };
+      currentOffset += dashLength + gapSize;
+      return segment;
     });
+  };
 
-    // Sort values in the order: Cash, Card, Mobile Money, Pos
-    const paymentOrder = ["Cash", "Card", "MoMo", "P.O.S."];
-    const sortedValues = paymentOrder
-        .map(type => values.find(v => v.label === type))
-        .filter(Boolean);
+  const segments = calculateSegments();
 
-    const radius = 50;
-    const strokeWidth = 10;
-    const innerRadius = radius - strokeWidth / 2 - 2; // Adjusted for a better fit
-    const circumference = 2 * Math.PI * radius;
-    const gapSize = 15;
-    const totalGap = gapSize * sortedValues.length;
-
-    // Calculate segments for the circle with visible gaps and no overlap
-    const calculateSegments = () => {
-        let currentOffset = 0;
-        return sortedValues.map((item) => {
-            const percentage = item.value / total;
-            // Distribute the circumference minus total gap among the arcs
-            const dashLength = (circumference - totalGap) * percentage;
-            const segment = {
-                ...item,
-                dashLength: dashLength > 0 ? dashLength : 0,
-                dashOffset: currentOffset
-            };
-            currentOffset += dashLength + gapSize;
-            return segment;
-        });
-    };
-
-    const segments = calculateSegments();
 
     // NOTE: polarToCartesian function is no longer needed since ClipPaths are removed
 

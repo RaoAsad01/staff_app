@@ -12,7 +12,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState('Total');
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const [fetchedTickets, setFetchedTickets] = useState([]);
@@ -26,10 +26,12 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
     page_size: 10,
     previous: null
   });
+  const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
 
   useEffect(() => {
     if (eventInfo?.eventUuid) {
       fetchTicketList(eventInfo.eventUuid);
+      fetchTicketStats(eventInfo.eventUuid);
     }
   }, [eventInfo?.eventUuid]);
 
@@ -70,6 +72,21 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
     }
   };
 
+  const fetchTicketStats = async (eventUuid) => {
+    try {
+      const res = await ticketService.ticketStatsInfo(eventUuid);
+      const statsData = res?.data?.data || {};
+
+      setStats({
+        total: statsData.total || 0,
+        scanned: statsData.scanned || 0,
+        unscanned: statsData.unscanned || 0,
+      });
+    } catch (err) {
+      console.error('Error fetching ticket stats:', err);
+    }
+  };
+
   const loadMoreTickets = () => {
     if (!isLoading && hasMore && eventInfo?.eventUuid) {
       fetchTicketList(eventInfo.eventUuid, currentPage + 1, true);
@@ -93,7 +110,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       );
     }
 
-    if (activeTab !== 'All') {
+    if (activeTab !== 'Total') {
       filteredTickets = filteredTickets.filter((ticket) => {
         if (activeTab === 'Checked In') {
           return ticket.status === 'Checked In';
@@ -166,7 +183,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
     }
 
     switch (activeTab) {
-      case 'All':
+      case 'Total':
         return "No Matching Results";
       case 'Checked In':
         return "No Matching Results";
@@ -178,6 +195,27 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   };
 
   const filteredTickets = filterTickets();
+
+  const totalTickets = stats.total;
+  const checkedInCount = stats.scanned;
+  const noShowCount = stats.unscanned;
+
+  const getTabValue = (tab) => {
+    switch (tab) {
+      case 'Total':
+        return totalTickets;
+      case 'Checked In':
+        return checkedInCount;
+      case 'No Show':
+        return noShowCount;
+      default:
+        return 0;
+    }
+  };
+
+  const getDisplayTabName = (tab) => {
+    return tab; // Display as is from the constants
+  };
 
   return (
     <ScrollView
@@ -191,24 +229,6 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
       }}
       scrollEventThrottle={400}
     >
-      <View style={styles.tabContainer}>
-        {dashboardattendeestab.map((tab, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => handleTabPress(tab)}
-            style={[
-              styles.tab,
-              activeTab === tab && styles.activeTab
-            ]}
-          >
-            <Text
-              style={activeTab === tab ? styles.tabTextActive : styles.tabText}
-            >
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
       <View style={styles.searchFilterContainer}>
         <View style={[
@@ -236,6 +256,39 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
         <TouchableOpacity style={styles.filterButton} onPress={handleFilterButtonPress}>
           <SvgIcons.filterIcon width={20} height={20} />
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.tabContainerWrapper}>
+        <View style={styles.tabContainer}>
+          {dashboardattendeestab.map((tab, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleTabPress(tab)}
+              style={[
+                styles.tab,
+                activeTab === tab && styles.activeTab
+              ]}
+            >
+              <Text style={[
+                styles.tabText,
+                activeTab === tab && styles.tabTextActive
+              ]}>
+                {getDisplayTabName(tab)}
+              </Text>
+              <View style={[
+                styles.countBadge,
+                activeTab === tab ? styles.activeBadge : styles.inactiveBadge
+              ]}>
+                <Text style={[
+                  styles.countText,
+                  activeTab === tab ? styles.activeCountText : styles.inactiveCountText
+                ]}>
+                  {getTabValue(tab)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {filteredTickets.length > 0 ? (
@@ -466,35 +519,62 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8
   },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  tabContainerWrapper: {
+    backgroundColor: color.white_FFFFFF,
+    borderRadius: 12,
+    padding: 8,
     marginBottom: 15,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
   tab: {
-    flex: 1,
-    padding: 8,
-    marginHorizontal: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F7E4B680',
-    backgroundColor: '#F7E4B680',
   },
   activeTab: {
     backgroundColor: color.btnBrown_AE6F28,
-    borderColor: color.btnBrown_AE6F28,
   },
   tabText: {
-    textAlign: 'center',
-    color: color.black_544B45,
+    fontSize: 16,
     fontWeight: '400',
-    fontSize: 14,
+    color: color.brown_766F6A,
   },
   tabTextActive: {
-    color: color.white_FFFFFF,
+    fontSize: 16,
     fontWeight: '500',
-    fontSize: 14,
+    color: color.white_FFFFFF,
+  },
+  countBadge: {
+    borderRadius: 2,
+    marginLeft: 5,
+    minWidth: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 1,
+    paddingHorizontal: 3,
+  },
+  activeBadge: {
+    backgroundColor: color.brown_F7E4B6,
+  },
+  inactiveBadge: {
+    backgroundColor: '#87807CB2',
+  },
+  countText: {
+    fontSize: 10,
+    fontWeight: '500',
     textAlign: 'center',
+  },
+  activeCountText: {
+    color: color.black_544B45,
+  },
+  inactiveCountText: {
+    color: color.white_FFFFFF,
   },
   searchFilterContainer: {
     flexDirection: 'row',

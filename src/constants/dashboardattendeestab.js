@@ -1,1 +1,1 @@
-export const dashboardattendeestab = ["All", "Checked In", "No Show"];
+export const dashboardattendeestab = ["Total", "Checked In", "No Show"];

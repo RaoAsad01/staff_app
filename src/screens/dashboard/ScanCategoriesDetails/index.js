@@ -91,11 +91,13 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
           <CircularProgress value={item.scanned} total={item.total} percentage={item.percentage} />
           <View style={styles.textContainer}>
             <Text style={styles.label}>{item.label}</Text>
-            <Text style={styles.value}>
-              <Text style={styles.valueResult}>{item.scanned}</Text>
-              <Text> / </Text>
-              <Text style={styles.valueTotal}>{item.total}</Text>
-            </Text>
+            <View style={styles.valueContainer}>
+              <View style={styles.valueResultContainer}>
+                <Text style={styles.valueResult}>{String(item.scanned).padStart(2, '0')}</Text>
+              </View>
+              <View style={styles.separatorLine} />
+              <Text style={styles.valueTotal}>{String(item.total).padStart(2, '0')}</Text>
+            </View>
           </View>
           {hasSubItems && (
             <View style={styles.iconsContainer}>
@@ -202,11 +204,13 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
         <CircularProgress value={totalScanned} total={totalTickets} percentage={totalTickets > 0 ? Math.round((totalScanned / totalTickets) * 100) : 0} />
         <View style={styles.textContainer}>
           <Text style={styles.totalLabel}>Total Scanned Tickets</Text>
-          <Text style={styles.value}>
-            <Text style={styles.valueResult}>{totalScanned}</Text>
-            <Text> / </Text>
-            <Text style={styles.valueTotal}>{totalTickets}</Text>
-          </Text>
+          <View style={styles.valueContainer}>
+            <View style={styles.valueResultContainer}>
+              <Text style={styles.valueResult}>{String(totalScanned).padStart(2, '0')}</Text>
+            </View>
+            <View style={styles.separatorLine} />
+            <Text style={styles.valueTotal}>{String(totalTickets).padStart(2, '0')}</Text>
+          </View>
         </View>
       </TouchableOpacity>
       
@@ -261,6 +265,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: color.brown_3C200A,
+  },
+  valueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  valueResultContainer: {
+    minWidth: 24,
+    alignItems: "flex-end",
+  },
+  separatorLine: {
+    width: 1,
+    height: 10,
+    marginTop: 1,
+    backgroundColor: color.black_544B45,
   },
   totalRow: {
     flexDirection: "row",
