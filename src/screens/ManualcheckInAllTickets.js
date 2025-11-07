@@ -40,16 +40,16 @@ const ManualCheckInAllTickets = () => {
 
                     setUserDetails({
                         purchaseDate: response.data[0]?.formatted_date,
-                        name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
-                        email: response.data[0]?.user_email || 'N/A',
+                        name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                        email: response.data[0]?.user_email || 'No Record',
                         firstName: response.data[0]?.user_first_name || '',
                         lastName: response.data[0]?.user_last_name || '',
-                        fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'N/A',
-                        category: response.data[0]?.category || 'N/A',
-                        ticketClass: response.data[0]?.ticket_class || 'N/A',
-                        scannedBy: response.data[0]?.scanned_by?.name || 'N/A',
-                        staffId: response.data[0]?.scanned_by?.staff_id || 'N/A',
-                        scannedOn: response.data[0]?.scanned_by?.scanned_on || 'N/A',
+                        fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                        category: response.data[0]?.category || 'No Record',
+                        ticketClass: response.data[0]?.ticket_class || 'No Record',
+                        scannedBy: response.data[0]?.scanned_by?.name || 'No Record',
+                        staffId: response.data[0]?.scanned_by?.staff_id || 'No Record',
+                        scannedOn: response.data[0]?.scanned_by?.scanned_on || 'No Record',
                     });
                 } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
                     //setError('No tickets found for this order.');
@@ -117,15 +117,15 @@ const ManualCheckInAllTickets = () => {
                         scan_count: response?.data?.scan_count || (ticket.scan_count ? ticket.scan_count + 1 : 1),
                         last_scanned_on: scannedByFromResponse?.scanned_on || response?.data?.last_scanned_on || new Date().toISOString(),
                         last_scanned_by_name: scannedByFromResponse?.name || ticket.last_scanned_by_name,
-                        scanned_on: scannedByFromResponse?.scanned_on || 'N/A',
+                        scanned_on: scannedByFromResponse?.scanned_on || 'No Record',
                     };
                     
                     // Map scanned_by object from response (full object with name and staff_id)
                     if (scannedByFromResponse) {
                         updatedTicket.scanned_by = {
-                            name: scannedByFromResponse.name || 'N/A',
-                            staff_id: scannedByFromResponse.staff_id || 'N/A',
-                            scanned_on: scannedByFromResponse?.scanned_on || 'N/A',
+                            name: scannedByFromResponse.name || 'No Record',
+                            staff_id: scannedByFromResponse.staff_id || 'No Record',
+                            scanned_on: scannedByFromResponse?.scanned_on || 'No Record',
                         };
                     }
                     
@@ -170,9 +170,9 @@ const ManualCheckInAllTickets = () => {
                         ...ticket, 
                         checkin_status: newStatus,
                         scanned_by: scannedByInfo ? {
-                            name: scannedByInfo.name || ticket.scanned_by?.name || 'N/A',
-                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'N/A',
-                            scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'N/A',
+                            name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
+                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record',
+                            scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'No Record',
                         } : ticket.scanned_by
                     }
                     : ticket
@@ -260,7 +260,7 @@ const ManualCheckInAllTickets = () => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {ticketDetails[0]?.category || 'N/A'}
+                                    {ticketDetails[0]?.category || 'No Record'}
                                 </Typography>
                                 <Text style={[styles.values, styles.marginTop10]}>Class</Text>
                                 <Typography
@@ -269,28 +269,28 @@ const ManualCheckInAllTickets = () => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {ticketDetails[0]?.ticket_class || 'N/A'}
+                                    {ticketDetails[0]?.ticket_class || 'No Record'}
                                 </Typography>
                                 <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
-                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{ticketDetails[0]?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{ticketDetails[0]?.ticket_number || 'No Record'}</Text>
                                 <Text style={[styles.values]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(ticketDetails[0]?.scanned_by?.scanned_on) || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(ticketDetails[0]?.scanned_by?.scanned_on) || 'No Record'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {ticketDetails[0]?.scanned_by?.name || 'N/A'}
+                                    {ticketDetails[0]?.scanned_by?.name || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {ticketDetails[0]?.scanned_by?.staff_id || 'N/A'}
+                                    {ticketDetails[0]?.scanned_by?.staff_id || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
-                                    {ticketDetails[0]?.currency || 'GHS'} {ticketDetails[0]?.ticket_price || 'N/A'}
+                                    {ticketDetails[0]?.currency || 'GHS'} {ticketDetails[0]?.ticket_price || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{ticketDetails[0]?.scan_count || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{ticketDetails[0]?.scan_count || 'No Record'}</Text>
                             </View>
                         </View>
                     </View>
@@ -325,11 +325,11 @@ const ManualCheckInAllTickets = () => {
                                 currency: ticket.currency,
                                 eventInfo: eventInfo,
                                 ticket_number: ticket.ticket_number,
-                                name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
-                                category: ticket.category || 'N/A',
-                                ticketClass: ticket.ticket_class || 'N/A',
+                                name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'No Record',
+                                category: ticket.category || 'No Record',
+                                ticketClass: ticket.ticket_class || 'No Record',
                                 scanned_by: ticket.scanned_by,
-                                scanned_on: ticket.scanned_by?.scanned_on || 'N/A',
+                                scanned_on: ticket.scanned_by?.scanned_on || 'No Record',
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}
                             onScanCountUpdate={route.params?.onScanCountUpdate}

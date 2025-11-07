@@ -337,7 +337,7 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
               </Text>
             </View>
             <View style={styles.statusContainer}>
-              <Text style={styles.valueID}>Tic ID: {item.id}</Text>
+              <Text style={styles.valueID}>Tix ID: {item.id}</Text>
             </View>
           </TouchableOpacity>
         ))
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '400',
     color: color.black_544B45,
-    marginTop: 10,
+    marginTop: 16,
   },
   statusContainer: {
     position: 'absolute',

@@ -26,16 +26,16 @@ const TicketScanned = ({ route }) => {
                         size={20}
                         color={color.placeholderTxt_24282C}
                     >
-                        {scanResponse?.message || 'N/A'}
+                        {scanResponse?.message || 'No Record'}
                     </Typography> */}
                     <Text style={styles.labeltickets}>
-                        {scanResponse?.message || 'N/A'}
+                        {scanResponse?.message || 'No Record'}
                     </Text>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
                     {/* <Text style={styles.ticketHolder}>Ticket Holder</Text> */}
-                    <Text style={styles.userName}>{scanResponse?.name || 'N/A'}</Text>
-                    <Text style={styles.userEmail}>{scanResponse?.user_email || 'N/A'}</Text>
-                    <Text style={styles.userPurchaseDate}>Purchase Date: {scanResponse?.date || 'N/A'}</Text>
+                    <Text style={styles.userName}>{scanResponse?.name || 'No Record'}</Text>
+                    <Text style={styles.userEmail}>{scanResponse?.user_email || 'No Record'}</Text>
+                    <Text style={styles.userPurchaseDate}>Purchase Date: {scanResponse?.date || 'No Record'}</Text>
                 </View>
 
                 <View style={styles.ticketContainer}>
@@ -49,7 +49,7 @@ const TicketScanned = ({ route }) => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {scanResponse?.category || 'N/A'}
+                                    {scanResponse?.category || 'No Record'}
                                 </Typography>
                                 <Text style={[styles.values, styles.marginTop10]}>Class</Text>
                                 <Typography
@@ -58,35 +58,35 @@ const TicketScanned = ({ route }) => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {scanResponse?.ticketClass || 'N/A'}
+                                    {scanResponse?.ticketClass || 'No Record'}
                                 </Typography>
                                 {/* <Text style={[styles.value, styles.marginTop10]}>
-                                    {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'N/A'}
+                                    {scanResponse?.currency || 'PKR'} {scanResponse?.ticket_price || 'No Record'}
                                 </Text> */}
                                 <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
-                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{scanResponse?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{scanResponse?.ticket_number || 'No Record'}</Text>
                                 <Text style={[styles.values]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.scanned_on) || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{formatDateTime(scanResponse?.scanned_on) || 'No Record'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
                                     {typeof scanResponse?.scanned_by === 'object' 
                                         ? scanResponse?.scanned_by?.name 
-                                        : scanResponse?.scanned_by || 'N/A'}
+                                        : scanResponse?.scanned_by || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
                                     {typeof scanResponse?.scanned_by === 'object'
                                         ? scanResponse?.scanned_by?.staff_id
-                                        : scanResponse?.staff_id || 'N/A'}
+                                        : scanResponse?.staff_id || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
-                                    {scanResponse?.currency || 'GHS'} {scanResponse?.ticket_price || 'N/A'}
+                                    {scanResponse?.currency || 'GHS'} {scanResponse?.ticket_price || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{scanResponse?.scan_count || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{scanResponse?.scan_count || 'No Record'}</Text>
                             </View>
                         </View>
                     </View>

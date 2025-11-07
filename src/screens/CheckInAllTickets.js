@@ -55,8 +55,8 @@ const CheckInAllTickets = ({ route }) => {
                     // Map scanned_by object from response
                     if (scannedByFromResponse) {
                         updatedTicket.scanned_by = {
-                            name: scannedByFromResponse.name || 'N/A',
-                            staff_id: scannedByFromResponse.staff_id || 'N/A'
+                            name: scannedByFromResponse.name || 'No Record',
+                            staff_id: scannedByFromResponse.staff_id || 'No Record'
                         };
                     }
                     
@@ -122,14 +122,14 @@ const CheckInAllTickets = ({ route }) => {
                         if (responseTicket?.scanned_by) {
                             // Use scanned_by from individual ticket in response
                             updatedTicket.scanned_by = {
-                                name: responseTicket.scanned_by.name || 'N/A',
-                                staff_id: responseTicket.scanned_by.staff_id || 'N/A'
+                                name: responseTicket.scanned_by.name || 'No Record',
+                                staff_id: responseTicket.scanned_by.staff_id || 'No Record'
                             };
                         } else if (scannedByFromResponse) {
                             // Use root level scanned_by if available
                             updatedTicket.scanned_by = {
-                                name: scannedByFromResponse.name || ticket?.scanned_by?.name || 'N/A',
-                                staff_id: scannedByFromResponse.staff_id || ticket?.scanned_by?.staff_id || 'N/A'
+                                name: scannedByFromResponse.name || ticket?.scanned_by?.name || 'No Record',
+                                staff_id: scannedByFromResponse.staff_id || ticket?.scanned_by?.staff_id || 'No Record'
                             };
                         }
                         
@@ -164,8 +164,8 @@ const CheckInAllTickets = ({ route }) => {
                         status: newStatus, 
                         checkin_status: newStatus,
                         scanned_by: scannedByInfo ? {
-                            name: scannedByInfo.name || ticket.scanned_by?.name || 'N/A',
-                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'N/A'
+                            name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
+                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record'
                         } : ticket.scanned_by
                     }
                     : ticket
@@ -220,7 +220,7 @@ const CheckInAllTickets = ({ route }) => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {tickets[0]?.category || 'N/A'}
+                                    {tickets[0]?.category || 'No Record'}
                                 </Typography>
                                 <Text style={[styles.values, styles.marginTop10]}>Class</Text>
                                 <Typography
@@ -229,28 +229,28 @@ const CheckInAllTickets = ({ route }) => {
                                     size={14}
                                     color={color.brown_3C200A}
                                 >
-                                    {tickets[0]?.ticket_class || 'N/A'}
+                                    {tickets[0]?.ticket_class || 'No Record'}
                                 </Typography>
                                 <Text style={[styles.values, styles.marginTop10]}>Ticket ID</Text>
-                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{tickets[0]?.ticket_number || 'N/A'}</Text>
+                                <Text style={[styles.ticketNumber, styles.marginTop10]}>{tickets[0]?.ticket_number || 'No Record'}</Text>
                                 <Text style={[styles.values]}>Last Scanned On</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{tickets[0]?.last_scanned_on || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop10]}>{tickets[0]?.last_scanned_on || 'No Record'}</Text>
                             </View>
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop10]}>
-                                    {tickets[0]?.scanned_by?.name  || 'N/A'}
+                                    {tickets[0]?.scanned_by?.name  || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {tickets[0]?.scanned_by?.staff_id  || 'N/A'}
+                                    {tickets[0]?.scanned_by?.staff_id  || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>
                                 <Text style={[styles.value, styles.marginTop10]}>
-                                    {tickets[0]?.currency || 'GHS'} {tickets[0]?.ticket_price || 'N/A'}
+                                    {tickets[0]?.currency || 'GHS'} {tickets[0]?.ticket_price || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Scan Count</Text>
-                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{tickets[0]?.scan_count || 'N/A'}</Text>
+                                <Text style={[styles.valueScanCount, styles.marginTop9]}>{tickets[0]?.scan_count || 'No Record'}</Text>
                             </View>
                         </View>
                     </View>
@@ -287,10 +287,10 @@ const CheckInAllTickets = ({ route }) => {
                                 eventInfo: eventInfo,
                                 eventUuid: ticket.event,
                                 ticket_number: ticket.ticket_number,
-                                category: ticket.category || 'N/A',
-                                ticketClass: ticket.ticket_class || 'N/A',
-                                name: name || 'N/A',
-                                email: email || 'N/A',
+                                category: ticket.category || 'No Record',
+                                ticketClass: ticket.ticket_class || 'No Record',
+                                name: name || 'No Record',
+                                email: email || 'No Record',
                                 scanned_by: ticket.scanned_by,
                             }))}
                             onTicketStatusChange={handleTicketStatusChange}

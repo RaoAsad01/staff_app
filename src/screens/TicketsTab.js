@@ -26,6 +26,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
         page_size: 10,
         previous: null
     });
+    const flatListRef = useRef(null);
 
     useEffect(() => {
         if (isFocused && eventInfo?.eventUuid) {
@@ -139,7 +140,19 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
     const handleTabPress = (tab) => {
         setSelectedTab(tab);
+        requestAnimationFrame(() => {
+            if (flatListRef.current) {
+                flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+            }
+        });
     };
+
+    useEffect(() => {
+        const offset = 0; // Always scroll to top
+        if (flatListRef.current) {
+            flatListRef.current.scrollToOffset({ offset, animated: false });
+        }
+    }, [selectedTab]);
 
     const handleTicketPress = (ticket) => {
         const scanResponse = {
@@ -312,6 +325,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
             <View style={styles.flatListContainer}>
                 <FlatList
+                    ref={flatListRef}
                     data={filteredTickets}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}

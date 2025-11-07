@@ -37,6 +37,16 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [ticketError, setTicketError] = useState('');
   const [showError, setShowError] = useState(false);
 
+  const isValidEmailOrPhone = (value) => {
+    if (!value) {
+      return false;
+    }
+    const trimmed = value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{7,15}$/;
+    return emailRegex.test(trimmed) || phoneRegex.test(trimmed);
+  };
+
   // Helper function to check if any ticket is selected
   const hasSelectedTicket = () => {
     return selectedTickets.some(ticket => ticket.quantity > 0);
@@ -44,7 +54,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
 
   // Helper function to check if name and email are filled
   const isNameAndEmailFilled = () => {
-    return name.trim() && email.trim();
+    return name.trim() && isValidEmailOrPhone(email);
   };
 
   // Helper function to check if payment section should be enabled
@@ -102,7 +112,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const fetchData = async () => {
     try {
       if (!eventInfo?.eventUuid) {
-        console.error('BoxOfficeTab: No event_uuid provided');
         return;
       }
 
@@ -127,12 +136,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       }
 
       // Fetch ticket pricing
-      console.log('BoxOfficeTab: Fetching ticket pricing for event:', eventInfo?.eventUuid);
       const pricingData = await ticketService.fetchTicketPricing(eventInfo?.eventUuid);
-      console.log('BoxOfficeTab: Received pricing data:', pricingData);
 
       if (!pricingData) {
-        console.error('BoxOfficeTab: No pricing data received');
         return;
       }
 
@@ -331,11 +337,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       return;
     }
 
-    if (!transactionNumber.trim()) {
-      setTransactionError('Please enter a valid transaction number.');
-      return;
-    }
-
     if (!paymentOption) {
       setPaymentError('Please select a payment option.');
       return;
@@ -372,11 +373,13 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         name.trim(),
         selectedTabState === 'Members' ? purchaseCode : undefined
       );
+      
       // Extract order number from response
       const orderNumber = response?.data?.order_number;
       const ticketNumber = response?.data?.ticket_number;
       const scanned_by = response?.data?.scanned_by?.name;
       const staff_id = response?.data?.scanned_by?.staff_id;
+      
       navigation.navigate('CheckInAllTickets', {
         ticketNumber: ticketNumber,
         totalTickets: totalQuantity,
@@ -391,6 +394,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         scanned_by: scanned_by,
         staff_id: staff_id,
       });
+      
     } catch (error) {
       if (error.isPurchaseCodeError) {
         setWrongPurchaseCodeError('Please enter a valid purchase code');
@@ -1064,7 +1068,6 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                     });
                   }
                 } catch (error) {
-                  console.log('Purchase code validation error:', error);
                   if (error.isPurchaseCodeError) {
                     setWrongPurchaseCodeError('Please enter a valid purchase code');
                   } else {
