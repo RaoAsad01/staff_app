@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     paddingBottom: 20,
+    marginTop: 2,
   },
   emptyText: {
     textAlign: 'center',

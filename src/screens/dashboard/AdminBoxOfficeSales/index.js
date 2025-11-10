@@ -25,14 +25,15 @@ const AdminBoxOfficeSales = ({ stats }) => {
     "VIP Ticket": "#87807C",
     "Members": "#EDB58A",
     "Standard": "#AE6F28",
-    "Premium": "#F4A261"
+    "Premium": "#F4A261",
+    "Packages": "#87807C"
   };
 
   // Transform the data into the required format for pie chart
   // by_payment_methods actually contains ticket types and their sales amounts
   const values = Object.keys(byPaymentMethods).length > 0
     ? Object.entries(byPaymentMethods)
-      .filter(([key, value]) => parseFloat(value) > 0) // Only show non-zero values
+      .filter(([key, value]) => parseFloat(value) >= 0) // Only show non-zero values
       .map(([key, value], index) => {
         return {
           label: key,
@@ -221,7 +222,8 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "flex-start",
     width: "50%",
-    gap: 10,
+    gap: 5,
+    marginRight: 5
   },
   paymentItem: {
     flexDirection: "row",

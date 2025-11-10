@@ -7,14 +7,19 @@ import { formatValue } from "../../../constants/formatValue";
 const ScanCategories = ({ stats }) => {
     // Extract scan categories data with default values
     const scanCategoriesData = stats?.data?.scan_categories || {};
-    const total = scanCategoriesData?.total || 0;
+    const total = scanCategoriesData?.total_scanned || 0;
     const byCategory = scanCategoriesData?.by_category || {};
 
     // Default colors for known categories
     const defaultCategoryColors = {
-        "Early Bird": "#AE6F28",
+        "VIP": "#87807C",
+        "General": "#CEBCA0",
+        "Early Bird": "#945F22",
         "VIP Ticket": "#87807C",
-        "Members": "#EDB58A"
+        "Members": "#EDB58A",
+        "Standard": "#AE6F28",
+        "Premium": "#F4A261",
+        "Packages": "#87807C"
     };
 
     // Generate colors for any new categories
@@ -232,7 +237,8 @@ const styles = StyleSheet.create({
         flexDirection: "column",
         alignItems: "flex-start",
         width: "50%",
-        gap: 10,
+        gap: 5,
+        marginRight: 5
     },
     paymentItem: {
         flexDirection: "row",

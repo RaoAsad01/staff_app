@@ -212,9 +212,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   textContainer: {
-    marginLeft: 20,
+    marginLeft: 16,
     flex: 1,
-    justifyContent: "center",
+    marginBottom: 2,
   },
   label: {
     fontSize: 15,
@@ -225,7 +225,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: color.placeholderTxt_24282C,
-    marginTop: 2,
   },
   chevronContainer: {
     padding: 8,

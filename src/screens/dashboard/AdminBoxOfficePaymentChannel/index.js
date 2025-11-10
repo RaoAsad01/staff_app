@@ -52,13 +52,13 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
     // Transform the data into the required format for pie chart
     let values = [];
 
-    if (Object.keys(paymentChannel).length > 0) {
+    if (Object.keys(paymentChannel).length >= 0) {
         values = Object.entries(paymentChannel)
             .filter(([key, value]) => {
                 // Filter out unwanted payment methods or zero values
                 const lowerKey = key.toLowerCase();
                 const shouldExclude = ['wallet', 'bank_transfer', 'free', 'total'].includes(lowerKey);
-                const hasValue = parseFloat(value) > 0;
+                const hasValue = parseFloat(value) >= 0;
                 console.log(`💰 Checking ${key}: value=${value}, exclude=${shouldExclude}, hasValue=${hasValue}`);
                 return !shouldExclude && hasValue;
             })
@@ -77,7 +77,7 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
 
     // If no values after filtering, show "No Data"
     if (values.length === 0) {
-        console.log('💰 No payment channel data found, showing No Data');
+        console.log(' No payment channel data found, showing No Data');
         values = [{
             label: "No Data",
             value: 0,
@@ -268,7 +268,8 @@ const styles = StyleSheet.create({
         flexDirection: "column",
         alignItems: "flex-start",
         width: "50%",
-        gap: 10,
+        gap: 5,
+        marginRight: 5
     },
     paymentItem: {
         flexDirection: "row",

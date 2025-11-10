@@ -192,6 +192,8 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "flex-start",
     width: "50%",
+    gap: 5,
+    marginRight: 5
   },
   paymentItem: {
     flexDirection: "row",

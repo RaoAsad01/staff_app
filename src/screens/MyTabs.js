@@ -272,7 +272,7 @@ function MyTabs() {
           ),
         };
       }}
-      initialRouteName="Check In"
+      initialRouteName="Dashboard"
     >
       <Tab.Screen
         name="Dashboard"

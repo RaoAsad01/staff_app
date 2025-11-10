@@ -32,7 +32,7 @@ const BoxOfficeSales = ({ stats }) => {
   // by_payment_methods actually contains ticket types and their sales amounts
   const values = Object.keys(byPaymentMethods).length > 0
     ? Object.entries(byPaymentMethods)
-      .filter(([key, value]) => parseFloat(value) > 0) // Only show non-zero values
+      .filter(([key, value]) => parseFloat(value) >= 0) // Only show non-zero values
       .map(([key, value], index) => {
         return {
           label: key,
@@ -232,7 +232,8 @@ const styles = StyleSheet.create({
         flexDirection: "column",
         alignItems: "flex-start",
         width: "50%",
-        gap: 10,
+        gap: 5,
+        marginRight: 5
     },
     paymentItem: {
         flexDirection: "row",

@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   
   },
   modalContainer: {
-    marginBottom: 180,
+    marginBottom: 200,
     backgroundColor: "#131314",
     borderRadius: 15,
     padding: 20,
