@@ -4,6 +4,7 @@ import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import { useNavigation } from "@react-navigation/native";
 import SvgIcons from "../../../../components/SvgIcons";
+import { formatValueWithPad } from "../../../constants/formatValue";
 
 const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
@@ -188,10 +189,10 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                   <Text style={styles.label}>{item.label}</Text>
                   <View style={styles.valueContainer}>
                     <View style={styles.valueResultContainer}>
-                      <Text style={styles.valueResult}>{String(item.checkedIn).padStart(2, '0')}</Text>
+                      <Text style={styles.valueResult}>{formatValueWithPad(item.checkedIn)}</Text>
                     </View>
                     <View style={styles.separatorLine} />
-                    <Text style={styles.valueTotal}>{String(item.total).padStart(2, '0')}</Text>
+                    <Text style={styles.valueTotal}>{formatValueWithPad(item.total)}</Text>
                   </View>
                 </View>
                 {hasSubItems && (
@@ -249,10 +250,10 @@ const CheckInSoldTicketsCard = ({ title, data, showRemaining, remainingTicketsDa
                         <Text style={styles.subItemLabel}>{subItem.label}</Text>
                         <View style={styles.valueContainer}>
                           <View style={styles.valueResultContainer}>
-                            <Text style={styles.valueResult}>{String(subItem.checkedIn).padStart(2, '0')}</Text>
+                            <Text style={styles.valueResult}>{formatValueWithPad(subItem.checkedIn)}</Text>
                           </View>
                           <View style={styles.separatorLine} />
-                          <Text style={styles.valueTotal}>{String(subItem.total).padStart(2, '0')}</Text>
+                          <Text style={styles.valueTotal}>{formatValueWithPad(subItem.total)}</Text>
                         </View>
                       </View>
                       {(userRole === 'ADMIN' || userRole === 'STAFF' || userRole === 'ORGANIZER') && (
@@ -342,17 +343,17 @@ const styles = StyleSheet.create({
   valueContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
   },
   valueResultContainer: {
-    minWidth: 24,
-    alignItems: "flex-end",
+    minWidth: 16,
+    alignItems: "flex-start",
   },
   separatorLine: {
     width: 1,
     height: 10,
     marginTop: 1,
     backgroundColor: color.black_544B45,
+    marginHorizontal: 5,
   },
   dropdownButton: {
     padding: 8,
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   },
   subItemLabel: {
     fontSize: 12,
-    color: color.grey_6B7785,
+    color: color.black_544B45,
     fontWeight: "400",
   },
   remainingContainer: {

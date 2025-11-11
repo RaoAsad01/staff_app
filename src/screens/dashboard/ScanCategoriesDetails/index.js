@@ -4,6 +4,7 @@ import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import SvgIcons from "../../../../components/SvgIcons";
 import { useNavigation } from '@react-navigation/native';
+import { formatValueWithPad } from "../../../constants/formatValue";
 
 const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
@@ -93,10 +94,10 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
             <Text style={styles.label}>{item.label}</Text>
             <View style={styles.valueContainer}>
               <View style={styles.valueResultContainer}>
-                <Text style={styles.valueResult}>{String(item.scanned).padStart(2, '0')}</Text>
+                <Text style={styles.valueResult}>{formatValueWithPad(item.scanned)}</Text>
               </View>
               <View style={styles.separatorLine} />
-              <Text style={styles.valueTotal}>{String(item.total).padStart(2, '0')}</Text>
+              <Text style={styles.valueTotal}>{formatValueWithPad(item.total)}</Text>
             </View>
           </View>
           {hasSubItems && (
@@ -206,10 +207,10 @@ const ScanCategoriesDetails = ({ stats, onScanAnalyticsPress, activeScanAnalytic
           <Text style={styles.totalLabel}>Total Scanned Tickets</Text>
           <View style={styles.valueContainer}>
             <View style={styles.valueResultContainer}>
-              <Text style={styles.valueResult}>{String(totalScanned).padStart(2, '0')}</Text>
+              <Text style={styles.valueResult}>{formatValueWithPad(totalScanned)}</Text>
             </View>
             <View style={styles.separatorLine} />
-            <Text style={styles.valueTotal}>{String(totalTickets).padStart(2, '0')}</Text>
+            <Text style={styles.valueTotal}>{formatValueWithPad(totalTickets)}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -269,17 +270,17 @@ const styles = StyleSheet.create({
   valueContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
   },
   valueResultContainer: {
-    minWidth: 24,
-    alignItems: "flex-end",
+    minWidth: 16,
+    alignItems: "flex-start",
   },
   separatorLine: {
     width: 1,
     height: 10,
     marginTop: 1,
     backgroundColor: color.black_544B45,
+    marginHorizontal: 5,
   },
   totalRow: {
     flexDirection: "row",

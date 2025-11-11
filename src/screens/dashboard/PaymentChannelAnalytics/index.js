@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AnalyticsChart from '../AnalyticsChart';
 import { color } from '../../../color/color';
-import { formatValue } from '../../../constants/formatValue';
 import { ticketService } from '../../../api/apiService';
 
 const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, userRole, staffUuid }) => {
@@ -22,17 +21,47 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
         "Free": "FREE"
     };
 
+    // Determine the default analytics dataset (Sold analytics baseline)
+    const defaultSoldAnalytics = useMemo(() => {
+        if (stats?.data?.sold_tickets_analytics?.data && typeof stats.data.sold_tickets_analytics.data === 'object') {
+            return stats.data.sold_tickets_analytics.data;
+        }
+
+        if (stats?.data?.box_office_sales?.sold_tickets_analytics?.data && typeof stats.data.box_office_sales.sold_tickets_analytics.data === 'object') {
+            return stats.data.box_office_sales.sold_tickets_analytics.data;
+        }
+
+        return null;
+    }, [stats]);
+
+    // Fallback to previous payment analytics data if sold analytics are unavailable
+    const fallbackPaymentAnalytics = useMemo(() => {
+        if (stats?.data?.payment_channel_analytics?.data && typeof stats.data.payment_channel_analytics.data === 'object') {
+            return stats.data.payment_channel_analytics.data;
+        }
+
+        if (stats?.data?.payment_analytics?.data && typeof stats.data.payment_analytics.data === 'object') {
+            return stats.data.payment_analytics.data;
+        }
+
+        if (stats?.data?.box_office_sales?.payment_analytics?.data && typeof stats.data.box_office_sales.payment_analytics.data === 'object') {
+            return stats.data.box_office_sales.payment_analytics.data;
+        }
+
+        if (stats?.data?.box_office_sales?.payment_channel_analytics?.data && typeof stats.data.box_office_sales.payment_channel_analytics.data === 'object') {
+            return stats.data.box_office_sales.payment_channel_analytics.data;
+        }
+
+        return null;
+    }, [stats]);
+
     // Get the backend parameter for the selected payment channel
     const paymentChannelParam = selectedPaymentChannel ? paymentChannelMapping[selectedPaymentChannel] : null;
-    
-    console.log('📊 PaymentChannelAnalytics - Selected Channel:', selectedPaymentChannel);
-    console.log('📊 PaymentChannelAnalytics - Payment Channel Param:', paymentChannelParam);
-    console.log('📊 PaymentChannelAnalytics - Staff UUID:', staffUuid);
 
     // Fetch analytics data when payment channel is selected
     useEffect(() => {
         const fetchPaymentChannelAnalytics = async () => {
-            console.log('📊 PaymentChannelAnalytics useEffect triggered with:', {
+            console.log('PaymentChannelAnalytics useEffect triggered with:', {
                 eventInfo: eventInfo?.eventUuid,
                 selectedPaymentChannel,
                 paymentChannelParam,
@@ -41,31 +70,12 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
             });
 
             if (!eventInfo?.eventUuid || !selectedPaymentChannel || !paymentChannelParam) {
-                console.log('📊 Missing required data, using initial stats data');
-                // Reset to initial stats data if no selection
-                const initialData = stats?.data?.payment_channel_analytics?.data ||
-                                  stats?.data?.payment_analytics?.data ||
-                                  stats?.data?.box_office_sales?.payment_analytics?.data ||
-                                  stats?.data?.box_office_sales?.payment_channel_analytics?.data ||
-                                  null;
-                console.log('📊 Initial data from stats:', initialData);
-                
-                // If no initial data, show empty object to prevent component from disappearing
-                if (initialData && Object.keys(initialData).length > 0) {
-                    setAnalyticsData(initialData);
-                } else {
-                    setAnalyticsData({});
-                }
+                setAnalyticsData(null);
                 return;
             }
 
             try {
                 setError(null);
-                
-                console.log('📊 Fetching payment channel analytics for:', paymentChannelParam);
-                console.log('📊 Event UUID:', eventInfo.eventUuid);
-                console.log('📊 User Role:', userRole);
-                
                 // Determine sales parameter based on user role
                 let salesParam = null;
                 let staffUuidParam = null;
@@ -79,9 +89,6 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
                     salesParam = null; // For organizer, get all data
                 }
 
-                console.log('📊 Sales parameter:', salesParam);
-                console.log('📊 Staff UUID parameter:', staffUuidParam);
-
                 const response = await ticketService.fetchDashboardStats(
                     eventInfo.eventUuid, 
                     salesParam, 
@@ -90,10 +97,6 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
                     staffUuidParam, 
                     paymentChannelParam
                 );
-
-                console.log('📊 Payment Channel Analytics Response:', JSON.stringify(response, null, 2));
-                console.log('📊 Response data keys:', Object.keys(response?.data || {}));
-
                 // Extract analytics data from response
                 // The backend returns payment_channel_analytics.data for the specific payment channel
                 const newAnalyticsData = response?.data?.payment_channel_analytics?.data ||
@@ -102,47 +105,15 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
                                       response?.data?.box_office_sales?.payment_channel_analytics?.data ||
                                       null;
 
-                console.log('📊 Extracted analytics data:', newAnalyticsData);
-                console.log('📊 Analytics data keys:', Object.keys(newAnalyticsData || {}));
-
                 setAnalyticsData(newAnalyticsData);
             } catch (err) {
-                console.error('❌ Error fetching payment channel analytics:', err);
-                console.error('❌ Error details:', {
-                    message: err.message,
-                    response: err.response?.data,
-                    status: err.response?.status
-                });
                 setError(err.message || 'Failed to fetch payment channel analytics');
-                // Fall back to initial stats data
-                const initialData = stats?.data?.payment_channel_analytics?.data ||
-                                  stats?.data?.payment_analytics?.data ||
-                                  stats?.data?.box_office_sales?.payment_analytics?.data ||
-                                  stats?.data?.box_office_sales?.payment_channel_analytics?.data ||
-                                  null;
-                console.log('📊 Fallback to initial data:', initialData);
-                setAnalyticsData(initialData);
+                setAnalyticsData(null);
             }
         };
 
         fetchPaymentChannelAnalytics();
     }, [selectedPaymentChannel, paymentChannelParam, eventInfo?.eventUuid, userRole, staffUuid, stats]);
-
-    console.log('📊 PaymentChannelAnalytics - Analytics Data:', JSON.stringify(analyticsData, null, 2));
-    
-    // Debug initial stats data
-    console.log('📊 PaymentChannelAnalytics - Initial Stats Debug:');
-    console.log('📊 stats?.data keys:', Object.keys(stats?.data || {}));
-    console.log('📊 payment_analytics:', stats?.data?.payment_analytics);
-    console.log('📊 payment_channel_analytics:', stats?.data?.payment_channel_analytics);
-    console.log('📊 box_office_sales keys:', Object.keys(stats?.data?.box_office_sales || {}));
-    console.log('📊 box_office_sales.payment_analytics:', stats?.data?.box_office_sales?.payment_analytics);
-    console.log('📊 box_office_sales.payment_channel_analytics:', stats?.data?.box_office_sales?.payment_channel_analytics);
-    console.log('📊 selectedPaymentChannel:', selectedPaymentChannel);
-    console.log('📊 paymentChannelParam:', paymentChannelParam);
-    console.log('📊 userRole:', userRole);
-
-
     // Show error state
     if (error) {
         return (
@@ -162,27 +133,33 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
     // Get data for selected payment channel or all channels
     let chartData = [];
 
-    if (selectedPaymentChannel && paymentChannelParam) {
-        // When a payment channel is selected, the backend returns data filtered for that channel
-        // The data is directly in analyticsData (no need to look for channel-specific keys)
-        console.log('📊 Processing payment channel analytics data for:', selectedPaymentChannel);
-        console.log('📊 Analytics data structure:', analyticsData);
+    const resolvedAnalyticsSource = useMemo(() => {
+        if (paymentChannelParam && analyticsData && typeof analyticsData === 'object') {
+            return analyticsData;
+        }
+
+        if (defaultSoldAnalytics && typeof defaultSoldAnalytics === 'object') {
+            return defaultSoldAnalytics;
+        }
+
+        return fallbackPaymentAnalytics;
+    }, [paymentChannelParam, analyticsData, defaultSoldAnalytics, fallbackPaymentAnalytics]);
+
+    if (paymentChannelParam && selectedPaymentChannel) {
         
-        if (analyticsData && typeof analyticsData === 'object') {
+        if (resolvedAnalyticsSource && typeof resolvedAnalyticsSource === 'object') {
             // Convert the time-based data to chart format
-            chartData = Object.entries(analyticsData).map(([time, value]) => ({
+            chartData = Object.entries(resolvedAnalyticsSource).map(([time, value]) => ({
                 time: formatTimeLabel(time),
                 value: parseFloat(value) || 0
             }));
-            console.log('📊 Channel-specific chart data:', chartData);
         } else {
-            console.log('📊 No analytics data available for selected payment channel');
+            console.log('No analytics data available for selected payment channel');
         }
     } else {
         // Show aggregated data for all channels (fallback to initial stats)
-        console.log('📊 No payment channel selected, using initial stats data');
-        if (analyticsData && typeof analyticsData === 'object') {
-            chartData = Object.entries(analyticsData).map(([time, value]) => ({
+        if (resolvedAnalyticsSource && typeof resolvedAnalyticsSource === 'object') {
+            chartData = Object.entries(resolvedAnalyticsSource).map(([time, value]) => ({
                 time: formatTimeLabel(time),
                 value: parseFloat(value) || 0
             }));
@@ -190,11 +167,11 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
     }
 
     // Sort by time
-    chartData.sort((a, b) => {
-        const timeA = parseTime(a.time);
-        const timeB = parseTime(b.time);
-        return timeA - timeB;
-    });
+    // chartData.sort((a, b) => {
+    //     const timeA = parseTime(a.time);
+    //     const timeB = parseTime(b.time);
+    //     return timeA - timeB;
+    // });
 
     // If no chart data, provide empty data to prevent AnalyticsChart from showing error
     if (chartData.length === 0) {
@@ -209,9 +186,9 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
     return (
         <View style={styles.container}>
             <AnalyticsChart
-                title={selectedPaymentChannel ? `${selectedPaymentChannel} Payment Analytics` : 'Payment Channel Analytics'}
+                title={selectedPaymentChannel ? `${selectedPaymentChannel} Payment` : 'Payment Channel'}
                 data={chartData}
-                dataType="payment"
+                dataType={selectedPaymentChannel && paymentChannelParam ? 'payment' : 'sold'}
             />
         </View>
     );

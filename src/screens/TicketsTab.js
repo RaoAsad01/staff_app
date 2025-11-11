@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
-import { ticketService } from '../api/apiService';
+import { apiClient, ticketService } from '../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import NoResults from '../components/NoResults';
 

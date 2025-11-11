@@ -4,6 +4,7 @@ import { Svg, Circle, Text as SvgText } from "react-native-svg";
 import { color } from '../../../color/color';
 import { formatValue } from '../../../constants/formatValue';
 import SvgIcons from '../../../../components/SvgIcons';
+import { formatValueWithPad } from '../../../constants/formatValue';
 
 // CircularProgress component matching the exact design from CheckInSolidTicketsCard
 const CircularProgress = ({ value, total, percentage, color = color.btnBrown_AE6F28 }) => {
@@ -167,11 +168,11 @@ const TotalPaymentChannelCard = ({ stats, onPaymentChannelPress, activePaymentCh
                 <Text style={styles.label}>{channel.label}</Text>
                 <View style={styles.valueContainer}>
                   <View style={styles.valueResultContainer}>
-                    <Text style={styles.valueResult}>GHS {formatValue(channel.value)}</Text>
+                    <Text style={styles.valueResult}>GHS {formatValueWithPad(channel.value)}</Text>
                   </View>
                   <View style={styles.separatorLine} />
                   <View style={styles.valueTotalContainer}>
-                    <Text style={styles.valueTotal}>GHS {formatValue(totalAmount)}</Text>
+                    <Text style={styles.valueTotal}>GHS {formatValueWithPad(totalAmount)}</Text>
                   </View>
                 </View>
               </View>
