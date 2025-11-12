@@ -19,6 +19,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const [email, setEmail] = useState('');
   const [purchaseCode, setPurchaseCode] = useState('');
   const [paymentOption, setPaymentOption] = useState('');
+  const [isPinModalVisible, setPinModalVisible] = useState(false);
+  const [cashPinModal, setCashPinModal] = useState('');
+  const [cashPin, setCashPin] = useState('');
+  const [cashPinError, setCashPinError] = useState('');
   const [isPOSModalVisible, setPOSModalVisible] = useState(false);
   const [isPurchaseCodeModalVisible, setPurchaseCodeModalVisible] = useState(false);
   const [transactionNumber, setTransactionNumber] = useState('');
@@ -93,8 +97,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setPurchaseCode('');
     setPaymentOption('');
     setPOSModalVisible(false);
+    setPinModalVisible(false);
     setPurchaseCodeModalVisible(false);
     setTransactionNumber('');
+    setCashPinModal('');
+    setCashPin('');
     setPurchaseCodeModal('');
     setTicketPricing([]);
     setPricingCategories([]);
@@ -107,6 +114,8 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setWrongPurchaseCodeError('');
     setPaymentError('');
     setTicketError('');
+    setCashPinError('');
+    setCashPinError('');
   };
 
   const fetchData = async () => {
@@ -245,6 +254,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       setTicketError('');
       setPOSModalVisible(false);
       setPurchaseCodeModalVisible(false);
+      setPinModalVisible(false);
+      setCashPinModal('');
+      setCashPin('');
+      setCashPinError('');
 
       // Update selected tickets for the new tab
       const category = ticketPricing.find(cat => cat.title === selectedTab);
@@ -295,6 +308,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setTicketError('');
     setPOSModalVisible(false);
     setPurchaseCodeModalVisible(false);
+    setPinModalVisible(false);
+    setCashPinModal('');
+    setCashPin('');
+    setCashPinError('');
 
     const category = ticketPricing.find(cat => cat.title === tab);
     console.log('BoxOfficeTab: Found category:', category);
@@ -342,6 +359,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       return;
     }
 
+    if (paymentOption === 'CASH' && !cashOtp.trim()) {
+      setCashPinError('Please enter a valid PIN.');
+      setPinModalVisible(true);
+      return;
+    }
+
     // Check if purchase code is required for Members tab
     if (selectedTabState === 'Members' && !purchaseCode.trim()) {
       setPurchaseError('Please enter a valid Purchase code.');
@@ -362,7 +385,12 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       }
 
       // Generate a unique transaction ID for non-POS payments
-      const transactionId = paymentOption === 'P.O.S' ? null : `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const transactionId =
+        paymentOption === 'P.O.S'
+          ? null
+          : paymentOption === 'CASH'
+            ? cashOtp.trim()
+            : `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       const response = await ticketService.fetchBoxOfficeGetTicket(
         eventInfo.eventUuid,
@@ -764,17 +792,18 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               ]}
               onPress={() => {
                 if (!isPaymentSectionEnabled()) return;
-                if (selectedTabState === 'Members') {
-                  setPaymentOption('CASH');
-                  // Clear any previous errors when opening modal
-                  setWrongPurchaseCodeError('');
-                  setPurchaseError('');
-                  setPurchaseCodeModalVisible(true);
-                } else {
-                  setPaymentOption('CASH');
-                }
+                setPaymentOption('CASH');
+                setCashPin('');
+                setCashPinModal('');
+                setPinModalVisible(true);
+                // Clear any previous errors when opening modal
+                setWrongPurchaseCodeError('');
+                setPurchaseError('');
                 if (paymentError) {
                   setPaymentError('');
+                }
+                if (cashPinError) {
+                  setCashPinError('');
                 }
               }}
               disabled={!isPaymentSectionEnabled()}
@@ -809,8 +838,14 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 if (paymentError) {
                   setPaymentError('');
                 }
+                if (cashPinError) {
+                  setCashPinError('');
+                }
+                setPinModalVisible(false);
+                setCashPin('');
               }}
-              disabled={!isPaymentSectionEnabled()}
+              // disabled={!isPaymentSectionEnabled()}
+              disabled={true}
             >
               {paymentOption === 'BANK' ? (
                 <SvgIcons.cardIconActive width={24} height={24} />
@@ -857,6 +892,10 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 if (paymentError) {
                   setPaymentError('');
                 }
+                if (cashPinError) {
+                  setCashPinError('');
+                }
+                setPinModalVisible(false);
               }}
               disabled={!isPaymentSectionEnabled()}
             >
@@ -887,8 +926,14 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                 if (paymentError) {
                   setPaymentError('');
                 }
+                if (cashPinError) {
+                  setCashPinError('');
+                }
+                setPinModalVisible(false);
+                setCashPin('');
               }}
-              disabled={!isPaymentSectionEnabled()}
+              // disabled={!isPaymentSectionEnabled()}
+              disabled={true}
             >
               {paymentOption === 'MOBILE_MONEY' ? (
                 <SvgIcons.mobMoneyIconActive width={24} height={24} />
@@ -904,6 +949,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         {paymentError && (
           <Text style={styles.errorText}>{paymentError}</Text>
         )}
+      {cashPinError && (
+        <Text style={styles.errorText}>{cashPinError}</Text>
+      )}
         {paymentOption && paymentOption !== 'P.O.S' && (
           <TouchableOpacity
             style={[
@@ -952,6 +1000,57 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
               <Text style={styles.getTicketsButtonTextPOS}>Get Ticket(s)</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPOSModalVisible(false)} style={styles.cancelButtonContainer}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={isPinModalVisible} transparent animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>Enter PIN</Text>
+            </View>
+            <TextInput
+              style={[
+                styles.inputTransaction,
+                cashPinError ? styles.inputError : null
+              ]}
+              placeholder="Enter PIN"
+              placeholderTextColor={color.brown_766F6A}
+              value={cashPinModal}
+              onChangeText={(text) => {
+                setCashPinModal(text);
+                if (cashPinError) {
+                  setCashPinError('');
+                }
+              }}
+              keyboardType="default"
+              selectionColor={color.selectField_CEBCA0}
+            />
+            {cashPinError && (
+              <Text style={styles.errorTextTransaction}>{cashPinError}</Text>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.getTicketsButtonPOS,
+                styles.disabledButton,
+              ]}
+              disabled
+            >
+              <Text style={styles.getTicketsButtonTextPOS}>Continue</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setPinModalVisible(false);
+                setPaymentOption('');
+                setCashPinModal('');
+                setCashPin('');
+                setCashPinError('');
+              }}
+              style={styles.cancelButtonContainer}
+            >
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
