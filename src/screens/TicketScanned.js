@@ -5,6 +5,7 @@ import SvgIcons from '../../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
 import { formatDateTime } from '../constants/dateAndTime';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
+import { truncateStaffName } from '../utils/stringUtils';
 import { useEffect } from 'react';
 
 const TicketScanned = ({ route }) => {
@@ -71,14 +72,12 @@ const TicketScanned = ({ route }) => {
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {typeof scanResponse?.scanned_by === 'object' 
-                                        ? scanResponse?.scanned_by?.name 
-                                        : scanResponse?.scanned_by || 'No Record'}
+                                    {truncateStaffName(scanResponse?.scanned_by) || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
                                     {typeof scanResponse?.scanned_by === 'object'
-                                        ? scanResponse?.scanned_by?.staff_id
+                                        ? scanResponse?.scanned_by?.staff_id || 'No Record'
                                         : scanResponse?.staff_id || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Price</Text>

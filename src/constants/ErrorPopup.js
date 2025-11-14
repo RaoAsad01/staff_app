@@ -13,7 +13,8 @@ const ErrorPopup = ({ visible, onClose, title = "", subtitle = "" }) => {
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <View style={styles.modalContainer}>
+                <View style={styles.container}>
+                    <View style={styles.modalContainer}>
                     <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                         <SvgIcons.CrossIconBrownbg width={24} height={24} />
                     </TouchableOpacity>
@@ -32,6 +33,7 @@ const ErrorPopup = ({ visible, onClose, title = "", subtitle = "" }) => {
                         size={14}
                         color={color.placeholderTxt_24282C}>
                         {subtitle}</Typography>
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -45,12 +47,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    container: {
+        width: '100%',
+        paddingHorizontal: 16,
+    },
     modalContainer: {
         backgroundColor: 'white',
         borderRadius: 20,
         padding: 30,
         alignItems: 'center',
-
+        width: '100%',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -60,7 +66,8 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
         position: 'relative',
-        minWidth: 350,
+        minWidth: 300,
+        maxWidth: 500,
     },
     closeButton: {
         position: 'absolute',

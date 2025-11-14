@@ -10,6 +10,7 @@ import SuccessPopup from '../constants/SuccessPopup';
 import ErrorPopup from '../constants/ErrorPopup';
 import Typography from '../components/Typography';
 import { formatDateTime } from '../constants/dateAndTime';
+import { truncateStaffName } from '../utils/stringUtils';
 
 const ManualCheckInAllTickets = () => {
     const route = useRoute();
@@ -109,7 +110,7 @@ const ManualCheckInAllTickets = () => {
                     // Extract scanned_by information from check-in response
                     const scannedByFromResponse = response?.data?.scanned_by;
                     console.log('Manual Check-in - scanned_by from response:', scannedByFromResponse);
-                    
+
                     // Update ticket details with all relevant fields from the response
                     const updatedTicket = {
                         ...ticket,
@@ -119,7 +120,7 @@ const ManualCheckInAllTickets = () => {
                         last_scanned_by_name: scannedByFromResponse?.name || ticket.last_scanned_by_name,
                         scanned_on: scannedByFromResponse?.scanned_on || 'No Record',
                     };
-                    
+
                     // Map scanned_by object from response (full object with name and staff_id)
                     if (scannedByFromResponse) {
                         updatedTicket.scanned_by = {
@@ -128,7 +129,7 @@ const ManualCheckInAllTickets = () => {
                             scanned_on: scannedByFromResponse?.scanned_on || 'No Record',
                         };
                     }
-                    
+
                     setTicketDetails([updatedTicket]);
 
                     // Update scan count when ticket is successfully checked in
@@ -166,8 +167,8 @@ const ManualCheckInAllTickets = () => {
         setTicketDetails(prevTickets =>
             prevTickets.map(ticket =>
                 ticket.uuid === ticketUuid
-                    ? { 
-                        ...ticket, 
+                    ? {
+                        ...ticket,
                         checkin_status: newStatus,
                         scanned_by: scannedByInfo ? {
                             name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
@@ -279,7 +280,7 @@ const ManualCheckInAllTickets = () => {
                             <View style={styles.rightColumnContent}>
                                 <Text style={styles.values}>Scanned By</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>
-                                    {ticketDetails[0]?.scanned_by?.name || 'No Record'}
+                                    {truncateStaffName(ticketDetails[0]?.scanned_by?.name) || 'No Record'}
                                 </Text>
                                 <Text style={[styles.values, styles.marginTop10]}>Staff ID</Text>
                                 <Text style={[styles.valueScanCount, styles.marginTop8]}>

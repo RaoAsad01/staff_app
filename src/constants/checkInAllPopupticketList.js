@@ -3,13 +3,15 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { color } from '../color/color';
 import { ticketService } from '../api/apiService';
 import SuccessPopup from './SuccessPopup';
+import ErrorPopup from './ErrorPopup';
 import { useState } from 'react';
-import { date } from 'yup';
 
 const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate, userEmail }) => {
     const { eventInfo } = useRoute().params;
     const navigation = useNavigation();
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
 
     const handleStatusChange = async (ticketToCheckIn) => {
         console.log("Check-in ticket data:", ticketToCheckIn)
@@ -22,15 +24,16 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                 // Extract scanned_by information from response
                 const scannedByFromResponse = response?.data?.scanned_by;
                 console.log('CheckInAllPopup - scanned_by from response:', scannedByFromResponse);
-                
+
                 // Notify parent component about the status change with scanned_by info
                 if (onTicketStatusChange) {
                     onTicketStatusChange(
-                        ticketToCheckIn.uuid, 
+                        ticketToCheckIn.uuid,
                         'SCANNED',
                         scannedByFromResponse ? {
                             name: scannedByFromResponse.name,
-                            staff_id: scannedByFromResponse.staff_id
+                            staff_id: scannedByFromResponse.staff_id,
+                            scanned_on: scannedByFromResponse.scanned_on,
                         } : null
                     );
                 }
@@ -42,16 +45,25 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
 
                 setShowSuccessPopup(true);
             } else {
-                Alert.alert('Check-in failed', response?.data?.message || 'Ticket not scanned.');
+                const errorMsg = response?.data?.message || response?.message || "We couldn't check in this ticket. Please try again or contact support.";
+                setErrorMessage(errorMsg);
+                setShowErrorPopup(true);
             }
         } catch (error) {
             console.error('Check-in error:', error);
-            Alert.alert('Error', error.message || 'Something went wrong.');
+            const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
+            setErrorMessage(errorMsg);
+            setShowErrorPopup(true);
         }
     };
 
     const handleCloseSuccessPopup = () => {
         setShowSuccessPopup(false);
+    };
+
+    const handleCloseErrorPopup = () => {
+        setShowErrorPopup(false);
+        setErrorMessage(null);
     };
 
     const handleItemPress = (item) => {
@@ -144,6 +156,13 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                 onClose={handleCloseSuccessPopup}
                 title="Check-In Successful"
                 subtitle="Ticket checked in successfully"
+            />
+
+            <ErrorPopup
+                visible={showErrorPopup}
+                onClose={handleCloseErrorPopup}
+                title="Check-In Failed"
+                subtitle={errorMessage || "We couldn't check in this ticket. Please try again or contact support."}
             />
         </>
     );

@@ -38,29 +38,33 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const fetchTicketList = async (eventUuid) => {
     try {
       setIsLoading(true);
-      const res = await ticketService.ticketStatsListing(eventUuid,'PAID');
+      const res = await ticketService.ticketStatsListing(eventUuid, 'PAID');
       const list = res?.data || [];
       const mappedTickets = list.map((ticket) => {
         const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
         return {
-          id: ticket.ticket_number || 'N/A',
-          type: ticket.ticket_type || 'N/A',
-          price: ticket.ticket_price || 'N/A',
-          date: ticket.date || 'N/A',
+          id: ticket.ticket_number || 'No Record',
+          type: ticket.ticket_type || 'No Record',
+          price: ticket.ticket_price || 'No Record',
+          date: ticket.formatted_date || 'No Record',
           status: ticket.checkin_status === 'SCANNED' ? 'Checked In' : 'No Show',
-          note: ticket.note || 'N/A',
+          note: ticket.note || 'No Record',
           imageUrl: null,
-          uuid: ticket.uuid || 'N/A',
-          ticketHolder: ticket.ticket_holder || 'N/A',
-          lastScannedByName: ticket.last_scanned_by_name || 'N/A',
-          scanCount: ticket.scan_count || 'N/A',
+          uuid: ticket.uuid || 'No Record',
+          ticketHolder: ticket.ticket_holder || 'No Record',
+          lastScannedByName: ticket.last_scanned_by_name || 'No Record',
+          scanCount: ticket.scan_count || 'No Record',
           note: ticket.note || 'No note added',
-          lastScannedOn: ticket.last_scanned_on || 'N/A',
+          lastScannedOn: ticket.last_scanned_on || 'No Record',
           qrCodeUrl: qrCodeUrl,
-          currency: ticket.currency || 'N/A',
-          category: ticket.category || 'N/A',
-          ticketClass: ticket.ticket_class || 'N/A',
-          name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
+          currency: ticket.currency || 'No Record',
+          category: ticket.category || 'No Record',
+          email: ticket.user_email || 'No Record',
+          ticketClass: ticket.ticket_class || 'No Record',
+          name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'No Record',
+          scannedBy: ticket.scanned_by?.name || 'No Record',
+          staffId: ticket.scanned_by?.staff_id || 'No Record',
+          scannedOn: ticket.scanned_by?.scanned_on || 'No Record',
         };
       });
 
@@ -133,19 +137,23 @@ const AttendeesComponent = ({ eventInfo, onScanCountUpdate }) => {
   const handleTicketPress = (ticket) => {
     const scanResponse = {
       message: ticket.status === 'Checked In' ? 'Ticket Scanned' : 'Ticket Unscanned',
-      ticket_holder: ticket.ticketHolder || 'N/A',
-      ticket: ticket.type || 'N/A',
-      currency: ticket.currency || 'N/A',
-      ticket_price: ticket.price || 'N/A',
-      last_scan: ticket.lastScannedOn || 'N/A',
-      scanned_by: ticket.lastScannedByName || 'N/A',
-      ticket_number: ticket.id || 'N/A',
+      ticket_holder: ticket.ticketHolder || 'No Record',
+      ticket: ticket.type || 'No Record',
+      currency: ticket.currency || 'No Record',
+      ticket_price: ticket.price || 'No Record',
+      last_scan: ticket.lastScannedOn || 'No Record',
+      ticket_number: ticket.id || 'No Record',
       scan_count: ticket.scanCount || 0,
       note: ticket.note || 'No note added',
       qrCodeUrl: ticket.qrCodeUrl,
-      category: ticket.category || 'N/A',
-      ticketClass: ticket.ticketClass || 'N/A',
-      name: ticket.name || 'N/A',
+      category: ticket.category || 'No Record',
+      ticketClass: ticket.ticketClass || 'No Record',
+      user_email: ticket.email || 'No Record',
+      date: ticket.date || 'No Record',
+      name: ticket.name || 'No Record',
+      scanned_by: ticket.scannedBy || 'No Record',
+      staff_id: ticket.staffId || 'No Record',
+      scanned_on: ticket.scannedOn || 'No Record',
     };
 
     navigation.navigate('TicketScanned', {

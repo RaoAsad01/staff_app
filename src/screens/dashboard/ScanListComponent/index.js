@@ -34,33 +34,36 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             const mappedTickets = list.map((ticket) => {
                 const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
-                    id: ticket.ticket_number || 'N/A',
-                    type: ticket.ticket_type || 'N/A',
-                    price: ticket.ticket_price || 'N/A',
-                    date: ticket.formatted_date || 'N/A',
+                    id: ticket.ticket_number || 'No Record',
+                    type: ticket.ticket_type || 'No Record',
+                    price: ticket.ticket_price || 'No Record',
+                    date: ticket.formatted_date || 'No Record',
                     status: ticket.checkin_status,
-                    note: ticket.note || 'N/A',
+                    note: ticket.note || 'No Record',
                     imageUrl: null,
-                    uuid: ticket.uuid || 'N/A',
-                    ticketHolder: ticket.ticket_holder || 'N/A',
-                    lastScannedByName: ticket.last_scanned_by_name || 'N/A',
-                    scanCount: ticket.scan_count || 'N/A',
+                    uuid: ticket.uuid || 'No Record',
+                    ticketHolder: ticket.ticket_holder || 'No Record',
+                    lastScannedByName: ticket.last_scanned_by_name || 'No Record',
+                    scanCount: ticket.scan_count || 'No Record',
                     note: ticket.note || 'No note added',
-                    lastScannedOn: ticket.last_scanned_on || 'N/A',
+                    lastScannedOn: ticket.last_scanned_on || 'No Record',
                     qrCodeUrl: qrCodeUrl,
-                    currency: ticket.currency || 'N/A',
+                    currency: ticket.currency || 'No Record',
                     userfirstname: ticket.user_first_name,
-                    name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'N/A',
-                    user_email: ticket.user_email || 'N/A',
-                    category: ticket.category || 'N/A',
-                    ticketClass: ticket.ticket_class || 'N/A',
+                    name: `${ticket.user_first_name || ''} ${ticket.user_last_name || ''}`.trim() || 'No Record',
+                    user_email: ticket.user_email || 'No Record',
+                    category: ticket.category || 'No Record',
+                    ticketClass: ticket.ticket_class || 'No Record',
+                    scannedBy: ticket.scanned_by?.name || 'No Record',
+                    staffId: ticket.scanned_by?.staff_id || 'No Record',
+                    scannedOn: ticket.scanned_by?.scanned_on || 'No Record',
                 };
             });
 
             setFetchedTickets(mappedTickets);
 
             // Extract unique ticket types and remove "Pricing" from the end
-            const uniqueTypes = [...new Set(mappedTickets.map(ticket => ticket.type))].filter(type => type !== 'N/A');
+            const uniqueTypes = [...new Set(mappedTickets.map(ticket => ticket.type))].filter(type => type !== 'No Record');
             const cleanedTypes = uniqueTypes.map(type => type.replace(/\s*Pricing$/, ''));
             setAvailableTicketTypes(cleanedTypes);
         } catch (err) {
@@ -104,13 +107,12 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
     const handleTicketPress = (ticket) => {
         const scanResponse = {
             message: ticket.status === 'SCANNED' ? 'Ticket Scanned' : 'Ticket Scanned',
-            ticket_holder: ticket.ticketHolder || 'N/A',
-            ticket: ticket.type || 'N/A',
-            currency: ticket.currency || 'N/A',
-            ticket_price: ticket.price || 'N/A',
-            last_scan: ticket.lastScannedOn || 'N/A',
-            scanned_by: ticket.lastScannedByName || 'N/A',
-            ticket_number: ticket.id || 'N/A',
+            ticket_holder: ticket.ticketHolder || 'No Record',
+            ticket: ticket.type || 'No Record',
+            currency: ticket.currency || 'No Record',
+            ticket_price: ticket.price || 'No Record',
+            last_scan: ticket.lastScannedOn || 'No Record',
+            ticket_number: ticket.id || 'No Record',
             scan_count: ticket.scanCount || 0,
             note: ticket.note || 'No note added',
             qrCodeUrl: ticket.qrCodeUrl,
@@ -119,6 +121,9 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             user_email: ticket.user_email,
             category: ticket.category,
             ticketClass: ticket.ticketClass,
+            scanned_by: ticket.scannedBy || 'No Record',
+            staff_id: ticket.staffId || 'No Record',
+            scanned_on: ticket.scannedOn || 'No Record',
         };
 
         navigation.navigate('TicketScanned', {
@@ -196,7 +201,7 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
                         <View style={styles.cardContent}>
                             <View>
                                 <Text style={styles.label}>Name</Text>
-                                <Text style={styles.value}>{item.name || 'N/A'}</Text>
+                                <Text style={styles.value}>{item.name || 'No Record'}</Text>
                                 <Text style={styles.label}>Category</Text>
                                 <Text style={styles.value}>{item.category}</Text>
                                 <Text style={styles.label}>Class</Text>

@@ -6,11 +6,11 @@
  */
 export const truncateString = (str, maxLength = 10) => {
   if (!str || typeof str !== 'string') return str;
-  
+
   if (str.length <= maxLength) {
     return str;
   }
-  
+
   return str.substring(0, maxLength) + '...';
 };
 
@@ -29,5 +29,9 @@ export const truncateCityName = (cityName) => {
 };
 
 export const truncateEventName = (cityName) => {
+  return truncateString(cityName, 10);
+};
+
+export const truncateStaffName = (cityName) => {
   return truncateString(cityName, 10);
 };
