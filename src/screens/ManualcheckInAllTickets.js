@@ -33,6 +33,7 @@ const ManualCheckInAllTickets = () => {
                 console.log('Ticket Details Response:', JSON.stringify(response, null, 2));
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
                     console.log('📋First ticket data:', response.data[0]);
+                    console.log('📋Scanned by:', response.data[0]?.scanned_by);
                     setTicketDetails(response.data);
 
                     // Check if the first ticket is already scanned, and set the success state accordingly
