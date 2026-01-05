@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Platform, useColorScheme } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigationState } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
 import LoginScreen from '../screens/LoginScreen';
 import MyTabs from '../screens/MyTabs';
 import OtpLoginScreen from '../screens/OtpLoginScreen';
@@ -14,72 +18,101 @@ import StaffDashboard from '../screens/dashboard/StaffDashboard';
 
 const Stack = createNativeStackNavigator();
 
+// Dark screens that need black navigation bar
+const darkScreens = ['Initial', 'Splash', 'Login', 'OtpLogin'];
+
 function LoggedInScreen() {
   return <MyTabs />;
 }
 
 function Navigation({ route }) {
+  const scheme = useColorScheme();
+  const routeName = useNavigationState(state => {
+    if (!state) return 'Initial';
+    const route = state.routes[state.index];
+    return route.name;
+  });
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBehaviorAsync('overlay-swipe');
+      
+      // Determine if current screen is dark or light
+      const isDarkScreen = darkScreens.includes(routeName);
+      
+      if (isDarkScreen) {
+        NavigationBar.setBackgroundColorAsync('#281c10');
+        NavigationBar.setButtonStyleAsync('light');
+      } else {
+        NavigationBar.setBackgroundColorAsync('#fff');
+        NavigationBar.setButtonStyleAsync('dark');
+      }
+    }
+  }, [routeName, scheme]);
+
   return (
-    <Stack.Navigator initialRouteName="Initial">
-      <Stack.Screen 
-        name="Initial" 
-        component={InitialScreen} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: false,
-          statusBarHidden: true,
-          statusBarStyle: 'light',
-          statusBarTranslucent: true,
-          animation: 'none'
-        }} 
+    <>
+      <StatusBar
+        translucent
+        style={darkScreens.includes(routeName) ? 'light' : 'dark'}
+        backgroundColor="transparent"
       />
-      <Stack.Screen 
-        name="Splash" 
-        component={SplashScreenComponent} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarHidden: true,
-          statusBarStyle: 'light',
-          statusBarTranslucent: true,
-          animation: 'fade'
-        }} 
-      />
-      <Stack.Screen 
-        name="Login" 
-        component={LoginScreen} 
-        options={{ 
-          headerShown: false, 
-          unmountOnBlur: true,
-          statusBarHidden: true,
-          statusBarStyle: 'light',
-          statusBarTranslucent: true,
-          animation: 'fade'
-        }} 
-      />
-      <Stack.Screen 
-        name="LoggedIn" 
-        component={LoggedInScreen} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
-        }} 
-      />
-      <Stack.Screen 
-        name="OtpLogin" 
-        component={OtpLoginScreen} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarHidden: true,
-          statusBarStyle: 'light',
-          statusBarTranslucent: true,
-          animation: 'fade'
-        }} 
-      />
+      <Stack.Navigator initialRouteName="Initial">
+        <Stack.Screen 
+          name="Initial" 
+          component={InitialScreen} 
+          options={{ 
+            headerShown: false,
+            unmountOnBlur: false,
+            statusBarStyle: 'light',
+            statusBarTranslucent: true,
+            animation: 'none'
+          }} 
+        />
+        <Stack.Screen 
+          name="Splash" 
+          component={SplashScreenComponent} 
+          options={{ 
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'light',
+            statusBarTranslucent: true,
+            animation: 'fade'
+          }} 
+        />
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen} 
+          options={{ 
+            headerShown: false, 
+            unmountOnBlur: true,
+            statusBarStyle: 'light',
+            statusBarTranslucent: true,
+            animation: 'fade'
+          }} 
+        />
+        <Stack.Screen 
+          name="LoggedIn" 
+          component={LoggedInScreen} 
+          options={{ 
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }} 
+        />
+        <Stack.Screen 
+          name="OtpLogin" 
+          component={OtpLoginScreen} 
+          options={{ 
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'light',
+            statusBarTranslucent: true,
+            animation: 'fade'
+          }} 
+        />
       <Stack.Screen 
         name="TicketsTab" 
         component={TicketsTab} 
@@ -88,7 +121,7 @@ function Navigation({ route }) {
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
       <Stack.Screen 
@@ -99,7 +132,7 @@ function Navigation({ route }) {
           unmountOnBlur: false,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
       <Stack.Screen 
@@ -110,7 +143,7 @@ function Navigation({ route }) {
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
       <Stack.Screen 
@@ -121,7 +154,7 @@ function Navigation({ route }) {
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
       <Stack.Screen 
@@ -132,7 +165,7 @@ function Navigation({ route }) {
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
       <Stack.Screen 
@@ -143,10 +176,11 @@ function Navigation({ route }) {
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
+          statusBarTranslucent: true
         }} 
       />
     </Stack.Navigator>
+    </>
   );
 }
 

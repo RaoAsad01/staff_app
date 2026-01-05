@@ -25,6 +25,7 @@
     },
     "android": {
       "package": "com.asad_ahmad.staffapp",
+      "iconBackground": "#000000",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",

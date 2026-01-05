@@ -44,7 +44,7 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
                 </TouchableOpacity>
             )}
 
-            <SafeAreaView style={[styles.bottomtextbg, { bottom: screenHeight * 0.08 }]}>
+            <SafeAreaView style={[styles.bottomtextbg, { bottom: screenHeight * 0.01 }]}>
                 <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
             </SafeAreaView>
         </>

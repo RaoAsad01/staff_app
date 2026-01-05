@@ -301,7 +301,7 @@ const OtpLoginScreen = ({ route }) => {
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={{ flex: 1 }}>
-          <StatusBar style="light" backgroundColor="transparent" translucent hidden={true} />
+          <StatusBar style="light" backgroundColor="transparent" translucent />
           {/* <ExpoImageBackground
             source={require('../../assets/images/bg-img-signup.png')}
             contentFit="cover"
@@ -497,7 +497,7 @@ const OtpLoginScreen = ({ route }) => {
           </View>
 
           {!isKeyboardVisible && (
-            <LinearGradient colors={["#000000", "#281c10"]} style={{ flex: 1 }}>
+            <LinearGradient colors={["#000000", "#281c10"]} style={styles.bottomGradient}>
               <MiddleSection showGetStartedButton={false} />
             </LinearGradient>
           )}
@@ -713,6 +713,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 20,
+  },
+  bottomGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    zIndex: -1,
   },
 });
 

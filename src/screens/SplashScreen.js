@@ -42,7 +42,6 @@ const SplashScreenComponent = () => {
         style="light"
         backgroundColor="transparent"
         translucent
-        hidden={true}
       />
       <SafeAreaView style={styles.container}>
         <View style={styles.topSection}>

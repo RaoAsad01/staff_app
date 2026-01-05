@@ -50,6 +50,7 @@ import EmailIcon from '../assets/svgs/icon_email.svg';
 import DownArrowWhite from '../assets/svgs/downarrow_white.svg';
 import IconBarsInactive from '../assets/svgs/icon_bars_inactive.svg';
 import IconBarsActive from '../assets/svgs/icon_bars_active.svg';
+import RightArrowWhite from '../assets/svgs/right-arrow-white.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -104,4 +105,5 @@ export default {
     downArrowWhite: DownArrowWhite,
     iconBarsInactive: IconBarsInactive,
     iconBarsActive: IconBarsActive,
+    rightArrowWhite: RightArrowWhite,
 };

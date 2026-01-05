@@ -167,7 +167,6 @@ const LoginScreen = () => {
             style="light"
             backgroundColor="transparent"
             translucent
-            hidden={true}
           />
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <View style={[styles.centeredContent, { paddingTop: screenHeight * 0.40 }]}>
@@ -225,7 +224,7 @@ const LoginScreen = () => {
                         onPress={handleSubmit}
                         disabled={!values.user_identifier.trim()}
                       >
-                        <SvgIcons.ArrowRight width={28} height={28} fill={color.black_544B45} />
+                        <SvgIcons.rightArrowWhite width={28} height={28} fill={color.black_544B45} />
                       </TouchableOpacity>
                     </View>
                     {touched.user_identifier && errors.user_identifier && (
@@ -313,7 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
     backgroundColor: 'transparent',
-    marginBottom: 20,
+    marginBottom: 5,
     height: 54,
     marginHorizontal: 20
 
@@ -395,7 +394,6 @@ const styles = StyleSheet.create({
   toggleButton: {
     alignItems: 'center',
     marginTop: 8,
-    paddingVertical: 8,
   },
 });
 
