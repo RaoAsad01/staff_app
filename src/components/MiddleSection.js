@@ -45,7 +45,22 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
             )}
 
             <SafeAreaView style={[styles.bottomtextbg, { bottom: screenHeight * 0.01 }]}>
-                <Caption color={color.grey_DEDCDC} size={12} align="center">By Hexallo Enterprise</Caption>
+                <Caption color={color.grey_DEDCDC} size={12} marginBottom={10} align="center">By Hexallo Enterprise</Caption>
+                <Typography
+                    weight="450"
+                    size={12}
+                    color={color.grey_DEDCDC}
+                    style={styles.footerText}
+                >
+                    By logging in you accept{' '}
+                    <Typography weight="600" size={12} color={color.grey_DEDCDC} style={styles.linkText}>
+                        Terms of Use
+                    </Typography>
+                    {' '}{'\n'}and{' '}
+                    <Typography weight="600" size={12} color={color.grey_DEDCDC} style={styles.linkText}>
+                        Privacy Policy
+                    </Typography>
+                </Typography>
             </SafeAreaView>
         </>
     );
@@ -88,6 +103,13 @@ const styles = {
         backgroundColor: 'transparent',
         position: 'absolute',
     },
+    footerText: {
+        textAlign: 'center',
+        lineHeight: 13,
+    },
+    linkText: {
+        textDecorationLine: 'underline',
+},
 };
 
 export default MiddleSection; 
