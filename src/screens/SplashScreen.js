@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import Typography, { Heading3, Body1, ButtonTextDemiBold, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +25,9 @@ const SplashScreenComponent = () => {
   const handleGetStarted = async () => {
     try {
       // Mark that the user has seen the onboarding
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+
+      // Keep SecureStore in sync (optional; helps with migration/back-compat)
       await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
       
       // After onboarding, go to login

@@ -8,20 +8,38 @@ import { countryCodes } from '../constants/countryCodes';
 export const detectCountryCode = async () => {
   try {
     console.log('Requesting location permissions...');
-    // Request location permissions
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('❌ Location permission not granted');
+    
+    // First check if location services are enabled
+    const servicesEnabled = await Location.hasServicesEnabledAsync();
+    if (!servicesEnabled) {
+      console.log('Location services are disabled on device');
       return null;
     }
-    console.log('✅ Location permission granted');
+    console.log('Location services are enabled');
+    
+    // Check current permission status first
+    let { status } = await Location.getForegroundPermissionsAsync();
+    console.log('Current location permission status:', status);
+    
+    // Request location permissions if not already granted
+    if (status !== 'granted') {
+      const permissionResponse = await Location.requestForegroundPermissionsAsync();
+      status = permissionResponse.status;
+      console.log('Location permission request result:', status);
+    }
+    
+    if (status !== 'granted') {
+      console.log('Location permission not granted, cannot detect country from GPS');
+      return null;
+    }
+    console.log('Location permission granted');
 
     console.log('Getting current position...');
-    // Get current position
+    // Get current position with high accuracy to ensure correct country
     const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-      timeout: 10000, // Increased timeout
-      maximumAge: 300000, // 5 minutes
+      accuracy: Location.Accuracy.High, // Use high accuracy for better country detection
+      timeout: 15000, // 15 second timeout
+      maximumAge: 600000, // 10 minutes - accept slightly older location
     });
 
     console.log('Location obtained:', {
@@ -29,22 +47,40 @@ export const detectCountryCode = async () => {
       longitude: location.coords.longitude
     });
 
-    console.log('Reverse geocoding...');
+    console.log('Reverse geocoding with coordinates:', {
+      lat: location.coords.latitude,
+      lng: location.coords.longitude,
+      accuracy: location.coords.accuracy
+    });
+    
     // Reverse geocode to get address
     const address = await Location.reverseGeocodeAsync({
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
     });
 
-    console.log('Address data:', address);
+    console.log('Address data from reverse geocoding:', JSON.stringify(address, null, 2));
 
     if (address && address.length > 0) {
-      const countryCode = address[0].isoCountryCode;
-      console.log('Detected country code:', countryCode);
-      return countryCode;
+      const firstAddress = address[0];
+      const countryCode = firstAddress.isoCountryCode;
+      
+      console.log('Reverse geocoding result:', {
+        countryCode: countryCode,
+        country: firstAddress.country,
+        region: firstAddress.region,
+        city: firstAddress.city
+      });
+      
+      if (countryCode && countryCode.length === 2) {
+        console.log('Detected country code from GPS:', countryCode);
+        return countryCode;
+      } else {
+        console.log('Invalid country code from reverse geocoding:', countryCode);
+      }
     }
 
-    console.log('No address data found');
+    console.log('No valid address data found from reverse geocoding');
     return null;
   } catch (error) {
     console.error('Error detecting country code:', error);
@@ -93,14 +129,14 @@ export const findCountryByIsoCode = (isoCode) => {
 
 /**
  * Auto-detects the user's country and returns the corresponding country object
- * @returns {Promise<Object>} The detected country object or default country
+ * @returns {Promise<Object>} The detected country object or null if detection fails
  */
 export const getAutoDetectedCountry = async () => {
   try {
     console.log('Starting country auto-detection...');
     
-    // First try location-based detection
-    console.log('Attempting location-based detection...');
+    // First try location-based detection (GPS coordinates)
+    console.log('Attempting location-based detection (GPS)...');
     const detectedIsoCode = await detectCountryCode();
     console.log('Location detection result:', detectedIsoCode);
     
@@ -108,17 +144,18 @@ export const getAutoDetectedCountry = async () => {
       const country = findCountryByIsoCode(detectedIsoCode);
       console.log('Found country from location:', country);
       if (country) {
-        console.log('Country detected from location:', country.name);
+        console.log('Country detected from GPS location:', country.name);
         return country;
       } else {
         console.log('Country not found in our list for code:', detectedIsoCode);
       }
     } else {
-      console.log('Location detection failed');
+      console.log('Location detection failed - permission denied or unavailable');
     }
     
-    // Fallback to locale-based detection
-    console.log('Attempting locale-based detection...');
+    // Only use locale as fallback if location completely failed
+    // But log that we're using locale (which might be inaccurate)
+    console.log('Falling back to locale-based detection (may be inaccurate)...');
     const localeIsoCode = detectCountryFromLocale();
     console.log('Locale detection result:', localeIsoCode);
     
@@ -126,8 +163,10 @@ export const getAutoDetectedCountry = async () => {
       const country = findCountryByIsoCode(localeIsoCode);
       console.log('Found country from locale:', country);
       if (country) {
-        console.log('Country detected from locale:', country.name);
-        return country;
+        console.log('Country detected from device locale (may not match physical location):', country.name);
+        // Return null instead of locale-based country, so we keep the default
+        // This way user can see their default and manually change if needed
+        return null;
       } else {
         console.log('Country not found in our list for code:', localeIsoCode);
       }
@@ -135,23 +174,13 @@ export const getAutoDetectedCountry = async () => {
       console.log('Locale detection failed');
     }
     
-    // Final fallback to default country (Ghana)
-    console.log('Using default country: Ghana');
-    return findCountryByIsoCode('GH') || {
-      name: 'Ghana',
-      code: 'GH',
-      dialCode: '+233',
-      flag: '🇬🇭'
-    };
+    // Return null if detection fails - let the default country be used
+    console.log('Country detection failed, returning null to use default');
+    return null;
     
   } catch (error) {
     console.error('Error in getAutoDetectedCountry:', error);
-    // Return default country on error
-    return findCountryByIsoCode('GH') || {
-      name: 'Ghana',
-      code: 'GH',
-      dialCode: '+233',
-      flag: '🇬🇭'
-    };
+    // Return null on error - let default country be used
+    return null;
   }
 };
