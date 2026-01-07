@@ -672,8 +672,33 @@ export const eventService = {
       // Return empty array if no events found
       return { data: [] };
     } catch (error) {
-      console.error('Fetch Staff Events Error:', error);
-      throw error;
+      console.error('Fetch Staff Events Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+
+      // Handle 404 error specifically
+      if (error.response?.status === 404) {
+        throw {
+          message: 'No Event Found',
+          status: 404,
+          response: error.response
+        };
+      }
+
+      // Handle other errors
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to fetch staff events.',
+          response: error.response
+        };
+      }
+
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
   },
 
