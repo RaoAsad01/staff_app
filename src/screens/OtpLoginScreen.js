@@ -10,7 +10,8 @@ import {
   Platform,
   Alert,
   Modal,
-  Dimensions
+  Dimensions,
+  InteractionManager
 } from 'react-native';
 import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
@@ -106,38 +107,54 @@ const OtpLoginScreen = ({ route }) => {
           otp: enteredOtp
         };
         const response = await authService.verifyOtp(payload);
-        console.log('OTP verify response:', response);
-        if (response.success && response.data && response.data.access_token) {
+        console.log('OTP verify response:', JSON.stringify(response, null, 2));
+        
+        // Handle different response structures
+        // API might return: { success: true, data: { access_token: "..." } }
+        // Or: { access_token: "..." } directly
+        const accessToken = response?.data?.access_token || response?.access_token;
+        const isSuccess = response?.success !== false; // Default to true if not explicitly false
+        
+        console.log('Access token found:', !!accessToken);
+        console.log('Response success:', isSuccess);
+        
+        if (accessToken) {
           setShowError(false);
           setErrorMessage('');
-          setLoading(false);
           // Store the access token
-          await SecureStore.setItemAsync('accessToken', response.data.access_token);
-          // Fetch staff events
-          const staffEventsData = await eventService.fetchStaffEvents();
-          console.log('Staff events data structure:', JSON.stringify(staffEventsData, null, 2));
-          const eventsList = staffEventsData?.data;
-          console.log('Events list:', eventsList);
-          
-          // Handle different data structures for ADMIN vs Organizer roles
+          await SecureStore.setItemAsync('accessToken', accessToken);
+          console.log('✅ Token stored successfully');
+          // Fetch staff events - handle errors gracefully
+          let staffEventsData = null;
+          let eventsList = [];
           let selectedEvent = null;
           
-          if (eventsList && eventsList.length > 0) {
-                      // For organizer role: eventsList[0] contains {events: [...], staff: "..."}
-          if (eventsList[0].events && Array.isArray(eventsList[0].events)) {
-            console.log('Organizer role detected - events array found');
-            console.log('Events array:', eventsList[0].events);
-            if (eventsList[0].events.length > 0) {
-              selectedEvent = eventsList[0].events[0];
-              console.log('Selected event from organizer role:', selectedEvent);
+          try {
+            staffEventsData = await eventService.fetchStaffEvents();
+            console.log('Staff events data structure:', JSON.stringify(staffEventsData, null, 2));
+            eventsList = staffEventsData?.data || [];
+            console.log('Events list:', eventsList);
+            console.log('Events list length:', eventsList?.length);
+            
+            // The apiService already transforms the response, so eventsList is an array of event objects
+            // Each event has: { id, event_title, uuid, cityName, date, time, eventUuid }
+            if (eventsList && eventsList.length > 0) {
+              // Select the first event from the transformed list
+              selectedEvent = eventsList[0];
+              console.log('✅ Selected event:', selectedEvent);
+              console.log('Selected event UUID:', selectedEvent?.uuid || selectedEvent?.eventUuid);
+            } else {
+              console.log('⚠️ No events found in eventsList - API returned empty array');
             }
-          } else {
-            // For admin role or direct event structure
-            console.log('Admin role or direct event structure detected');
-            selectedEvent = eventsList[0];
-            console.log('Selected event from admin role:', selectedEvent);
+          } catch (eventsError) {
+            console.error('⚠️ Error fetching staff events:', eventsError);
+            // Set empty arrays to ensure we show error
+            eventsList = [];
+            selectedEvent = null;
           }
-          }
+          
+          // Check if we have no events (either from error or empty response)
+          const hasNoEvents = (!eventsList || eventsList.length === 0) && !selectedEvent;
           
           if (selectedEvent) {
             const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
@@ -155,11 +172,35 @@ const OtpLoginScreen = ({ route }) => {
               const storedUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
               console.log('Verified stored UUID:', storedUuid);
               
-              navigation.reset({
-                index: 0,
-                routes: [{
-                  name: 'LoggedIn',
-                  params: {
+              setLoading(false);
+              console.log('✅ Navigating to LoggedIn with event data');
+              
+              // Use InteractionManager for release builds
+              InteractionManager.runAfterInteractions(() => {
+                try {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{
+                      name: 'LoggedIn',
+                      params: {
+                        eventInfo: {
+                          staff_name: eventInfoData?.data?.staff_name,
+                          event_title: eventInfoData?.data?.event_title,
+                          cityName: eventInfoData?.data?.location?.city,
+                          date: eventInfoData?.data?.start_date,
+                          time: eventInfoData?.data?.start_time,
+                          userId: eventInfoData?.data?.staff_id,
+                          scanCount: eventInfoData?.data?.scan_count,
+                          event_uuid: eventInfoData?.data?.location?.uuid,
+                          eventUuid: eventUuid
+                        },
+                      },
+                    }],
+                  });
+                  console.log('✅ Navigation to LoggedIn completed (with event)');
+                } catch (navError) {
+                  console.error('❌ Navigation error:', navError);
+                  navigation.replace('LoggedIn', {
                     eventInfo: {
                       staff_name: eventInfoData?.data?.staff_name,
                       event_title: eventInfoData?.data?.event_title,
@@ -171,50 +212,110 @@ const OtpLoginScreen = ({ route }) => {
                       event_uuid: eventInfoData?.data?.location?.uuid,
                       eventUuid: eventUuid
                     },
-                  },
-                }],
+                  });
+                }
               });
             } catch (eventError) {
               console.error('Error fetching event info:', eventError);
               
               // Handle business logic errors gracefully
+              setLoading(false);
               if (eventError.isBusinessError) {
                 console.log('Business logic error - proceeding without event data');
                 // Still navigate to logged in screen, just without event data
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'LoggedIn' }],
+                InteractionManager.runAfterInteractions(() => {
+                  try {
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'LoggedIn' }],
+                    });
+                    console.log('✅ Navigation to LoggedIn completed (business error)');
+                  } catch (navError) {
+                    console.error('❌ Navigation error:', navError);
+                    navigation.replace('LoggedIn');
+                  }
                 });
               } else {
                 // For other errors, show error message but still navigate
                 setErrorMessage('Unable to load event details. Please try again later.');
                 setShowError(true);
-                setLoading(false);
-                setTimeout(() => {
+                InteractionManager.runAfterInteractions(() => {
+                  setTimeout(() => {
+                    try {
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'LoggedIn' }],
+                      });
+                      console.log('✅ Navigation to LoggedIn completed (after error timeout)');
+                    } catch (navError) {
+                      console.error('❌ Navigation error:', navError);
+                      navigation.replace('LoggedIn');
+                    }
+                  }, 2000);
+                });
+              }
+            }
+          } else {
+            // No events found - show error and navigate
+            console.log('No events found - showing error and navigating');
+            
+            // Show error message to user
+            setErrorMessage('No events found. Please contact your administrator.');
+            setShowError(true);
+            setLoading(false);
+            
+            // Navigate after showing error message
+            // Use InteractionManager for release builds to ensure navigation happens after UI updates
+            InteractionManager.runAfterInteractions(() => {
+              setTimeout(() => {
+                try {
+                  console.log('✅ Attempting navigation to LoggedIn (no events)');
                   navigation.reset({
                     index: 0,
                     routes: [{ name: 'LoggedIn' }],
                   });
-                }, 2000);
-              }
-            }
-          } else {
-            console.log('No events found - proceeding without event data');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'LoggedIn' }],
+                  console.log('✅ Navigation to LoggedIn completed (no events)');
+                } catch (navError) {
+                  console.error('❌ Navigation reset error:', navError);
+                  // Try alternative navigation methods
+                  try {
+                    console.log('Trying navigation.replace...');
+                    navigation.replace('LoggedIn');
+                    console.log('✅ Used navigation.replace as fallback');
+                  } catch (replaceError) {
+                    console.error('❌ Replace also failed, trying navigate:', replaceError);
+                    try {
+                      navigation.navigate('LoggedIn');
+                      console.log('✅ Used navigation.navigate as final fallback');
+                    } catch (navigateError) {
+                      console.error('❌ All navigation methods failed:', navigateError);
+                    }
+                  }
+                }
+              }, 2000); // Show error for 2 seconds before navigating
             });
           }
         } else {
+          // OTP verification failed - no token received
+          console.error('❌ OTP verification failed - no access token in response');
+          console.error('Response structure:', JSON.stringify(response, null, 2));
           setErrorMessage('You have entered an invalid OTP');
           setShowError(true);
           setLoading(false);
         }
       } catch (error) {
-        setErrorMessage('You have entered an invalid OTP');
+        console.error('❌ OTP Verification Error:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status
+        });
+        
+        // Show specific error message if available
+        const errorMessage = error?.message || 'You have entered an invalid OTP';
+        setErrorMessage(errorMessage);
         setShowError(true);
         setLoading(false);
-        console.log('OTP Verification Error:', error);
       }
     }
   };

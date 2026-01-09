@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../src/color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -12,8 +13,14 @@ const { width } = Dimensions.get('window');
 const Header = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const [tabKey, setTabKey] = useState(0);
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
+  
+  // Calculate top padding: use safe area insets, or StatusBar height on Android
+  const topPadding = Platform.OS === 'android' 
+    ? (StatusBar.currentHeight || 0) 
+    : insets.top;
 
 
 
@@ -61,8 +68,7 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.statusBarPlaceholder} />
-      <SafeAreaView style={styles.safeAreaContainer}>
+      <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.headerColumn}>
           <View style={styles.header}>
             <View style={styles.headerContent}>
@@ -106,10 +112,6 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
 const styles = StyleSheet.create({
   mainContainer: {
     backgroundColor: 'transparent',
-  },
-  statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? 0 : 0,
-    backgroundColor: color.white_FFFFFF,
   },
   safeAreaContainer: {
     backgroundColor: color.white_FFFFFF,

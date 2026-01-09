@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, FlatList, ScrollView, Alert, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, FlatList, ScrollView, Alert, Dimensions, Text, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
 import AdminOverallStatistics from './AdminOverallStatistics';
@@ -34,7 +35,13 @@ import { formatDateWithMonthName } from '../../constants/dateAndTime';
 
 const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
+  
+  // Calculate top padding: use safe area insets, or StatusBar height on Android
+  const topPadding = Platform.OS === 'android' 
+    ? (StatusBar.currentHeight || 0) 
+    : insets.top;
   const [selectedTab, setSelectedTab] = useState("Check-Ins");
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
   const [selectedAdminTab, setSelectedAdminTab] = useState(admindashboardterminaltab[0]);
@@ -990,9 +997,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   return (
     <View style={styles.mainContainer}>
-
-      <View style={styles.statusBarPlaceholder} />
-      <SafeAreaView style={styles.safeAreaContainer}>
+      <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
@@ -1176,13 +1181,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-  },
-  statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? 0 : 0,
-    backgroundColor: 'transparent',
-  },
-  headerColumn: {
-    paddingTop: Platform.OS === 'android' ? 15 : 0,
   },
   header: {
     flexDirection: 'row',

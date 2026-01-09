@@ -127,24 +127,50 @@ export const authService = {
   // Verify OTP service
   verifyOtp: async (data) => {
     try {
+      console.log('🔐 Verifying OTP with payload:', { uuid: data.uuid, otp: '***' });
       const response = await apiClient.post(endpoints.verifyOtp, data);
-      console.log('API Response (Verify OTP):', response.data);
-      if (response.data?.access_token) {
-        await SecureStore.setItemAsync('accessToken', response.data.access_token);
-        console.log('Token stored successfully');
+      console.log('✅ OTP Verification Response Status:', response.status);
+      console.log('✅ OTP Verification Response Data:', JSON.stringify(response.data, null, 2));
+      
+      // Handle different response structures
+      // Structure 1: { success: true, data: { access_token: "..." } }
+      // Structure 2: { access_token: "..." } directly
+      const responseData = response.data;
+      const accessToken = responseData?.data?.access_token || responseData?.access_token;
+      
+      if (accessToken) {
+        await SecureStore.setItemAsync('accessToken', accessToken);
+        console.log('✅ Token stored successfully in SecureStore');
+        
+        // Verify token was stored
+        const storedToken = await SecureStore.getItemAsync('accessToken');
+        console.log('✅ Token verification - stored:', !!storedToken);
+      } else {
+        console.warn('⚠️ No access_token found in response');
+        console.warn('Response structure:', JSON.stringify(responseData, null, 2));
       }
-      return response.data;
+      
+      // Return the full response data structure
+      return responseData;
     } catch (error) {
-      console.error('OTP Error:', {
+      console.error('❌ OTP Verification Error:', {
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
         message: error.message,
-        request: error.config?.data
+        request: error.config?.data,
+        url: error.config?.url,
+        baseURL: BASE_URL
       });
+      
       if (error.response?.data) {
+        const errorMessage = error.response.data.message || 
+                            error.response.data.error || 
+                            'Server error';
         throw {
-          message: error.response.data.message || 'Server error',
-          response: error.response
+          message: errorMessage,
+          response: error.response,
+          status: error.response?.status
         };
       }
       throw {
@@ -642,8 +668,16 @@ export const eventService = {
 
   fetchStaffEvents: async () => {
     try {
+      // Log request details
+      const token = await SecureStore.getItemAsync('accessToken');
+      console.log('🔍 Fetching staff events...');
+      console.log('📡 Request URL:', `${BASE_URL}${endpoints.staffEvents}`);
+      console.log('🔑 Has token:', !!token);
+      console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
+      
       const response = await apiClient.get(endpoints.staffEvents);
-      console.log('Fetch Staff Events Response:', response.data);
+      console.log('✅ Fetch Staff Events Response Status:', response.status);
+      console.log('✅ Fetch Staff Events Response Data:', JSON.stringify(response.data, null, 2));
 
       // Handle the new response structure
       if (response.data?.success && response.data?.data && response.data.data.length > 0) {
@@ -670,35 +704,37 @@ export const eventService = {
       }
 
       // Return empty array if no events found
+      console.log('No events found in response, returning empty array');
       return { data: [] };
     } catch (error) {
       console.error('Fetch Staff Events Error:', {
         status: error.response?.status,
+        statusText: error.response?.statusText,
         data: error.response?.data,
         message: error.message,
+        url: error.config?.url,
+        baseURL: BASE_URL,
+        fullURL: `${BASE_URL}${endpoints.staffEvents}`
       });
 
-      // Handle 404 error specifically
+      // Handle 404 error specifically - endpoint might not exist or user has no events
       if (error.response?.status === 404) {
-        throw {
-          message: 'No Event Found',
-          status: 404,
-          response: error.response
-        };
+        console.log('⚠️ 404 Error - Endpoint not found or no events available');
+        console.log('This might be normal if the user has no assigned events');
+        // Return empty array instead of throwing error - allow login to proceed
+        return { data: [] };
       }
 
-      // Handle other errors
-      if (error.response?.data) {
-        throw {
-          message: error.response.data.message || 'Failed to fetch staff events.',
-          response: error.response
-        };
+      // Handle 403 Forbidden - might be permission issue
+      if (error.response?.status === 403) {
+        console.log('⚠️ 403 Forbidden - User may not have permission to access events');
+        return { data: [] };
       }
 
-      throw {
-        message: 'Network error. Please check your connection.',
-        error: error
-      };
+      // For other errors, still return empty array to allow login
+      // But log the error for debugging
+      console.warn('⚠️ Error fetching staff events, but allowing login to proceed:', error.message);
+      return { data: [] };
     }
   },
 

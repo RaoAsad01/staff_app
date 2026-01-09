@@ -1,13 +1,20 @@
 import React from 'react';
-import { View, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, Dimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import SvgIcons from '../../components/SvgIcons';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
 
 const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
     const { height: screenHeight } = Dimensions.get('window');
+    const insets = useSafeAreaInsets();
     const isSmallScreen = screenHeight < 700;
     const isLargeScreen = screenHeight > 800;
+    
+    // Calculate dynamic bottom padding based on safe area insets
+    // Add minimum padding (16px) plus safe area bottom inset
+    const bottomPadding = Math.max(16, insets.bottom);
+    
     return (
         <>
             <View style={[styles.middleSection, { bottom: screenHeight * 0.25 }]}>
@@ -44,7 +51,7 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
                 </TouchableOpacity>
             )}
 
-            <SafeAreaView style={[styles.bottomtextbg, { bottom: screenHeight * 0.01 }]}>
+            <SafeAreaView style={[styles.bottomtextbg, { bottom: bottomPadding }]}>
                 <Caption color={color.grey_DEDCDC} size={12} marginBottom={10} align="center">By Hexallo Enterprise</Caption>
                 <Typography
                     weight="450"
@@ -95,17 +102,20 @@ const styles = {
     bottomtextbg: {
         width: 'auto',
         paddingHorizontal: 20,
-        height: 32,
+        paddingVertical: 8,
+        minHeight: 60,
         borderRadius: 6,
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
         backgroundColor: 'transparent',
         position: 'absolute',
+        left: 0,
+        right: 0,
     },
     footerText: {
         textAlign: 'center',
-        lineHeight: 13,
+        lineHeight: 15,
     },
     linkText: {
         textDecorationLine: 'underline',

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from './CheckIn';
 import Tickets from './Tickets';
 import ManualScan from './ManualScan';
@@ -17,9 +18,14 @@ const Tab = createBottomTabNavigator();
 
 function MyTabs() {
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const initialEventInfo = route?.params?.eventInfo;
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
+  
+  // Calculate dynamic tab bar height with safe area insets
+  // Base height (66) + bottom safe area inset (for devices with navigation bars)
+  const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
 
   // Update eventInfo when route params change
   useEffect(() => {
@@ -263,8 +269,16 @@ function MyTabs() {
           },
 
           tabBarStyle: {
-            height: 66,
+            height: tabBarHeight,
             backgroundColor: isCheckInActive ? '#f3f3f3' : '#f3f3f3',
+            paddingBottom: Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom,
+            paddingTop: 8,
+            borderTopWidth: 0,
+            elevation: 8,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
           },
           tabBarShowLabel: false,
           tabBarButton: (props) => (
