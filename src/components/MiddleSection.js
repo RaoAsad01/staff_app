@@ -59,7 +59,7 @@ const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {
                     color={color.grey_DEDCDC}
                     style={styles.footerText}
                 >
-                    By logging in you accept{' '}
+                    By logging in you accept our{' '}
                     <Typography weight="600" size={12} color={color.grey_DEDCDC} style={styles.linkText}>
                         Terms of Use
                     </Typography>
