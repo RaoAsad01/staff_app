@@ -6,13 +6,14 @@ import HomeScreen from './CheckIn';
 import Tickets from './Tickets';
 import ManualScan from './ManualScan';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
 import { fetchUpdatedScanCount, updateEventInfoScanCount } from '../utils/scanCountUpdater';
 import { eventService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
+import { logger } from '../utils/logger';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,14 +41,14 @@ function MyTabs() {
       if (!eventInformation?.eventUuid) {
         try {
           setIsLoadingEventInfo(true);
-          console.log('No eventInfo found, fetching from backend...');
+          logger.log('No eventInfo found, fetching from backend...');
           
           // Try to get the last selected event from secure storage
           const lastEventUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
-          console.log('Retrieved stored UUID:', lastEventUuid);
+          logger.log('Retrieved stored UUID:', lastEventUuid);
           
           if (lastEventUuid) {
-            console.log('Found last event UUID in storage:', lastEventUuid);
+            logger.log('Found last event UUID in storage:', lastEventUuid);
             const eventInfoData = await eventService.fetchEventInfo(lastEventUuid);
             
             const transformedEventInfo = {
@@ -62,10 +63,10 @@ function MyTabs() {
               eventUuid: lastEventUuid
             };
             
-            console.log('Fetched event info from backend:', transformedEventInfo);
+            logger.log('Fetched event info from backend:', transformedEventInfo);
             setEventInformation(transformedEventInfo);
-          } else {
-            console.log('No last event UUID found in storage, fetching user events...');
+            } else {
+              logger.log('No last event UUID found in storage, fetching user events...');
             // Fallback: fetch user events and use the first available event
             try {
               const staffEventsData = await eventService.fetchStaffEvents();
@@ -87,7 +88,7 @@ function MyTabs() {
                 
                 if (selectedEvent) {
                   const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
-                  console.log('Using first available event:', eventUuid);
+                  logger.log('Using first available event:', eventUuid);
                   
                   // Store this event UUID for future use
                   await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
@@ -107,20 +108,20 @@ function MyTabs() {
                     eventUuid: eventUuid
                   };
                   
-                  console.log('Fetched fallback event info from backend:', transformedEventInfo);
+                  logger.log('Fetched fallback event info from backend:', transformedEventInfo);
                   setEventInformation(transformedEventInfo);
                 } else {
-                  console.log('No events available for user');
+                  logger.log('No events available for user');
                 }
               } else {
-                console.log('No events found for user');
+                logger.log('No events found for user');
               }
             } catch (fallbackError) {
-              console.error('Error fetching fallback events:', fallbackError);
+              logger.error('Error fetching fallback events:', fallbackError);
             }
           }
         } catch (error) {
-          console.error('Error fetching event info on app restart:', error);
+          logger.error('Error fetching event info on app restart:', error);
         } finally {
           setIsLoadingEventInfo(false);
         }
@@ -141,13 +142,13 @@ function MyTabs() {
         setEventInformation(updatedEventInfo);
       }
     } catch (error) {
-      console.error('Error updating scan count:', error);
+      logger.error('Error updating scan count:', error);
     }
   };
 
   // Function to handle event change from dashboard
   const handleEventChange = async (newEvent) => {
-    console.log('Event changed to:', newEvent);
+    logger.log('Event changed to:', newEvent);
     // Transform the event data to match the expected format
     const transformedEvent = {
       eventUuid: newEvent.uuid,
@@ -161,9 +162,9 @@ function MyTabs() {
     // Store the new event UUID for app restart scenarios
     try {
       await SecureStore.setItemAsync('lastSelectedEventUuid', newEvent.uuid);
-      console.log('Stored new selected event UUID:', newEvent.uuid);
+      logger.log('Stored new selected event UUID:', newEvent.uuid);
     } catch (error) {
-      console.error('Error storing event UUID:', error);
+      logger.error('Error storing event UUID:', error);
     }
     
     setEventInformation(transformedEvent);

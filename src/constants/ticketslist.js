@@ -1,4 +1,4 @@
-import SvgIcons from "../../components/SvgIcons";
+import SvgIcons from "../components/SvgIcons";
 export const ticketslist = [
     {
         id: '#12389651342',

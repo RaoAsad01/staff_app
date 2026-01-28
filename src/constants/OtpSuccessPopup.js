@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import Typography from '../components/Typography';
 
 const OtpSuccessPopup = ({ visible, onClose, title = "OTP Sent Successfully", subtitle = "We've sent a one-time password to your email" }) => {

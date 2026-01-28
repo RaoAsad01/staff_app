@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import Typography, { Body1, Caption } from '../components/Typography';
 
 const ErrorPopup = ({ visible, onClose, title = "", subtitle = "" }) => {

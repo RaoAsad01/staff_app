@@ -4,14 +4,15 @@ import Svg, { Defs, ClipPath, Circle, Path, G, Stop, RadialGradient } from "reac
 import { color } from '../../../color/color';
 import Typography, { Body1, Heading5 } from '../../../components/Typography';
 import { formatValue } from '../../../constants/formatValue';
+import { logger } from '../../../utils/logger';
 
 const BoxOfficeSales = ({ stats }) => {
   // Log the raw stats data received from backend
-  console.log('================================================');
-  console.log('📊 AdminBoxOfficeSales - Raw Stats Data:', JSON.stringify(stats, null, 2));
-  console.log('📊 AdminBoxOfficeSales - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
-  console.log('📊 AdminBoxOfficeSales - By Payment Methods:', JSON.stringify(stats?.data?.box_office_sales?.by_payment_methods, null, 2));
-  console.log('================================================');
+  logger.log('================================================');
+  logger.log('📊 AdminBoxOfficeSales - Raw Stats Data:', JSON.stringify(stats, null, 2));
+  logger.log('📊 AdminBoxOfficeSales - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+  logger.log('📊 AdminBoxOfficeSales - By Payment Methods:', JSON.stringify(stats?.data?.box_office_sales?.by_payment_methods, null, 2));
+  logger.log('================================================');
 
   const boxOfficeSalesData = stats?.data?.box_office_sales || {};
   const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};

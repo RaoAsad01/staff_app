@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { color } from '../../../color/color';
-import SvgIcons from '../../../../components/SvgIcons';
+import SvgIcons from '../../../components/SvgIcons';
 
 const AdminOverallStatistics = ({ stats,
     onTotalTicketsPress,

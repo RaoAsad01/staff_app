@@ -1,32 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
-import SvgIcons from '../../components/SvgIcons';
-import { apiClient, ticketService } from '../api/apiService';
+import SvgIcons from '../components/SvgIcons';
+import { ticketService, BASE_URL } from '../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import NoResults from '../components/NoResults';
+import { logger } from '../utils/logger';
 
-const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
+const TicketsTab = ({ eventInfo, initialTab }) => {
     const navigation = useNavigation()
+    const insets = useSafeAreaInsets();
     const [searchText, setSearchText] = useState('');
     const [selectedTab, setSelectedTab] = useState(initialTab || 'All');
     const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const isFocused = useIsFocused();
     const [fetchedTickets, setFetchedTickets] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
-    const [paginationInfo, setPaginationInfo] = useState({
-        count: 0,
-        current_page: 1,
-        next: null,
-        page_size: 10,
-        previous: null
-    });
     const flatListRef = useRef(null);
+
+    // Calculate dynamic marginTop based on safe area insets
+    // Samsung devices typically have larger top insets (25+), so we adjust accordingly
+    // For other devices with smaller insets, we use a smaller base value to reduce top space
+    const dynamicMarginTop = Platform.OS === 'ios' 
+        ? -35 + (insets.top > 20 ? (insets.top - 20) * 0.3 : 0)
+        : insets.top > 25 
+            ? -47 + (insets.top - 25) * 0.5  // Samsung devices with larger insets
+            : -35;  // Other Android devices with smaller insets
 
     useEffect(() => {
         if (isFocused && eventInfo?.eventUuid) {
@@ -45,11 +47,11 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
     const fetchTicketList = async (eventUuid) => {
         try {
             setIsLoading(true);
-            const res = await ticketService.ticketStatsListing(eventUuid,'PAID'); // No need to pass page
+            const res = await ticketService.ticketStatsListing(eventUuid, 'PAID');
             const list = res?.data || [];
 
             const mappedTickets = list.map((ticket) => {
-                const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
+                const qrCodeUrl = `${BASE_URL}ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
                     id: ticket.ticket_number || 'No Record',
                     type: ticket.ticket_type || 'No Record',
@@ -79,7 +81,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
             setFetchedTickets(mappedTickets);
         } catch (err) {
-            console.error('Error fetching ticket list:', {
+            logger.error('Error fetching ticket list:', {
                 message: err?.message,
                 status: err?.response?.status,
                 statusText: err?.response?.statusText,
@@ -104,7 +106,7 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
                 unscanned: statsData.unscanned || 0,
             });
         } catch (err) {
-            console.error('Error fetching ticket stats:', {
+            logger.error('Error fetching ticket stats:', {
                 message: err?.message,
                 status: err?.response?.status,
                 statusText: err?.response?.statusText,
@@ -183,12 +185,6 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
             scanResponse: scanResponse,
             eventInfo: eventInfo,
         });
-    };
-
-    const loadMoreTickets = () => {
-        if (!isLoading && hasMore && eventInfo?.eventUuid) {
-            fetchTicketList(eventInfo.eventUuid, currentPage + 1, true);
-        }
     };
 
     const renderItem = ({ item }) => (
@@ -270,7 +266,8 @@ const TicketsTab = ({ tickets, eventInfo, initialTab }) => {
 
             <View style={[
                 styles.searchContainer,
-                isSearchFocused && styles.searchContainerFocused
+                isSearchFocused && styles.searchContainerFocused,
+                { marginTop: dynamicMarginTop }
             ]}>
                 <View style={styles.searchBarContainer}>
                     <TextInput
@@ -361,7 +358,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
-        paddingTop: Platform.OS === 'ios' ? 10 : 18
     },
     ticketContainer: {
         flexDirection: 'row',
@@ -486,7 +482,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
-        marginTop: Platform.OS === 'ios' ? -45 : -17,
+        // marginTop is now set dynamically based on safe area insets
         borderColor: color.borderBrown_CEBCA0,
         borderWidth: 1,
         height: 45,

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
 import { useNavigation } from "@react-navigation/native";
-import SvgIcons from "../../../../components/SvgIcons";
+import SvgIcons from "../../../components/SvgIcons";
 import { formatValueWithPad } from "../../../constants/formatValue";
 
 const CircularProgress = ({ value, total, percentage }) => {

@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import Header from '../../components/header';
+import Header from '../components/header';
 import { color } from '../color/color';
 import CheckInAllPopUp from '../constants/checkInAllPopupticketList';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import { ticketService, eventService } from '../api/apiService';
 import { useNavigation } from '@react-navigation/native';
 import SuccessPopup from '../constants/SuccessPopup';
@@ -11,6 +11,7 @@ import ErrorPopup from '../constants/ErrorPopup';
 import Typography from '../components/Typography';
 import { formatDateTime } from '../constants/dateAndTime';
 import { truncateStaffName } from '../utils/stringUtils';
+import { logger } from '../utils/logger';
 
 const CheckInAllTickets = ({ route }) => {
     const { totalTickets, email, orderData, eventInfo, name, scanned_by} = route.params;
@@ -37,7 +38,7 @@ const CheckInAllTickets = ({ route }) => {
             setError(null);
             try {
                 const response = await ticketService.manualDetailCheckin(eventUuid, code);
-                console.log('Single Ticket Check-in Response:', response);
+                logger.log('Single Ticket Check-in Response:', response);
 
                 if (response?.data?.status === 'SCANNED') {
                     setCheckInSuccess(true);
@@ -45,7 +46,7 @@ const CheckInAllTickets = ({ route }) => {
                     
                     // Extract scanned_by information from check-in response
                     const scannedByFromResponse = response?.data?.scanned_by;
-                    console.log('Single Ticket Check-in - scanned_by from response:', scannedByFromResponse);
+                    logger.log('Single Ticket Check-in - scanned_by from response:', scannedByFromResponse);
                     
                     // Update the ticket status and scanned_by information immediately
                     const updatedTicket = { 
@@ -81,7 +82,7 @@ const CheckInAllTickets = ({ route }) => {
                     setShowErrorPopup(true);
                 }
             } catch (err) {
-                console.error('Single Ticket Check-in Error:', err);
+                logger.error('Single Ticket Check-in Error:', err);
                 setError(err.message || 'Failed to check in ticket.');
                 setShowErrorPopup(true);
             } finally {
@@ -96,7 +97,7 @@ const CheckInAllTickets = ({ route }) => {
             setError(null);
             try {
                 const response = await ticketService.boxOfficeDetailCheckinAll(eventUuid, orderNumber);
-                console.log('Check-in All Response:', response);
+                logger.log('Check-in All Response:', response);
 
                 if (response?.success && response?.status === 200) {
                     setCheckInSuccess(true);
@@ -105,7 +106,7 @@ const CheckInAllTickets = ({ route }) => {
                     // Extract scanned_by information from check-in response
                     // The response might have scanned_by at root data level or in each ticket
                     const scannedByFromResponse = response?.data?.scanned_by || response?.scanned_by;
-                    console.log('Check-in All - scanned_by from response:', scannedByFromResponse);
+                    logger.log('Check-in All - scanned_by from response:', scannedByFromResponse);
                     
                     // Also check if response has updated tickets array with scanned_by info
                     const responseTickets = response?.data?.data || response?.data?.tickets || null;
@@ -151,7 +152,7 @@ const CheckInAllTickets = ({ route }) => {
                     setShowErrorPopup(true);
                 }
             } catch (err) {
-                console.error('Check-in All Error:', err);
+                logger.error('Check-in All Error:', err);
                 setError(err.message || 'Failed to check in all tickets.');
                 setShowErrorPopup(true);
             } finally {

@@ -13,6 +13,7 @@ import {
 import { color } from '../color/color';
 import { eventService } from '../api/apiService';
 import Typography, { Body1, Heading5 } from './Typography';
+import { logger } from '../utils/logger';
 
 const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
   const [events, setEvents] = useState([]);
@@ -48,7 +49,7 @@ const EventsModal = ({ visible, onClose, onEventSelect, currentEventUuid }) => {
         setEvents([]);
       }
     } catch (err) {
-      console.error('Error fetching events:', err);
+      logger.error('Error fetching events:', err);
       setError('Failed to load events');
       Alert.alert('Error', 'Failed to load events. Please try again.');
     } finally {

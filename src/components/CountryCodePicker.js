@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { color } from '../color/color';
 import Typography from './Typography';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from './SvgIcons';
 import { countryCodes } from '../constants/countryCodes';
 
 const CountryCodePicker = ({

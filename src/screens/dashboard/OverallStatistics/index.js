@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { color } from '../../../color/color';
-import SvgIcons from '../../../../components/SvgIcons';
+import SvgIcons from '../../../components/SvgIcons';
+import { logger } from '../../../utils/logger';
 
 const OverallStatistics = ({ stats,
     onTotalTicketsPress,
@@ -18,14 +19,14 @@ const OverallStatistics = ({ stats,
     const terminalStats = Object.keys(terminalStatsFromTerminal).length > 0 ? terminalStatsFromTerminal : terminalStatsFromOverall;
     const scanAnalytics = stats?.data?.scan_analytics || {};
     
-    console.log('OverallStatistics - Terminal Stats from terminal_statistics:', JSON.stringify(terminalStatsFromTerminal, null, 2));
-    console.log('OverallStatistics - Terminal Stats from overall_statistics:', JSON.stringify(terminalStatsFromOverall, null, 2));
-    console.log('OverallStatistics - Final terminalStats:', JSON.stringify(terminalStats, null, 2));
+    logger.log('OverallStatistics - Terminal Stats from terminal_statistics:', JSON.stringify(terminalStatsFromTerminal, null, 2));
+    logger.log('OverallStatistics - Terminal Stats from overall_statistics:', JSON.stringify(terminalStatsFromOverall, null, 2));
+    logger.log('OverallStatistics - Final terminalStats:', JSON.stringify(terminalStats, null, 2));
 
     // Debug: Check if data exists at different paths
-    console.log('OverallStatistics - Stats Data Keys:', Object.keys(stats?.data || {}));
-    console.log('OverallStatistics - Direct terminal_statistics access:', stats?.data?.terminal_statistics);
-    console.log('OverallStatistics - Direct overall_statistics access:', stats?.data?.overall_statistics);
+    logger.log('OverallStatistics - Stats Data Keys:', Object.keys(stats?.data || {}));
+    logger.log('OverallStatistics - Direct terminal_statistics access:', stats?.data?.terminal_statistics);
+    logger.log('OverallStatistics - Direct overall_statistics access:', stats?.data?.overall_statistics);
 
     // Extract values with multiple fallback paths
     const totalTicketsRaw = terminalStats?.total_tickets || 0;
@@ -33,10 +34,10 @@ const OverallStatistics = ({ stats,
     const totalUnscannedRaw = terminalStats?.total_unscanned || 0;
     const availableTicketsRaw = terminalStats?.available_tickets || 0;
 
-    console.log('OverallStatistics - Raw Values:');
-    console.log('  - totalTicketsRaw:', totalTicketsRaw);
-    console.log('  - totalScannedRaw:', totalScannedRaw);
-    console.log('  - availableTicketsRaw:', availableTicketsRaw);
+    logger.log('OverallStatistics - Raw Values:');
+    logger.log('  - totalTicketsRaw:', totalTicketsRaw);
+    logger.log('  - totalScannedRaw:', totalScannedRaw);
+    logger.log('  - availableTicketsRaw:', availableTicketsRaw);
 
     // Handle cases where values might be objects or null/undefined
     const totalTickets = typeof totalTicketsRaw === 'object' && totalTicketsRaw !== null ? (totalTicketsRaw.total || totalTicketsRaw.count || 0) : (totalTicketsRaw || 0);
@@ -44,10 +45,10 @@ const OverallStatistics = ({ stats,
     const totalUnscanned = typeof totalUnscannedRaw === 'object' && totalUnscannedRaw !== null ? (totalUnscannedRaw.total || totalUnscannedRaw.count || 0) : (totalUnscannedRaw || 0);
     const availableTickets = typeof availableTicketsRaw === 'object' && availableTicketsRaw !== null ? (availableTicketsRaw.total || availableTicketsRaw.count || 0) : (availableTicketsRaw || 0);
 
-    console.log('OverallStatistics - Final Processed Values:');
-    console.log('  - totalTickets:', totalTickets);
-    console.log('  - totalScanned:', totalScanned);
-    console.log('  - availableTickets:', availableTickets);
+    logger.log('OverallStatistics - Final Processed Values:');
+    logger.log('  - totalTickets:', totalTickets);
+    logger.log('  - totalScanned:', totalScanned);
+    logger.log('  - availableTickets:', availableTickets);
 
     return (
         <View style={styles.container}>

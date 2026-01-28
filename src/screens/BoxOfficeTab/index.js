@@ -6,10 +6,11 @@ import { color } from '../../color/color';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import SvgIcons from '../../../components/SvgIcons';
+import SvgIcons from '../../components/SvgIcons';
 import { ticketService } from '../../api/apiService';
 import { formatDateOnly, formatDateWithMonthName } from '../../constants/dateAndTime';
 import ErrorPopup from '../../constants/ErrorPopup';
+import { logger } from '../../utils/logger';
 
 const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const navigation = useNavigation();
@@ -189,7 +190,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         return acc;
       }, []);
 
-      console.log('BoxOfficeTab: Processed categories:', categories);
+      logger.log('BoxOfficeTab: Processed categories:', categories);
 
       setTicketPricing(categories);
 
@@ -204,7 +205,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       }
 
       if (targetCategory) {
-        console.log('BoxOfficeTab: Processing category:', targetCategory);
+        logger.log('BoxOfficeTab: Processing category:', targetCategory);
         const initialTickets = targetCategory.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
@@ -217,11 +218,11 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           sale_end_date_time: ticket.sale_end_date_time,
           description: ticket.description,
         }));
-        console.log('BoxOfficeTab: Initial tickets created:', initialTickets);
+        logger.log('BoxOfficeTab: Initial tickets created:', initialTickets);
         setSelectedTickets(initialTickets);
       }
     } catch (error) {
-      console.error('BoxOfficeTab: Error processing ticket pricing:', error);
+      logger.error('BoxOfficeTab: Error processing ticket pricing:', error);
     } finally {
       setIsLoading(false);
     }
@@ -264,7 +265,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       // Update selected tickets for the new tab
       const category = ticketPricing.find(cat => cat.title === selectedTab);
       if (category) {
-        console.log('BoxOfficeTab: Processing selectedTab change for category:', category);
+        logger.log('BoxOfficeTab: Processing selectedTab change for category:', category);
         const updatedTickets = category.tickets.map(ticket => ({
           type: ticket.name,
           uuid: ticket.uuid,
@@ -277,7 +278,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           sale_end_date_time: ticket.sale_end_date_time,
           description: ticket.description,
         }));
-        console.log('BoxOfficeTab: Updated tickets for selectedTab:', updatedTickets);
+        logger.log('BoxOfficeTab: Updated tickets for selectedTab:', updatedTickets);
         setSelectedTickets(updatedTickets);
       }
     }
@@ -291,7 +292,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
   const totalQuantity = selectedTickets.reduce((sum, ticket) => sum + ticket.quantity, 0);
 
   const handleTabPress = (tab) => {
-    console.log('BoxOfficeTab: Tab pressed:', tab);
+    logger.log('BoxOfficeTab: Tab pressed:', tab);
     setSelectedTabState(tab);
 
     // Clear all form fields when switching tabs
@@ -316,7 +317,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
     setCashPinError('');
 
     const category = ticketPricing.find(cat => cat.title === tab);
-    console.log('BoxOfficeTab: Found category:', category);
+    logger.log('BoxOfficeTab: Found category:', category);
 
     if (category) {
       const updatedTickets = category.tickets.map(ticket => ({
@@ -331,7 +332,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         sale_end_date_time: ticket.sale_end_date_time,
         description: ticket.description,
       }));
-      console.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
+      logger.log('BoxOfficeTab: Updated tickets for category:', updatedTickets);
       setSelectedTickets(updatedTickets);
     }
   };
@@ -428,7 +429,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
       });
 
     } catch (error) {
-      console.error('BoxOffice get ticket Error:', error);
+      logger.error('BoxOffice get ticket Error:', error);
       const errorMsg = error?.response?.data?.message || error?.message || "We couldn't process your request. Please try again or contact support.";
       setErrorMessage(errorMsg);
       setShowErrorPopup(true);
@@ -507,7 +508,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
         scanned_on: scanned_on,
       });
     } catch (error) {
-      console.error('BoxOffice POS payment Error:', error);
+      logger.error('BoxOffice POS payment Error:', error);
       const errorMsg = error?.response?.data?.message || error?.message || "We couldn't process your request. Please try again or contact support.";
       setErrorMessage(errorMsg);
       setShowErrorPopup(true);
@@ -1185,7 +1186,7 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
                       });
                     }
                   } catch (error) {
-                    console.error('BoxOffice purchase code Error:', error);
+                    logger.error('BoxOffice purchase code Error:', error);
                     const errorMsg = error?.response?.data?.message || error?.message || "We couldn't process your request. Please try again or contact support.";
                     setErrorMessage(errorMsg);
                     setShowErrorPopup(true);

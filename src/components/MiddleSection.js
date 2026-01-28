@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, SafeAreaView, Dimensions, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from './SvgIcons';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';
 
 const MiddleSection = ({ showGetStartedButton = false, onGetStartedPress }) => {

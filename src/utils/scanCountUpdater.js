@@ -1,4 +1,5 @@
 import { eventService } from '../api/apiService';
+import { logger } from './logger';
 
 // Function to fetch updated event info and return the new scan count
 export const fetchUpdatedScanCount = async (eventUuid) => {
@@ -6,7 +7,7 @@ export const fetchUpdatedScanCount = async (eventUuid) => {
     const eventInfoData = await eventService.fetchEventInfo(eventUuid);
     return eventInfoData?.data?.scan_count || 0;
   } catch (error) {
-    console.error('Error fetching updated scan count:', error);
+    logger.error('Error fetching updated scan count:', error);
     return null;
   }
 };

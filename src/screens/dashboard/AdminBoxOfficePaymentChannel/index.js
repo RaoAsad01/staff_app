@@ -4,37 +4,38 @@ import Svg, { Defs, ClipPath, Circle, Path, G, Stop, RadialGradient } from "reac
 import { color } from '../../../color/color';
 import Typography, { Body1, Heading5 } from '../../../components/Typography';
 import { formatValue } from '../../../constants/formatValue';
+import { logger } from '../../../utils/logger';
 
 const AdminBoxOfficePaymentChannel = ({ stats }) => {
     // Comprehensive logging for backend response structure
-    console.log('================================================');
-    console.log('💰 AdminBoxOfficePaymentChannel - COMPLETE BACKEND RESPONSE:');
-    console.log('💰 Full stats object:', JSON.stringify(stats, null, 2));
-    console.log('💰 stats.data keys:', Object.keys(stats?.data || {}));
-    console.log('💰 Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
-    console.log('💰 Payment Channels (plural):', JSON.stringify(stats?.data?.box_office_sales?.payment_channels, null, 2));
-    console.log('💰 Payment Channel (singular):', JSON.stringify(stats?.data?.box_office_sales?.payment_channel, null, 2));
-    console.log('💰 Payment Channels at root level:', JSON.stringify(stats?.data?.payment_channels, null, 2));
-    console.log('💰 Payment Channel at root level:', JSON.stringify(stats?.data?.payment_channel, null, 2));
+    logger.log('================================================');
+    logger.log('💰 AdminBoxOfficePaymentChannel - COMPLETE BACKEND RESPONSE:');
+    logger.log('💰 Full stats object:', JSON.stringify(stats, null, 2));
+    logger.log('💰 stats.data keys:', Object.keys(stats?.data || {}));
+    logger.log('💰 Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+    logger.log('💰 Payment Channels (plural):', JSON.stringify(stats?.data?.box_office_sales?.payment_channels, null, 2));
+    logger.log('💰 Payment Channel (singular):', JSON.stringify(stats?.data?.box_office_sales?.payment_channel, null, 2));
+    logger.log('💰 Payment Channels at root level:', JSON.stringify(stats?.data?.payment_channels, null, 2));
+    logger.log('💰 Payment Channel at root level:', JSON.stringify(stats?.data?.payment_channel, null, 2));
 
     // Check for analytics data
-    console.log('💰 Payment Analytics Data:', JSON.stringify(stats?.data?.payment_analytics, null, 2));
-    console.log('💰 Payment Channel Analytics:', JSON.stringify(stats?.data?.payment_channel_analytics, null, 2));
-    console.log('💰 Box Office Payment Analytics:', JSON.stringify(stats?.data?.box_office_sales?.payment_analytics, null, 2));
-    console.log('💰 Box Office Payment Channel Analytics:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel_analytics, null, 2));
+    logger.log('💰 Payment Analytics Data:', JSON.stringify(stats?.data?.payment_analytics, null, 2));
+    logger.log('💰 Payment Channel Analytics:', JSON.stringify(stats?.data?.payment_channel_analytics, null, 2));
+    logger.log('💰 Box Office Payment Analytics:', JSON.stringify(stats?.data?.box_office_sales?.payment_analytics, null, 2));
+    logger.log('💰 Box Office Payment Channel Analytics:', JSON.stringify(stats?.data?.box_office_sales?.payment_channel_analytics, null, 2));
 
     // Check for total amount data
-    console.log('💰 Total Amount Data:', JSON.stringify(stats?.data?.total_amount, null, 2));
-    console.log('💰 Box Office Total Amount:', JSON.stringify(stats?.data?.box_office_sales?.total_amount, null, 2));
-    console.log('💰 Box Office Sales Total:', JSON.stringify(stats?.data?.box_office_sales?.total, null, 2));
-    console.log('================================================');
+    logger.log('💰 Total Amount Data:', JSON.stringify(stats?.data?.total_amount, null, 2));
+    logger.log('💰 Box Office Total Amount:', JSON.stringify(stats?.data?.box_office_sales?.total_amount, null, 2));
+    logger.log('💰 Box Office Sales Total:', JSON.stringify(stats?.data?.box_office_sales?.total, null, 2));
+    logger.log('================================================');
 
     const boxOfficeSalesData = stats?.data?.box_office_sales || {};
     // Try both payment_channels (plural) and payment_channel (singular) for backward compatibility
     const paymentChannel = boxOfficeSalesData?.payment_channels || boxOfficeSalesData?.payment_channel || {};
 
-    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Keys:', Object.keys(paymentChannel));
-    console.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Values:', paymentChannel);
+    logger.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Keys:', Object.keys(paymentChannel));
+    logger.log('💰 AdminBoxOfficePaymentChannel - Payment Channel Values:', paymentChannel);
 
     // Map payment methods to colors
     const paymentMethodColors = {
@@ -59,7 +60,7 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
                 const lowerKey = key.toLowerCase();
                 const shouldExclude = ['wallet', 'bank_transfer', 'free', 'total'].includes(lowerKey);
                 const hasValue = parseFloat(value) >= 0;
-                console.log(`💰 Checking ${key}: value=${value}, exclude=${shouldExclude}, hasValue=${hasValue}`);
+                logger.log(`💰 Checking ${key}: value=${value}, exclude=${shouldExclude}, hasValue=${hasValue}`);
                 return !shouldExclude && hasValue;
             })
             .map(([key, value], index) => {
@@ -77,7 +78,7 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
 
     // If no values after filtering, show "No Data"
     if (values.length === 0) {
-        console.log(' No payment channel data found, showing No Data');
+        logger.log(' No payment channel data found, showing No Data');
         values = [{
             label: "No Data",
             value: 0,
@@ -85,7 +86,7 @@ const AdminBoxOfficePaymentChannel = ({ stats }) => {
         }];
     }
 
-    console.log('💰 Final values array:', values);
+    logger.log('💰 Final values array:', values);
 
     // Sort values in desired order
     const paymentOrder = ["Cash", "P.O.S.", "Card", "MoMo"];

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
+import { logger } from '../utils/logger';
 
 const NoteModal = ({ visible, onAddNote, onCancel, initialNote,scannedData }) => {
     const [noteText, setNoteText] = useState('');
@@ -14,7 +15,7 @@ const NoteModal = ({ visible, onAddNote, onCancel, initialNote,scannedData }) =>
 
     const handleAddNote = () => {
         if (!scannedData) {
-            console.warn('Cannot add note: scannedData is null');
+            logger.warn('Cannot add note: scannedData is null');
             return;
         }
         if (noteText.trim().length > 0) {

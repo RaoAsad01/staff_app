@@ -10,12 +10,13 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import { StatusBar } from 'expo-status-bar';
 import Typography, { Heading3, Body1, ButtonTextDemiBold, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,7 +34,7 @@ const SplashScreenComponent = () => {
       // After onboarding, go to login
       navigation.replace('Login');
     } catch (error) {
-      console.error('Error saving onboarding status:', error);
+      logger.error('Error saving onboarding status:', error);
       // On error, still go to login
       navigation.replace('Login');
     }

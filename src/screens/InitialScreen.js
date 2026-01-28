@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { color } from '../color/color';
 import { eventService } from '../api/apiService';
+import { logger } from '../utils/logger';
 
 /**
  * InitialScreen - Handles app launch routing logic
@@ -38,7 +39,7 @@ const InitialScreen = () => {
             }
         } catch (onboardingError) {
             // If storage fails, assume first time user
-            console.log('Error reading onboarding status, showing splash:', onboardingError);
+            logger.log('Error reading onboarding status, showing splash:', onboardingError);
             hasSeenOnboarding = null;
         }
 
@@ -52,7 +53,7 @@ const InitialScreen = () => {
         try {
             token = await SecureStore.getItemAsync('accessToken');
         } catch (tokenError) {
-            console.log('Error reading token:', tokenError);
+            logger.log('Error reading token:', tokenError);
             token = null;
         }
 

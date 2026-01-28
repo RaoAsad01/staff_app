@@ -1,12 +1,10 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { API_BASE_URL } from '../config/env';
+import { logger } from '../utils/logger';
 
-// Base URL configuration
-const BASE_URL = 'https://d1-api.hexallo.com/';
-//for dev orgainer const BASE_URL = 'https://d1-api.hexallo.com/';
-//for dev admin  const BASE_URL = 'https://d1-admin.hexallo.com/';
-//for prod orgainer const BASE_URL = 'https://t1-api.hexallo.com/';
-//for prod admin  const BASE_URL = 'https://t1-admin.hexallo.com/';
+// Base URL configuration (kept exported for backwards compatibility)
+export const BASE_URL = API_BASE_URL;
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -28,7 +26,7 @@ apiClient.interceptors.request.use(
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (error) {
-        console.error('Error getting token from SecureStore:', error);
+        logger.error('Error getting token from SecureStore:', error);
       }
     }
 
@@ -50,12 +48,12 @@ apiClient.interceptors.response.use(
       try {
         // Clear the invalid token
         await SecureStore.deleteItemAsync('accessToken');
-        console.log('Token expired or invalid, cleared from storage');
+        logger.log('Token expired or invalid, cleared from storage');
 
         // You could also dispatch a logout action here if using Redux
         // or trigger a navigation to login screen
       } catch (clearError) {
-        console.error('Error clearing token:', clearError);
+        logger.error('Error clearing token:', clearError);
       }
     }
 
@@ -94,7 +92,7 @@ export const authService = {
   requestOtp: async (data) => {
     try {
       const response = await apiClient.post(endpoints.otpRequest, data);
-      console.log('API Response:', response.data);
+      logger.log('API Response:', response.data);
 
       if (!response.data) {
         throw new Error('No data received from server');
@@ -102,7 +100,7 @@ export const authService = {
 
       return response.data;
     } catch (error) {
-      console.error('OTP Request Error:', {
+      logger.error('OTP Request Error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
@@ -127,10 +125,10 @@ export const authService = {
   // Verify OTP service
   verifyOtp: async (data) => {
     try {
-      console.log('🔐 Verifying OTP with payload:', { uuid: data.uuid, otp: '***' });
+      logger.log('🔐 Verifying OTP with payload:', { uuid: data.uuid, otp: '***' });
       const response = await apiClient.post(endpoints.verifyOtp, data);
-      console.log('✅ OTP Verification Response Status:', response.status);
-      console.log('✅ OTP Verification Response Data:', JSON.stringify(response.data, null, 2));
+      logger.log('✅ OTP Verification Response Status:', response.status);
+      logger.log('✅ OTP Verification Response Data:', JSON.stringify(response.data, null, 2));
       
       // Handle different response structures
       // Structure 1: { success: true, data: { access_token: "..." } }
@@ -140,20 +138,20 @@ export const authService = {
       
       if (accessToken) {
         await SecureStore.setItemAsync('accessToken', accessToken);
-        console.log('✅ Token stored successfully in SecureStore');
+        logger.log('✅ Token stored successfully in SecureStore');
         
         // Verify token was stored
         const storedToken = await SecureStore.getItemAsync('accessToken');
-        console.log('✅ Token verification - stored:', !!storedToken);
+        logger.log('✅ Token verification - stored:', !!storedToken);
       } else {
-        console.warn('⚠️ No access_token found in response');
-        console.warn('Response structure:', JSON.stringify(responseData, null, 2));
+        logger.warn('⚠️ No access_token found in response');
+        logger.warn('Response structure:', JSON.stringify(responseData, null, 2));
       }
       
       // Return the full response data structure
       return responseData;
     } catch (error) {
-      console.error('❌ OTP Verification Error:', {
+      logger.error('❌ OTP Verification Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -200,16 +198,16 @@ export const ticketService = {
       }
 
       if (!eventUuidFromScan || !ticketCodeFromScan) {
-        console.error('Could not extract event UUID and ticket code from scanned data:', scannedData);
+        logger.error('Could not extract event UUID and ticket code from scanned data:', scannedData);
         throw new Error('Invalid QR code format');
       }
 
-      console.log('Scanned Data:', scannedData);
-      console.log('Extracted Event UUID:', eventUuidFromScan);
-      console.log('Extracted Ticket Code:', ticketCodeFromScan);
+      logger.log('Scanned Data:', scannedData);
+      logger.log('Extracted Event UUID:', eventUuidFromScan);
+      logger.log('Extracted Ticket Code:', ticketCodeFromScan);
 
       const token = await SecureStore.getItemAsync('accessToken');
-      console.log('Current token:', token);
+      logger.log('Current token:', token);
       const requestData = {
         note: note || null,
       };
@@ -219,7 +217,7 @@ export const ticketService = {
         .replace('{event_uuid}', eventUuidFromScan)
         .replace('{ticket_code}', ticketCodeFromScan);
 
-      console.log('Request Details:', {
+      logger.log('Request Details:', {
         method: 'POST',
         url: requestUrl,
         baseURL: BASE_URL,
@@ -238,7 +236,7 @@ export const ticketService = {
       // ... rest of your response handling ...
 
     } catch (error) {
-      console.error('Ticket Scan Error:', {
+      logger.error('Ticket Scan Error:', {
         status: error.response?.status,
         message: error.message,
         responseType: error.response?.headers?.['content-type'],
@@ -266,7 +264,7 @@ export const ticketService = {
       const requestUrl = endpoints.updateNote
         .replace('{event_uuid}', eventUuid)
         .replace('{code}', code); // This part looks correct
-      console.log('update note:', requestUrl);
+      logger.log('update note:', requestUrl);
 
       // ... (rest of the updateTicketNote function)
     } catch (error) {
@@ -277,10 +275,10 @@ export const ticketService = {
   fetchAdminTerminals: async (event_uuid) => {
     try {
       const response = await apiClient.get(`${endpoints.adminDashboardTerminals}?event=${event_uuid}`); // Include event_uuid as a query parameter
-      console.log('Admin Dashboard Terminals Response:', response.data);
+      logger.log('Admin Dashboard Terminals Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Admin Dashboard Terminals Error:', {
+      logger.error('Admin Dashboard Terminals Error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
@@ -301,10 +299,10 @@ export const ticketService = {
   fetchUserTicketOrders: async (event_uuid) => {
     try {
       const response = await apiClient.get(`${endpoints.userTicketOrdersManual}?event_uuid=${event_uuid}`); // Include event_uuid as a query parameter
-      console.log('User Ticket Orders Response:', response.data);
+      logger.log('User Ticket Orders Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Fetch User Ticket Orders Error:', {
+      logger.error('Fetch User Ticket Orders Error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
@@ -325,10 +323,10 @@ export const ticketService = {
   fetchUserTicketOrdersDetail: async (orderNumber, eventUuid) => {
     try {
       const response = await apiClient.get(endpoints.userTicketOrdersManualDetail(orderNumber, eventUuid)); // Use the endpoint definition
-      console.log('Ticket Details Response:', response.data);
+      logger.log('Ticket Details Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Fetch Ticket Details Error:', error);
+      logger.error('Fetch Ticket Details Error:', error);
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch ticket orders Detail.',
@@ -343,13 +341,13 @@ export const ticketService = {
   },
 
   manualDetailCheckin: async (uuid, code) => {
-    console.log("Manual Checkin Params:", uuid, code);
+    logger.log('Manual Checkin Params:', uuid, code);
     try {
       const response = await apiClient.post(endpoints.manualDetailChekin(uuid, code));
-      console.log('Manual Ticket Details Response:', response.data);
+      logger.log('Manual Ticket Details Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Fetch Manual Ticket Details Error:', error);
+      logger.error('Fetch Manual Ticket Details Error:', error);
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch manual ticket orders Detail.',
@@ -364,13 +362,13 @@ export const ticketService = {
   },
 
   boxOfficeDetailCheckinAll: async (eventUuid, orderNumber) => {
-    console.log("box office checkin all Params:", eventUuid, orderNumber);
+    logger.log('box office checkin all Params:', eventUuid, orderNumber);
     try {
       const response = await apiClient.patch(endpoints.boxOfficeCheckInAllTicket(eventUuid, orderNumber));
-      console.log('box office checkin all Response:', response.data);
+      logger.log('box office checkin all Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('box office checkin all Details Error:', error);
+      logger.error('box office checkin all Details Error:', error);
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'box office checkin all error',
@@ -387,10 +385,10 @@ export const ticketService = {
   ticketStatsInfo: async (eventUuid) => {
     try {
       const response = await apiClient.get(`${endpoints.ticketStats}${eventUuid}/stats/`);
-      console.log(' Ticket Tab Response:', response.data);
+      logger.log(' Ticket Tab Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch ticket stats:', error);
+      logger.error('Failed to fetch ticket stats:', error);
       throw error;
     }
   },
@@ -410,20 +408,20 @@ export const ticketService = {
       }
 
       const response = await apiClient.get(url);
-      console.log('Ticket Tab listing Response:', response.data);
+      logger.log('Ticket Tab listing Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch ticket stats:', error);
+      logger.error('Failed to fetch ticket stats:', error);
       throw error;
     }
   },
   fetchTicketPricingStats: async () => {
     try {
       const response = await apiClient.get(endpoints.ticketPricingStats);
-      console.log('Ticket Pricing Stats API Response:', response.data);
+      logger.log('Ticket Pricing Stats API Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Fetch Ticket Pricing Stats Error:', {
+      logger.error('Fetch Ticket Pricing Stats Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -452,11 +450,11 @@ export const ticketService = {
         throw new Error('event_uuid is required');
       }
 
-      console.log('Fetching ticket pricing for event:', eventUuid);
+      logger.log('Fetching ticket pricing for event:', eventUuid);
       const response = await apiClient.get(`${endpoints.ticketPricing}?event_uuid=${eventUuid}`);
 
       // Log the complete response
-      console.log('Ticket Pricing API Response:', {
+      logger.log('Ticket Pricing API Response:', {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers,
@@ -472,7 +470,7 @@ export const ticketService = {
       const pricingData = response.data?.data?.data;
 
       // Log the data structure
-      console.log('Ticket Pricing Data Structure:', {
+      logger.log('Ticket Pricing Data Structure:', {
         hasData: !!pricingData,
         eventTitle: pricingData?.event_title,
         pricingTypeOptions: pricingData?.pricing_type_options,
@@ -482,7 +480,7 @@ export const ticketService = {
 
       return pricingData;
     } catch (error) {
-      console.error('Fetch Ticket Pricing Error:', {
+      logger.error('Fetch Ticket Pricing Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -523,11 +521,11 @@ export const ticketService = {
         name: name
       };
 
-      console.log('BoxOffice get ticket request body:', requestBody);
-      console.log('Purchase code being sent:', purchaseCode);
-      console.log('Items with purchase code:', itemsWithPurchaseCode);
+      logger.log('BoxOffice get ticket request body:', requestBody);
+      logger.log('Purchase code being sent:', purchaseCode);
+      logger.log('Items with purchase code:', itemsWithPurchaseCode);
       const response = await apiClient.post(endpoints.boxOfficeGetTicket, requestBody);
-      console.log('BoxOffice get ticket DetailsResponse:', {
+      logger.log('BoxOffice get ticket DetailsResponse:', {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers,
@@ -538,10 +536,10 @@ export const ticketService = {
           headers: response.config.headers
         }
       });
-      console.log('BoxOffice get ticket API Response:', response.data);
+      logger.log('BoxOffice get ticket API Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('BoxOffice get ticket Error:', {
+      logger.error('BoxOffice get ticket Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -552,13 +550,13 @@ export const ticketService = {
         }
       });
       if (error.response?.data) {
-        console.log('BoxOffice Response:', error.response?.data);
+        logger.log('BoxOffice Response:', error.response?.data);
 
         // Handle specific validation errors
         if (error.response.status === 400 && error.response.data?.data?.purchase_code) {
           const purchaseCodeErrors = error.response.data.data.purchase_code;
           if (Array.isArray(purchaseCodeErrors) && purchaseCodeErrors.length > 0) {
-            console.error('Purchase code validation failed:', {
+            logger.error('Purchase code validation failed:', {
               purchaseCode: purchaseCode,
               errors: purchaseCodeErrors,
               fullResponse: error.response.data
@@ -619,13 +617,13 @@ export const ticketService = {
       }
 
       // Log the API call details
-      console.log('================================================');
-      console.log('📡 API CALL - fetchDashboardStats');
-      console.log('Base URL:', BASE_URL);
-      console.log('Endpoint:', url);
-      console.log('Full URL:', BASE_URL + url);
-      console.log('HTTP Method: GET');
-      console.log('Parameters:', {
+      logger.log('================================================');
+      logger.log('📡 API CALL - fetchDashboardStats');
+      logger.log('Base URL:', BASE_URL);
+      logger.log('Endpoint:', url);
+      logger.log('Full URL:', BASE_URL + url);
+      logger.log('HTTP Method: GET');
+      logger.log('Parameters:', {
         eventUuid,
         sales,
         ticketType,
@@ -633,18 +631,18 @@ export const ticketService = {
         staffUuid,
         paymentChannel
       });
-      console.log('================================================');
+      logger.log('================================================');
 
       const response = await apiClient.get(url);
 
-      console.log('✅ API Response received:', {
+      logger.log('✅ API Response received:', {
         status: response.status,
         hasData: !!response.data
       });
 
       return response.data;
     } catch (error) {
-      console.error('❌ Fetch Dashboard Stats Error:', {
+      logger.error('❌ Fetch Dashboard Stats Error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
@@ -670,14 +668,14 @@ export const eventService = {
     try {
       // Log request details
       const token = await SecureStore.getItemAsync('accessToken');
-      console.log('🔍 Fetching staff events...');
-      console.log('📡 Request URL:', `${BASE_URL}${endpoints.staffEvents}`);
-      console.log('🔑 Has token:', !!token);
-      console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
+      logger.log('🔍 Fetching staff events...');
+      logger.log('📡 Request URL:', `${BASE_URL}${endpoints.staffEvents}`);
+      logger.log('🔑 Has token:', !!token);
+      logger.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
       
       const response = await apiClient.get(endpoints.staffEvents);
-      console.log('✅ Fetch Staff Events Response Status:', response.status);
-      console.log('✅ Fetch Staff Events Response Data:', JSON.stringify(response.data, null, 2));
+      logger.log('✅ Fetch Staff Events Response Status:', response.status);
+      logger.log('✅ Fetch Staff Events Response Data:', JSON.stringify(response.data, null, 2));
 
       // Handle the new response structure
       if (response.data?.success && response.data?.data && response.data.data.length > 0) {
@@ -704,10 +702,10 @@ export const eventService = {
       }
 
       // Return empty array if no events found
-      console.log('No events found in response, returning empty array');
+      logger.log('No events found in response, returning empty array');
       return { data: [] };
     } catch (error) {
-      console.error('Fetch Staff Events Error:', {
+      logger.error('Fetch Staff Events Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -719,21 +717,21 @@ export const eventService = {
 
       // Handle 404 error specifically - endpoint might not exist or user has no events
       if (error.response?.status === 404) {
-        console.log('⚠️ 404 Error - Endpoint not found or no events available');
-        console.log('This might be normal if the user has no assigned events');
+        logger.warn('⚠️ 404 Error - Endpoint not found or no events available');
+        logger.warn('This might be normal if the user has no assigned events');
         // Return empty array instead of throwing error - allow login to proceed
         return { data: [] };
       }
 
       // Handle 403 Forbidden - might be permission issue
       if (error.response?.status === 403) {
-        console.log('⚠️ 403 Forbidden - User may not have permission to access events');
+        logger.warn('⚠️ 403 Forbidden - User may not have permission to access events');
         return { data: [] };
       }
 
       // For other errors, still return empty array to allow login
       // But log the error for debugging
-      console.warn('⚠️ Error fetching staff events, but allowing login to proceed:', error.message);
+      logger.warn('⚠️ Error fetching staff events, but allowing login to proceed:', error.message);
       return { data: [] };
     }
   },
@@ -741,10 +739,10 @@ export const eventService = {
   fetchEventInfo: async (eventUuid) => {
     try {
       const response = await apiClient.get(`${endpoints.eventInfo}${eventUuid}/info/`);
-      console.log('Fetch Event Info Response:', response.data);
+      logger.log('Fetch Event Info Response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Fetch Event Info Error:', {
+      logger.error('Fetch Event Info Error:', {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
@@ -762,7 +760,7 @@ export const eventService = {
 
         // Check if it's a business logic error (like "Event is not published")
         if (errorMessage && errorMessage.includes('not published')) {
-          console.error('403 Forbidden - Business logic error:', errorMessage);
+          logger.error('403 Forbidden - Business logic error:', errorMessage);
           throw {
             message: errorMessage || 'Event is not available.',
             status: 403,
@@ -771,7 +769,7 @@ export const eventService = {
           };
         } else {
           // This might be an authentication error
-          console.error('403 Forbidden - Possible authentication issue detected');
+          logger.error('403 Forbidden - Possible authentication issue detected');
           // Clear the stored token as it might be invalid
           await SecureStore.deleteItemAsync('accessToken');
           throw {
@@ -817,7 +815,7 @@ export const userService = {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log("image profile:", response.data);
+      logger.log('image profile:', response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

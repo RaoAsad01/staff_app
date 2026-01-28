@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, ScrollView, Text } from 'react-native';
 import { color } from '../../../color/color';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import SvgIcons from '../../../../components/SvgIcons';
+import SvgIcons from '../../../components/SvgIcons';
 import { dashboardsalesscantab } from '../../../constants/dashboardsalesscantab';
 import AnalyticsChart from '../AnalyticsChart';
 import { ticketService } from '../../../api/apiService';
@@ -21,6 +21,7 @@ import AvailableTicketsCard from '../AvailableTicketsCard';
 import { truncateCityName } from '../../../utils/stringUtils';
 import { truncateEventName } from '../../../utils/stringUtils';
 import { formatDateWithMonthName } from '../../../constants/dateAndTime';
+import { logger } from '../../../utils/logger';
 
 const StaffDashboard = () => {
   const navigation = useNavigation();
@@ -58,7 +59,7 @@ const StaffDashboard = () => {
           const salesParam = 'box_office';
 
           // Log the parameters being sent
-          console.log('StaffDashboard - Fetching stats with params:', {
+          logger.log('StaffDashboard - Fetching stats with params:', {
             eventUuid: currentEventInfo.eventUuid,
             sales: salesParam,
             ticketType: null,
@@ -72,7 +73,7 @@ const StaffDashboard = () => {
           setError(null);
         }
       } catch (err) {
-        console.error('Error fetching staff dashboard stats:', err);
+        logger.error('Error fetching staff dashboard stats:', err);
         setError(err.message || 'Failed to fetch dashboard stats');
       } finally {
         setLoading(false);
@@ -88,7 +89,7 @@ const StaffDashboard = () => {
 
 
   const handlePaymentChannelPress = (paymentChannel) => {
-    console.log('Payment channel pressed:', paymentChannel);
+    logger.log('Payment channel pressed:', paymentChannel);
     // Toggle active payment channel
     if (activePaymentChannel === paymentChannel) {
       setActivePaymentChannel(null);
@@ -99,7 +100,7 @@ const StaffDashboard = () => {
 
   const handleEventSelect = (event) => {
     setSelectedEvent(event);
-    console.log('Selected event:', event);
+    logger.log('Selected event:', event);
 
     // If the selected event is different from the current event
     if (event.uuid !== currentEventInfo?.eventUuid) {
@@ -169,7 +170,7 @@ const StaffDashboard = () => {
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
-      console.error('Error fetching analytics for', ticketType, error);
+      logger.error('Error fetching analytics for', ticketType, error);
     }
   };
 
@@ -187,7 +188,7 @@ const StaffDashboard = () => {
     }
 
     try {
-      console.log('🔍 Fetching scan analytics for:', {
+      logger.log('🔍 Fetching scan analytics for:', {
         scanType,
         parentCategory,
         ticketUuid
@@ -204,8 +205,8 @@ const StaffDashboard = () => {
         const analyticsData = response.data.scan_analytics.data;
         const analyticsTitle = ticketUuid ? `${scanType} Scans` : `${parentCategory} Scans`;
 
-        console.log('Scan Analytics Data:', analyticsData);
-        console.log('Scan Analytics Response:', response.data.scan_analytics);
+        logger.log('Scan Analytics Data:', analyticsData);
+        logger.log('Scan Analytics Response:', response.data.scan_analytics);
 
         const chartData = Object.entries(analyticsData)
           .filter(([hour, value]) => value > 0) // Filter out zero values
@@ -224,15 +225,15 @@ const StaffDashboard = () => {
             };
           });
 
-        console.log('Formatted Scan Chart Data:', chartData);
+        logger.log('Formatted Scan Chart Data:', chartData);
         setScanAnalyticsData(chartData);
         setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
       } else {
-        console.warn('No scan analytics data found in response');
+        logger.warn('No scan analytics data found in response');
       }
     } catch (error) {
-      console.error('Error fetching scan analytics for', scanType, error);
+      logger.error('Error fetching scan analytics for', scanType, error);
     }
   };
 
@@ -280,7 +281,7 @@ const StaffDashboard = () => {
         setActiveCheckInAnalytics(analyticsKey);
       }
     } catch (error) {
-      console.error('Error fetching check-in analytics for', ticketType, error);
+      logger.error('Error fetching check-in analytics for', ticketType, error);
     }
   };
 
@@ -350,7 +351,7 @@ const StaffDashboard = () => {
 
   function formatHourLabel(hourStr) {
     if (!hourStr || typeof hourStr !== 'string') {
-      console.warn('formatHourLabel: Invalid input', hourStr);
+      logger.warn('formatHourLabel: Invalid input', hourStr);
       return '';
     }
 
@@ -524,7 +525,7 @@ const StaffDashboard = () => {
           <BoxOfficeSales
             stats={dashboardStats}
             onDebugData={(data) => {
-              console.log('BoxOfficeSales - Backend Data:', JSON.stringify(data, null, 2));
+              logger.log('BoxOfficeSales - Backend Data:', JSON.stringify(data, null, 2));
             }}
           />
           <CheckInSoldTicketsCard

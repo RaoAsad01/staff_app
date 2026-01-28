@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import AnalyticsChart from '../AnalyticsChart';
 import { color } from '../../../color/color';
 import { ticketService } from '../../../api/apiService';
+import { logger } from '../../../utils/logger';
 
 const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, userRole, staffUuid }) => {
     const [analyticsData, setAnalyticsData] = useState(null);
@@ -61,7 +62,7 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
     // Fetch analytics data when payment channel is selected
     useEffect(() => {
         const fetchPaymentChannelAnalytics = async () => {
-            console.log('PaymentChannelAnalytics useEffect triggered with:', {
+            logger.log('PaymentChannelAnalytics useEffect triggered with:', {
                 eventInfo: eventInfo?.eventUuid,
                 selectedPaymentChannel,
                 paymentChannelParam,
@@ -154,7 +155,7 @@ const PaymentChannelAnalytics = ({ stats, selectedPaymentChannel, eventInfo, use
                 value: parseFloat(value) || 0
             }));
         } else {
-            console.log('No analytics data available for selected payment channel');
+            logger.log('No analytics data available for selected payment channel');
         }
     } else {
         // Show aggregated data for all channels (fallback to initial stats)

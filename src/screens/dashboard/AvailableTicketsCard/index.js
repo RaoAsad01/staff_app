@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { color } from "../../../color/color";
-import SvgIcons from "../../../../components/SvgIcons";
+import SvgIcons from "../../../components/SvgIcons";
 import { useNavigation } from '@react-navigation/native';
+import { logger } from '../../../utils/logger';
 
 const CircularProgress = ({ value, total, percentage }) => {
   const radius = 20;
@@ -64,7 +65,7 @@ const AvailableTicketsCard = ({ data, stats }) => {
   };
 
   const handleSubItemPress = (subItemLabel, parentLabel) => {
-    console.log('AvailableTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
+    logger.log('AvailableTicketsCard - Subitem clicked:', subItemLabel, 'Parent:', parentLabel);
 
     // Dynamic tab mapping - use the parent label directly
     // The parent category should be the tab name in BoxOfficeTab
@@ -91,7 +92,7 @@ const AvailableTicketsCard = ({ data, stats }) => {
       }
     }
 
-    console.log('AvailableTicketsCard - Mapped tab:', selectedTab);
+    logger.log('AvailableTicketsCard - Mapped tab:', selectedTab);
 
     if (selectedTab && selectedTab !== 'Available Tickets') {
       navigation.navigate('Tickets', {
@@ -99,7 +100,7 @@ const AvailableTicketsCard = ({ data, stats }) => {
         selectedTab: selectedTab
       });
     } else {
-      console.warn('AvailableTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
+      logger.warn('AvailableTicketsCard - No valid tab found for:', subItemLabel, 'Parent:', parentLabel);
     }
   };
 

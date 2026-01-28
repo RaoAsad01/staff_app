@@ -9,7 +9,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import { authService } from '../api/apiService';
 import Typography, { Body1, Caption } from '../components/Typography';
 import { fontSize, fontWeight } from '../constants/typography';
@@ -17,6 +17,7 @@ import MiddleSection from '../components/MiddleSection';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { defaultCountryCode } from '../constants/countryCodes';
 import { getAutoDetectedCountry } from '../utils/countryDetection';
+import { logger } from '../utils/logger';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -61,7 +62,7 @@ const LoginScreen = () => {
             setSelectedCountry(detectedCountry);
           }
         } catch (error) {
-          console.error('Failed to auto-detect country:', error);
+          logger.error('Failed to auto-detect country:', error);
         } finally {
           setIsDetectingCountry(false);
         }

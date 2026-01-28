@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { color } from '../../../color/color';
 import { dashboardattendeestab } from '../../../constants/dashboardattendeestab';
-import SvgIcons from '../../../../components/SvgIcons';
-import { ticketService } from '../../../api/apiService';
+import SvgIcons from '../../../components/SvgIcons';
+import { ticketService, BASE_URL } from '../../../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import { useNavigation } from '@react-navigation/native';
 import NoResults from '../../../components/NoResults';
+import { logger } from '../../../utils/logger';
 
 const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
     const navigation = useNavigation();
@@ -32,7 +33,7 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             const res = await ticketService.ticketStatsListing(eventUuid, staffUuid,'PAID');
             const list = res?.data || [];
             const mappedTickets = list.map((ticket) => {
-                const qrCodeUrl = `https://d1-api.hexallo.com/ticket/scan/${ticket.event}/${ticket.code}/`;
+                const qrCodeUrl = `${BASE_URL}ticket/scan/${ticket.event}/${ticket.code}/`;
                 return {
                     id: ticket.ticket_number || 'No Record',
                     type: ticket.ticket_type || 'No Record',
@@ -67,7 +68,7 @@ const ScanListComponent = ({ eventInfo, onScanCountUpdate, staffUuid }) => {
             const cleanedTypes = uniqueTypes.map(type => type.replace(/\s*Pricing$/, ''));
             setAvailableTicketTypes(cleanedTypes);
         } catch (err) {
-            console.error('Error fetching ticket list:', err);
+            logger.error('Error fetching ticket list:', err);
         } finally {
             setIsLoading(false);
         }

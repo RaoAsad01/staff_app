@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Svg, Circle, Text as SvgText } from "react-native-svg";
 import { color } from '../../../color/color';
 import { formatValue } from '../../../constants/formatValue';
-import SvgIcons from '../../../../components/SvgIcons';
+import SvgIcons from '../../../components/SvgIcons';
 import { formatValueWithPad } from '../../../constants/formatValue';
+import { logger } from '../../../utils/logger';
 
 // CircularProgress component matching the exact design from CheckInSolidTicketsCard
 const CircularProgress = ({ value, total, percentage, color = color.btnBrown_AE6F28 }) => {
@@ -55,11 +56,11 @@ const CircularProgress = ({ value, total, percentage, color = color.btnBrown_AE6
 
 const TotalPaymentChannelCard = ({ stats, onPaymentChannelPress, activePaymentChannel }) => {
   // Comprehensive logging for debugging
-  console.log('💳 TotalPaymentChannelCard - Full stats:', JSON.stringify(stats, null, 2));
-  console.log('💳 TotalPaymentChannelCard - stats.data keys:', Object.keys(stats?.data || {}));
-  console.log('💳 TotalPaymentChannelCard - box_office_sales:', stats?.data?.box_office_sales);
-  console.log('💳 TotalPaymentChannelCard - payment_channels (root):', stats?.data?.payment_channels);
-  console.log('💳 TotalPaymentChannelCard - payment_channel (root):', stats?.data?.payment_channel);
+  logger.log('💳 TotalPaymentChannelCard - Full stats:', JSON.stringify(stats, null, 2));
+  logger.log('💳 TotalPaymentChannelCard - stats.data keys:', Object.keys(stats?.data || {}));
+  logger.log('💳 TotalPaymentChannelCard - box_office_sales:', stats?.data?.box_office_sales);
+  logger.log('💳 TotalPaymentChannelCard - payment_channels (root):', stats?.data?.payment_channels);
+  logger.log('💳 TotalPaymentChannelCard - payment_channel (root):', stats?.data?.payment_channel);
 
   // Get payment channel data from various possible locations
   const boxOfficeSalesData = stats?.data?.box_office_sales || {};
@@ -77,14 +78,14 @@ const TotalPaymentChannelCard = ({ stats, onPaymentChannelPress, activePaymentCh
     paymentChannel?.total ||
     0;
 
-  console.log('💳 TotalPaymentChannelCard - Resolved Payment Channel Data:', paymentChannel);
-  console.log('💳 TotalPaymentChannelCard - Resolved Total Amount:', totalAmount);
-  console.log('💳 TotalPaymentChannelCard - Total Amount Sources:');
-  console.log('  - boxOfficeSalesData?.total_amount:', boxOfficeSalesData?.total_amount);
-  console.log('  - boxOfficeSalesData?.total:', boxOfficeSalesData?.total);
-  console.log('  - stats?.data?.total_amount:', stats?.data?.total_amount);
-  console.log('  - stats?.data?.total:', stats?.data?.total);
-  console.log('  - paymentChannel?.total:', paymentChannel?.total);
+  logger.log('💳 TotalPaymentChannelCard - Resolved Payment Channel Data:', paymentChannel);
+  logger.log('💳 TotalPaymentChannelCard - Resolved Total Amount:', totalAmount);
+  logger.log('💳 TotalPaymentChannelCard - Total Amount Sources:');
+  logger.log('  - boxOfficeSalesData?.total_amount:', boxOfficeSalesData?.total_amount);
+  logger.log('  - boxOfficeSalesData?.total:', boxOfficeSalesData?.total);
+  logger.log('  - stats?.data?.total_amount:', stats?.data?.total_amount);
+  logger.log('  - stats?.data?.total:', stats?.data?.total);
+  logger.log('  - paymentChannel?.total:', paymentChannel?.total);
 
   // Map payment methods to colors (matching the main payment channel component)
   const paymentMethodColors = {
@@ -133,8 +134,8 @@ const TotalPaymentChannelCard = ({ stats, onPaymentChannelPress, activePaymentCh
   const remainingChannels = paymentChannels.filter(v => !paymentOrder.includes(v.label));
   const allChannels = [...sortedChannels, ...remainingChannels];
 
-  console.log('💳 TotalPaymentChannelCard - Final allChannels:', allChannels);
-  console.log('💳 TotalPaymentChannelCard - allChannels length:', allChannels.length);
+  logger.log('💳 TotalPaymentChannelCard - Final allChannels:', allChannels);
+  logger.log('💳 TotalPaymentChannelCard - allChannels length:', allChannels.length);
 
 
   return (

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
 import { color } from '../color/color';
-import Header from '../../components/header';
-import SvgIcons from '../../components/SvgIcons';
+import Header from '../components/header';
+import SvgIcons from '../components/SvgIcons';
 import { useNavigation } from '@react-navigation/native';
 import { formatDateTime } from '../constants/dateAndTime';
 import Typography, { ButtonTextDemiBold, Caption } from '../components/Typography';

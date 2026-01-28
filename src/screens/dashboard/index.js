@@ -6,7 +6,7 @@ import OverallStatistics from './OverallStatistics';
 import AdminOverallStatistics from './AdminOverallStatistics';
 import BoxOfficeSales from './BoxOfficeSales';
 import { useNavigation } from '@react-navigation/native';
-import SvgIcons from '../../../components/SvgIcons';
+import SvgIcons from '../../components/SvgIcons';
 import { dashboardstatuslist } from '../../constants/dashboardstatuslist';
 import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
 import AttendeesComponent from './AttendeesComponent';
@@ -32,6 +32,7 @@ import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab
 import { truncateCityName } from '../../utils/stringUtils';
 import { truncateEventName } from '../../utils/stringUtils';
 import { formatDateWithMonthName } from '../../constants/dateAndTime';
+import { logger } from '../../utils/logger';
 
 const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
@@ -72,16 +73,16 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       try {
         setUserProfileLoading(true);
         const profile = await userService.getProfile();
-        console.log('User profile:', profile);
-        console.log('User profile keys:', Object.keys(profile || {}));
-        console.log('User role:', profile?.role);
-        console.log('User role type:', typeof profile?.role);
+        logger.log('User profile:', profile);
+        logger.log('User profile keys:', Object.keys(profile || {}));
+        logger.log('User role:', profile?.role);
+        logger.log('User role type:', typeof profile?.role);
 
         // Check for common role field variations
-        console.log('profile?.user_role :', profile?.user_role);
-        console.log('profile?.type:', profile?.type);
-        console.log('profile?.permission:', profile?.permission);
-        console.log('profile?.user_type:', profile?.user_type);
+        logger.log('profile?.user_role :', profile?.user_role);
+        logger.log('profile?.type:', profile?.type);
+        logger.log('profile?.permission:', profile?.permission);
+        logger.log('profile?.user_type:', profile?.user_type);
 
         // Try to find the role from various possible field names
         const role = profile?.role ||
@@ -91,11 +92,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           profile?.user_type ||
           profile?.data?.role ||
           profile?.user?.role;
-        console.log('Final role value:', role);
+        logger.log('Final role value:', role);
 
         setUserRole(role || null);
       } catch (err) {
-        console.error('Error fetching user profile:', err);
+        logger.error('Error fetching user profile:', err);
         setUserRole(null);
       } finally {
         setUserProfileLoading(false);
@@ -136,11 +137,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           
           // Log for debugging ORGANIZER payment channels
           if (userRole === 'ORGANIZER') {
-            console.log('📊 Dashboard Stats for ORGANIZER:', JSON.stringify(stats, null, 2));
-            console.log('📊 payment_channels location check:');
-            console.log('  - stats?.data?.payment_channels:', stats?.data?.payment_channels);
-            console.log('  - stats?.data?.box_office_sales?.payment_channels:', stats?.data?.box_office_sales?.payment_channels);
-            console.log('  - stats?.data?.box_office_sales?.payment_channel:', stats?.data?.box_office_sales?.payment_channel);
+            logger.log('📊 Dashboard Stats for ORGANIZER:', JSON.stringify(stats, null, 2));
+            logger.log('📊 payment_channels location check:');
+            logger.log('  - stats?.data?.payment_channels:', stats?.data?.payment_channels);
+            logger.log('  - stats?.data?.box_office_sales?.payment_channels:', stats?.data?.box_office_sales?.payment_channels);
+            logger.log('  - stats?.data?.box_office_sales?.payment_channel:', stats?.data?.box_office_sales?.payment_channel);
           }
           
           setDashboardStats(stats);
@@ -148,7 +149,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
           setError(null);
         }
       } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
+        logger.error('Error fetching dashboard stats:', err);
         setError(err.message || 'Failed to fetch dashboard stats');
       } finally {
         setLoading(false);
@@ -167,7 +168,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
   };
 
   const handlePaymentChannelPress = (paymentChannel) => {
-    console.log('Payment channel pressed:', paymentChannel);
+    logger.log('Payment channel pressed:', paymentChannel);
     // Toggle active payment channel
     if (activePaymentChannel === paymentChannel) {
       setActivePaymentChannel(null);
@@ -238,7 +239,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
 
-      console.log('handleAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
+      logger.log('handleAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
 
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
@@ -247,8 +248,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         const analyticsData = response.data.sold_tickets_analytics.data;
         const analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
 
-        console.log('Sold Tickets Analytics Data:', analyticsData);
-        console.log('Sold Tickets Analytics Response:', response.data.sold_tickets_analytics);
+        logger.log('Sold Tickets Analytics Data:', analyticsData);
+        logger.log('Sold Tickets Analytics Response:', response.data.sold_tickets_analytics);
 
         const chartData = Object.entries(analyticsData)
           .filter(([hour, value]) => value > 0) // Filter out zero values
@@ -267,13 +268,13 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             };
           });
 
-        console.log('Formatted Sold Tickets Chart Data:', chartData);
+        logger.log('Formatted Sold Tickets Chart Data:', chartData);
         setAnalyticsData(chartData);
         setAnalyticsTitle(analyticsTitle);
         setActiveAnalytics(analyticsKey);
       }
     } catch (error) {
-      console.error('Error fetching analytics for', ticketType, error);
+      logger.error('Error fetching analytics for', ticketType, error);
     }
   };
 
@@ -295,7 +296,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
 
-      console.log('handleCheckInAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
+      logger.log('handleCheckInAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
 
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
@@ -304,8 +305,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         const analyticsData = response.data.checkin_analytics.data;
         const analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
 
-        console.log('Check-In Analytics Data:', analyticsData);
-        console.log('Check-In Analytics Response:', response.data.checkin_analytics);
+        logger.log('Check-In Analytics Data:', analyticsData);
+        logger.log('Check-In Analytics Response:', response.data.checkin_analytics);
 
         const chartData = Object.entries(analyticsData)
           .filter(([hour, value]) => value > 0) // Filter out zero values
@@ -324,13 +325,13 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             };
           });
 
-        console.log('Formatted Chart Data:', chartData);
+        logger.log('Formatted Chart Data:', chartData);
         setCheckInAnalyticsData(chartData);
         setCheckInAnalyticsTitle(analyticsTitle);
         setActiveCheckInAnalytics(analyticsKey);
       }
     } catch (error) {
-      console.error('Error fetching check-in analytics for', ticketType, error);
+      logger.error('Error fetching check-in analytics for', ticketType, error);
     }
   };
 
@@ -348,7 +349,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
     }
 
     try {
-      console.log('🔍 Fetching scan analytics for:', {
+      logger.log('🔍 Fetching scan analytics for:', {
         scanType,
         parentCategory,
         ticketUuid
@@ -365,8 +366,8 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
         const analyticsData = response.data.scan_analytics.data;
         const analyticsTitle = ticketUuid ? `${scanType} Scans` : `${parentCategory} Scans`;
 
-        console.log('Scan Analytics Data:', analyticsData);
-        console.log('Scan Analytics Response:', response.data.scan_analytics);
+        logger.log('Scan Analytics Data:', analyticsData);
+        logger.log('Scan Analytics Response:', response.data.scan_analytics);
 
         const chartData = Object.entries(analyticsData)
           .filter(([hour, value]) => value > 0) // Filter out zero values
@@ -385,21 +386,21 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             };
           });
 
-        console.log('Formatted Scan Chart Data:', chartData);
+        logger.log('Formatted Scan Chart Data:', chartData);
         setScanAnalyticsData(chartData);
         setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
       } else {
-        console.warn('⚠️ No scan analytics data found in response');
+        logger.warn('⚠️ No scan analytics data found in response');
       }
     } catch (error) {
-      console.error('❌ Error fetching scan analytics for', scanType, error);
+      logger.error('❌ Error fetching scan analytics for', scanType, error);
     }
   };
 
   const handleEventSelect = (event) => {
     setSelectedEvent(event);
-    console.log('Selected event:', event);
+    logger.log('Selected event:', event);
 
     // If the selected event is different from the current event
     if (event.uuid !== eventInfo?.eventUuid) {
@@ -585,7 +586,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
 
   function formatHourLabel(hourStr) {
     if (!hourStr || typeof hourStr !== 'string') {
-      console.warn('formatHourLabel: Invalid input', hourStr);
+      logger.warn('formatHourLabel: Invalid input', hourStr);
       return '';
     }
 
@@ -741,11 +742,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
             <AdminBoxOfficePaymentChannel stats={dashboardStats} />
           )}
            {userRole === 'ORGANIZER' && (() => {
-            console.log('🔍 ORGANIZER Payment Channels Debug:');
-            console.log('dashboardStats?.data?.payment_channels:', dashboardStats?.data?.payment_channels);
-            console.log('dashboardStats?.data?.payment_channel:', dashboardStats?.data?.payment_channel);
-            console.log('dashboardStats?.data?.box_office_sales:', dashboardStats?.data?.box_office_sales);
-            console.log('Full dashboardStats.data keys:', Object.keys(dashboardStats?.data || {}));
+            logger.log('🔍 ORGANIZER Payment Channels Debug:');
+            logger.log('dashboardStats?.data?.payment_channels:', dashboardStats?.data?.payment_channels);
+            logger.log('dashboardStats?.data?.payment_channel:', dashboardStats?.data?.payment_channel);
+            logger.log('dashboardStats?.data?.box_office_sales:', dashboardStats?.data?.box_office_sales);
+            logger.log('Full dashboardStats.data keys:', Object.keys(dashboardStats?.data || {}));
             
             // Determine the payment channel data from various possible locations
             const paymentChannelData = dashboardStats?.data?.payment_channels 
@@ -753,7 +754,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
               || dashboardStats?.data?.box_office_sales?.payment_channels
               || dashboardStats?.data?.box_office_sales?.payment_channel;
             
-            console.log(' Resolved paymentChannelData:', paymentChannelData);
+            logger.log(' Resolved paymentChannelData:', paymentChannelData);
             
             return (
               <AdminBoxOfficePaymentChannel stats={{
@@ -1068,7 +1069,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                   // Admin user - show content based on selected admin tab
                   selectedAdminTab === 'Dashboard' ? (
                     <>
-                      {console.log('Rendering AdminOverallStatistics for role:', userRole)}
+                      {logger.log('Rendering AdminOverallStatistics for role:', userRole)}
                       <View style={styles.overallStatisticsContainer}>
                         <AdminOverallStatistics
                           stats={dashboardStats}
@@ -1082,7 +1083,7 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
                   ) : null
                 ) : (
                   <>
-                    {console.log('Rendering OverallStatistics for role:', userRole)}
+                    {logger.log('Rendering OverallStatistics for role:', userRole)}
                     <View style={styles.overallStatisticsContainer}>
                       <OverallStatistics
                         stats={dashboardStats}

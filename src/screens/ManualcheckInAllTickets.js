@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import Header from '../../components/header';
+import Header from '../components/header';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ticketService } from '../api/apiService'; // Import your ticket service
 import CheckInAllPopup from '../constants/checkInAllPopupticketList'; // Correct import path
@@ -11,6 +11,7 @@ import ErrorPopup from '../constants/ErrorPopup';
 import Typography from '../components/Typography';
 import { formatDateTime } from '../constants/dateAndTime';
 import { truncateStaffName } from '../utils/stringUtils';
+import { logger } from '../utils/logger';
 
 const ManualCheckInAllTickets = () => {
     const route = useRoute();
@@ -30,10 +31,10 @@ const ManualCheckInAllTickets = () => {
             setError(null);
             try {
                 const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
-                console.log('Ticket Details Response:', JSON.stringify(response, null, 2));
+                logger.log('Ticket Details Response:', JSON.stringify(response, null, 2));
                 if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
-                    console.log('📋First ticket data:', response.data[0]);
-                    console.log('📋Scanned by:', response.data[0]?.scanned_by);
+                    logger.log('📋First ticket data:', response.data[0]);
+                    logger.log('📋Scanned by:', response.data[0]?.scanned_by);
                     setTicketDetails(response.data);
 
                     // Check if the first ticket is already scanned, and set the success state accordingly
@@ -67,7 +68,7 @@ const ManualCheckInAllTickets = () => {
             } catch (err) {
                 //setError(err.message || 'Failed to fetch ticket details.');
                 setShowErrorPopup(true);
-                console.error('Error fetching ticket details:', err);
+                logger.error('Error fetching ticket details:', err);
             } finally {
                 setLoading(false);
             }
@@ -89,28 +90,28 @@ const ManualCheckInAllTickets = () => {
             setIsCheckingIn(true);
             setError(null);
             const ticket = ticketDetails[0];
-            console.log('Attempting to check-in ticket with UUID:', eventInfo.eventUuid, 'and Code:', ticket.code);
+            logger.log('Attempting to check-in ticket with UUID:', eventInfo.eventUuid, 'and Code:', ticket.code);
             try {
                 const response = await ticketService.manualDetailCheckin(eventInfo.eventUuid, ticket.code);
-                console.log('Full Single Ticket Check-in Response:', JSON.stringify(response, null, 2)); // Log the entire response
+                logger.log('Full Single Ticket Check-in Response:', JSON.stringify(response, null, 2)); // Log the entire response
 
                 if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
-                    console.log('Check-in successful according to response.');
-                    console.log('Response scanned_by:', response?.data?.scanned_by);
-                    console.log('Response scanned_by.name:', response?.data?.scanned_by?.name);
-                    console.log('Response scanned_by.staff_id:', response?.data?.scanned_by?.staff_id);
-                    console.log('Response scan_count:', response?.data?.scan_count);
-                    console.log('Response last_scanned_on:', response?.data?.last_scanned_on);
-                    console.log('Response last_scanned_by_name:', response?.data?.last_scanned_by_name);
-                    console.log('Full response.data keys:', Object.keys(response?.data || {}));
-                    console.log('Response scanned_by.scanned_on:', response?.data?.scanned_by?.scanned_on);
+                    logger.log('Check-in successful according to response.');
+                    logger.log('Response scanned_by:', response?.data?.scanned_by);
+                    logger.log('Response scanned_by.name:', response?.data?.scanned_by?.name);
+                    logger.log('Response scanned_by.staff_id:', response?.data?.scanned_by?.staff_id);
+                    logger.log('Response scan_count:', response?.data?.scan_count);
+                    logger.log('Response last_scanned_on:', response?.data?.last_scanned_on);
+                    logger.log('Response last_scanned_by_name:', response?.data?.last_scanned_by_name);
+                    logger.log('Full response.data keys:', Object.keys(response?.data || {}));
+                    logger.log('Response scanned_by.scanned_on:', response?.data?.scanned_by?.scanned_on);
 
                     setCheckInSuccess(true);
                     setShowSuccessPopup(true);
 
                     // Extract scanned_by information from check-in response
                     const scannedByFromResponse = response?.data?.scanned_by;
-                    console.log('Manual Check-in - scanned_by from response:', scannedByFromResponse);
+                    logger.log('Manual Check-in - scanned_by from response:', scannedByFromResponse);
 
                     // Update ticket details with all relevant fields from the response
                     const updatedTicket = {
@@ -142,19 +143,19 @@ const ManualCheckInAllTickets = () => {
                     try {
                         const updatedResponse = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
                         if (updatedResponse?.data && Array.isArray(updatedResponse.data) && updatedResponse.data.length > 0) {
-                            console.log(' Refetched ticket data after check-in:', updatedResponse.data[0]);
+                            logger.log(' Refetched ticket data after check-in:', updatedResponse.data[0]);
                             setTicketDetails(updatedResponse.data);
                         }
                     } catch (refetchError) {
-                        console.warn('Could not refetch ticket details:', refetchError);
+                        logger.warn('Could not refetch ticket details:', refetchError);
                         // Continue anyway, as we already have the updated data from check-in response
                     }
                 } else {
-                    console.log('Check-in failed according to response. Status:', response?.data?.status);
+                    logger.log('Check-in failed according to response. Status:', response?.data?.status);
                     setShowErrorPopup(true);
                 }
             } catch (err) {
-                console.error('Single Ticket Check-in Error:', err);
+                logger.error('Single Ticket Check-in Error:', err);
                 //setError(err.message || 'Failed to check in ticket.');
                 setShowErrorPopup(true);
             } finally {

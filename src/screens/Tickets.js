@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
-import Header from '../../components/header';
+import Header from '../components/header';
 import TicketsTab from './TicketsTab';
 import BoxOfficeTab from '../screens/BoxOfficeTab';
 import { color } from '../color/color';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 
 const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => {
   const [activeView, setActiveView] = useState('TicketsTab');

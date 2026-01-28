@@ -5,6 +5,7 @@ import { ticketService } from '../api/apiService';
 import SuccessPopup from './SuccessPopup';
 import ErrorPopup from './ErrorPopup';
 import { useState } from 'react';
+import { logger } from '../utils/logger';
 
 const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate, userEmail }) => {
     const { eventInfo } = useRoute().params;
@@ -14,16 +15,16 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
     const [errorMessage, setErrorMessage] = useState(null);
 
     const handleStatusChange = async (ticketToCheckIn) => {
-        console.log("Check-in ticket data:", ticketToCheckIn)
+        logger.log("Check-in ticket data:", ticketToCheckIn)
         try {
-            console.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
+            logger.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             const response = await ticketService.manualDetailCheckin(ticketToCheckIn.eventUuid, ticketToCheckIn.code);
-            console.log("API Response:", response);
+            logger.log("API Response:", response);
 
             if (response?.data?.status === 'SCANNED') {
                 // Extract scanned_by information from response
                 const scannedByFromResponse = response?.data?.scanned_by;
-                console.log('CheckInAllPopup - scanned_by from response:', scannedByFromResponse);
+                logger.log('CheckInAllPopup - scanned_by from response:', scannedByFromResponse);
 
                 // Notify parent component about the status change with scanned_by info
                 if (onTicketStatusChange) {
@@ -50,7 +51,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                 setShowErrorPopup(true);
             }
         } catch (error) {
-            console.error('Check-in error:', error);
+            logger.error('Check-in error:', error);
             const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
             setErrorMessage(errorMsg);
             setShowErrorPopup(true);
@@ -122,7 +123,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                             handleStatusChange(item);
                         } else {
                             Alert.alert('Already Scanned.');
-                            console.log("Ticket is already scanned.");
+                            logger.log("Ticket is already scanned.");
                         }
                     }}
                 >

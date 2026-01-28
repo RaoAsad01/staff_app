@@ -17,7 +17,7 @@ import { Image as ExpoImage, ImageBackground as ExpoImageBackground } from 'expo
 import { useNavigation } from '@react-navigation/native';
 import { color } from '../color/color';
 import { StatusBar } from 'expo-status-bar';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from '../components/SvgIcons';
 import { authService, eventService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,7 @@ import Typography, { Body1, Caption } from '../components/Typography';
 import MiddleSection from '../components/MiddleSection';
 import OtpSuccessPopup from '../constants/OtpSuccessPopup';
 import OtpErrorPopup from '../constants/OtpErrorPopup';
+import { logger } from '../utils/logger';
 
 // Helper function to format seconds as mm:ss
 function formatTime(seconds) {
@@ -71,7 +72,7 @@ const OtpLoginScreen = ({ route }) => {
 
   useEffect(() => {
     if (!uuid || !userIdentifier) {
-      console.log('Missing required parameters:', { uuid, userIdentifier });
+      logger.log('Missing required parameters:', { uuid, userIdentifier });
       Alert.alert('Error', 'Missing verification information');
       navigation.goBack();
     }
@@ -98,7 +99,7 @@ const OtpLoginScreen = ({ route }) => {
 
   const handleSignIn = async (otpArray) => {
     const enteredOtp = otpArray.join('');
-    console.log('handleSignIn called with OTP:', enteredOtp);
+    logger.log('handleSignIn called with OTP:', enteredOtp);
     if (enteredOtp.length === 5) {
       setLoading(true);
       try {
@@ -107,7 +108,7 @@ const OtpLoginScreen = ({ route }) => {
           otp: enteredOtp
         };
         const response = await authService.verifyOtp(payload);
-        console.log('OTP verify response:', JSON.stringify(response, null, 2));
+        logger.log('OTP verify response:', JSON.stringify(response, null, 2));
         
         // Handle different response structures
         // API might return: { success: true, data: { access_token: "..." } }
@@ -115,15 +116,15 @@ const OtpLoginScreen = ({ route }) => {
         const accessToken = response?.data?.access_token || response?.access_token;
         const isSuccess = response?.success !== false; // Default to true if not explicitly false
         
-        console.log('Access token found:', !!accessToken);
-        console.log('Response success:', isSuccess);
+        logger.log('Access token found:', !!accessToken);
+        logger.log('Response success:', isSuccess);
         
         if (accessToken) {
           setShowError(false);
           setErrorMessage('');
           // Store the access token
           await SecureStore.setItemAsync('accessToken', accessToken);
-          console.log('✅ Token stored successfully');
+          logger.log('✅ Token stored successfully');
           // Fetch staff events - handle errors gracefully
           let staffEventsData = null;
           let eventsList = [];
@@ -131,23 +132,23 @@ const OtpLoginScreen = ({ route }) => {
           
           try {
             staffEventsData = await eventService.fetchStaffEvents();
-            console.log('Staff events data structure:', JSON.stringify(staffEventsData, null, 2));
+            logger.log('Staff events data structure:', JSON.stringify(staffEventsData, null, 2));
             eventsList = staffEventsData?.data || [];
-            console.log('Events list:', eventsList);
-            console.log('Events list length:', eventsList?.length);
+            logger.log('Events list:', eventsList);
+            logger.log('Events list length:', eventsList?.length);
             
             // The apiService already transforms the response, so eventsList is an array of event objects
             // Each event has: { id, event_title, uuid, cityName, date, time, eventUuid }
             if (eventsList && eventsList.length > 0) {
               // Select the first event from the transformed list
               selectedEvent = eventsList[0];
-              console.log('✅ Selected event:', selectedEvent);
-              console.log('Selected event UUID:', selectedEvent?.uuid || selectedEvent?.eventUuid);
+              logger.log('✅ Selected event:', selectedEvent);
+              logger.log('Selected event UUID:', selectedEvent?.uuid || selectedEvent?.eventUuid);
             } else {
-              console.log('⚠️ No events found in eventsList - API returned empty array');
+              logger.log('⚠️ No events found in eventsList - API returned empty array');
             }
           } catch (eventsError) {
-            console.error('⚠️ Error fetching staff events:', eventsError);
+            logger.error('⚠️ Error fetching staff events:', eventsError);
             // Set empty arrays to ensure we show error
             eventsList = [];
             selectedEvent = null;
@@ -158,7 +159,7 @@ const OtpLoginScreen = ({ route }) => {
           
           if (selectedEvent) {
             const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
-            console.log('Selected event UUID:', eventUuid);
+          logger.log('Selected event UUID:', eventUuid);
             
             try {
               // Fetch event info
@@ -166,14 +167,14 @@ const OtpLoginScreen = ({ route }) => {
               
               // Store the selected event UUID for app restart scenarios
               await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
-              console.log('Stored last selected event UUID:', eventUuid);
+              logger.log('Stored last selected event UUID:', eventUuid);
               
               // Verify the storage worked
               const storedUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
-              console.log('Verified stored UUID:', storedUuid);
+              logger.log('Verified stored UUID:', storedUuid);
               
               setLoading(false);
-              console.log('✅ Navigating to LoggedIn with event data');
+              logger.log('✅ Navigating to LoggedIn with event data');
               
               // Use InteractionManager for release builds
               InteractionManager.runAfterInteractions(() => {
@@ -197,9 +198,9 @@ const OtpLoginScreen = ({ route }) => {
                       },
                     }],
                   });
-                  console.log('✅ Navigation to LoggedIn completed (with event)');
+                  logger.log('✅ Navigation to LoggedIn completed (with event)');
                 } catch (navError) {
-                  console.error('❌ Navigation error:', navError);
+                  logger.error('❌ Navigation error:', navError);
                   navigation.replace('LoggedIn', {
                     eventInfo: {
                       staff_name: eventInfoData?.data?.staff_name,
@@ -216,12 +217,12 @@ const OtpLoginScreen = ({ route }) => {
                 }
               });
             } catch (eventError) {
-              console.error('Error fetching event info:', eventError);
+              logger.error('Error fetching event info:', eventError);
               
               // Handle business logic errors gracefully
               setLoading(false);
               if (eventError.isBusinessError) {
-                console.log('Business logic error - proceeding without event data');
+                logger.log('Business logic error - proceeding without event data');
                 // Still navigate to logged in screen, just without event data
                 InteractionManager.runAfterInteractions(() => {
                   try {
@@ -229,9 +230,9 @@ const OtpLoginScreen = ({ route }) => {
                       index: 0,
                       routes: [{ name: 'LoggedIn' }],
                     });
-                    console.log('✅ Navigation to LoggedIn completed (business error)');
+                    logger.log('✅ Navigation to LoggedIn completed (business error)');
                   } catch (navError) {
-                    console.error('❌ Navigation error:', navError);
+                  logger.error('❌ Navigation error:', navError);
                     navigation.replace('LoggedIn');
                   }
                 });
@@ -246,9 +247,9 @@ const OtpLoginScreen = ({ route }) => {
                         index: 0,
                         routes: [{ name: 'LoggedIn' }],
                       });
-                      console.log('✅ Navigation to LoggedIn completed (after error timeout)');
+                      logger.log('✅ Navigation to LoggedIn completed (after error timeout)');
                     } catch (navError) {
-                      console.error('❌ Navigation error:', navError);
+                      logger.error('❌ Navigation error:', navError);
                       navigation.replace('LoggedIn');
                     }
                   }, 2000);
@@ -257,7 +258,7 @@ const OtpLoginScreen = ({ route }) => {
             }
           } else {
             // No events found - show error and navigate
-            console.log('No events found - showing error and navigating');
+                logger.log('No events found - showing error and navigating');
             
             // Show error message to user
             setErrorMessage('No events found. Please contact your administrator.');
@@ -269,26 +270,26 @@ const OtpLoginScreen = ({ route }) => {
             InteractionManager.runAfterInteractions(() => {
               setTimeout(() => {
                 try {
-                  console.log('✅ Attempting navigation to LoggedIn (no events)');
+                  logger.log('✅ Attempting navigation to LoggedIn (no events)');
                   navigation.reset({
                     index: 0,
                     routes: [{ name: 'LoggedIn' }],
                   });
-                  console.log('✅ Navigation to LoggedIn completed (no events)');
+                  logger.log('✅ Navigation to LoggedIn completed (no events)');
                 } catch (navError) {
-                  console.error('❌ Navigation reset error:', navError);
+                  logger.error('❌ Navigation reset error:', navError);
                   // Try alternative navigation methods
                   try {
-                    console.log('Trying navigation.replace...');
+                    logger.log('Trying navigation.replace...');
                     navigation.replace('LoggedIn');
-                    console.log('✅ Used navigation.replace as fallback');
+                    logger.log('✅ Used navigation.replace as fallback');
                   } catch (replaceError) {
-                    console.error('❌ Replace also failed, trying navigate:', replaceError);
+                    logger.error('❌ Replace also failed, trying navigate:', replaceError);
                     try {
                       navigation.navigate('LoggedIn');
-                      console.log('✅ Used navigation.navigate as final fallback');
+                      logger.log('✅ Used navigation.navigate as final fallback');
                     } catch (navigateError) {
-                      console.error('❌ All navigation methods failed:', navigateError);
+                    logger.error('❌ All navigation methods failed:', navigateError);
                     }
                   }
                 }
@@ -297,15 +298,15 @@ const OtpLoginScreen = ({ route }) => {
           }
         } else {
           // OTP verification failed - no token received
-          console.error('❌ OTP verification failed - no access token in response');
-          console.error('Response structure:', JSON.stringify(response, null, 2));
+          logger.error('❌ OTP verification failed - no access token in response');
+          logger.error('Response structure:', JSON.stringify(response, null, 2));
           setErrorMessage('You have entered an invalid OTP');
           setShowError(true);
           setLoading(false);
         }
       } catch (error) {
-        console.error('❌ OTP Verification Error:', error);
-        console.error('Error details:', {
+        logger.error('❌ OTP Verification Error:', error);
+        logger.error('Error details:', {
           message: error?.message,
           response: error?.response?.data,
           status: error?.response?.status
@@ -348,7 +349,7 @@ const OtpLoginScreen = ({ route }) => {
         setShowErrorPopup(true);
       }
     } catch (error) {
-      console.error('Resend OTP Error:', error);
+      logger.error('Resend OTP Error:', error);
       setShowErrorPopup(true);
     }
   };
@@ -376,7 +377,7 @@ const OtpLoginScreen = ({ route }) => {
     setOtp(updatedOtp);
     setShowError(false);
     setErrorMessage('');
-    console.log('OTP changed:', updatedOtp);
+    logger.log('OTP changed:', updatedOtp);
     // Move to next input field automatically
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();

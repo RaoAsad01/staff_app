@@ -3,9 +3,10 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Activity
 //import Header from '../../../../components/header';
 import { color } from '../../../color/color';
 import { useNavigation } from '@react-navigation/native';
-import SvgIcons from '../../../../components/SvgIcons';
+import SvgIcons from '../../../components/SvgIcons';
 import { ticketService } from '../../../api/apiService';
 import NoResults from '../../../components/NoResults';
+import { logger } from '../../../utils/logger';
 import { formatValue } from '../../../constants/formatValue';
 
 const TerminalsComponent = ({ eventInfo, onEventChange }) => {
@@ -28,7 +29,7 @@ const TerminalsComponent = ({ eventInfo, onEventChange }) => {
         }
 
         const response = await ticketService.fetchAdminTerminals(eventInfo.eventUuid);
-        console.log('admin terminals response', response);
+        logger.log('admin terminals response', response);
         if (response?.data) {
           setTicketOrders(response.data);
         } else {
@@ -36,7 +37,7 @@ const TerminalsComponent = ({ eventInfo, onEventChange }) => {
         }
       } catch (err) {
         setError(err.message || 'Failed to fetch admin terminals.');
-        console.error('Error fetching admin terminals:', err);
+        logger.error('Error fetching admin terminals:', err);
       } finally {
         setLoading(false);
       }

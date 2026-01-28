@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { color } from '../src/color/color';
+import { color } from '../color/color';
 import SvgIcons from './SvgIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { truncateCityName } from '../src/utils/stringUtils';
-import { truncateEventName } from '../src/utils/stringUtils';
-import { formatDateWithMonthName } from '../src/constants/dateAndTime';
+import { truncateCityName } from '../utils/stringUtils';
+import { truncateEventName } from '../utils/stringUtils';
+import { formatDateWithMonthName } from '../constants/dateAndTime';
 
 const { width } = Dimensions.get('window');
 
@@ -207,3 +207,4 @@ const styles = StyleSheet.create({
 });
 
 export default Header;
+

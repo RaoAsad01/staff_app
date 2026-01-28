@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import SvgIcons from '../../components/SvgIcons';
+import SvgIcons from './SvgIcons';
 import { color } from '../color/color';
 
 const NoResults = ({ message = "No Matching Results" }) => {

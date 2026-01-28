@@ -1,14 +1,15 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, Dimensions, SafeAreaView, Animated } from 'react-native';
-import CameraOverlay from '../../components/CameraOverlay';
-import Header from '../../components/header';
+import CameraOverlay from '../components/CameraOverlay';
+import Header from '../components/header';
 import { color } from '../color/color';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getFormatDate } from '../constants/currentdateandtime';
 import NoteModal from '../constants/noteModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
+import { logger } from '../utils/logger';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
@@ -90,7 +91,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     try {
       // Get the note for this ticket
       const note = notes[data] || '';
-      console.log('Sending note with scan:', note);
+      logger.log('Sending note with scan:', note);
 
       const response = await ticketService.scanTicket(data, note);
       setScanResponse(response.data);
@@ -114,7 +115,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
           icon: 'close'
         };
       } else {
-        console.log('Ticket scanned successfully');
+        logger.log('Ticket scanned successfully');
         // Update scan count when ticket is successfully scanned
         if (onScanCountUpdate) {
           onScanCountUpdate();
@@ -163,7 +164,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 
   const handleAddNote = async (newNote) => {
     if (!scannedData) {
-      console.warn("Cannot update note: scannedData is null.");
+      logger.warn("Cannot update note: scannedData is null.");
       return;
     }
 
@@ -176,7 +177,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 
     try {
       if (newNote.trim().length > 0) {
-        console.log("Updating note for ticket code:", ticketCode, "for event:", currentEventUuid);
+        logger.log("Updating note for ticket code:", ticketCode, "for event:", currentEventUuid);
         await ticketService.updateTicketNote(ticketCode, newNote, currentEventUuid);
         setNotes((prevNotes) => ({
           ...prevNotes,
@@ -184,7 +185,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
         }));
       }
     } catch (error) {
-      console.error("Failed to update ticket note:", error.message);
+      logger.error("Failed to update ticket note:", error.message);
     }
 
     setNoteModalVisible(false);
