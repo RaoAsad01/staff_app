@@ -12,6 +12,11 @@ import Typography from '../components/Typography';
 import { formatDateTime } from '../constants/dateAndTime';
 import { truncateStaffName } from '../utils/stringUtils';
 import { logger } from '../utils/logger';
+import { useOfflineSync } from '../hooks/useOfflineSync';
+import { networkService } from '../utils/network';
+import { syncService } from '../utils/syncService';
+import { offlineStorage } from '../utils/offlineStorage';
+import OfflineIndicator from '../components/OfflineIndicator';
 
 const ManualCheckInAllTickets = () => {
     const route = useRoute();
@@ -25,55 +30,107 @@ const ManualCheckInAllTickets = () => {
     const [checkInSuccess, setCheckInSuccess] = useState(false); // State to show success
     const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State to control success popup
     const [showErrorPopup, setShowErrorPopup] = useState(false); // State to control error popup
-    useEffect(() => {
-        const fetchTicketDetails = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
-                logger.log('Ticket Details Response:', JSON.stringify(response, null, 2));
-                if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
-                    logger.log('📋First ticket data:', response.data[0]);
-                    logger.log('📋Scanned by:', response.data[0]?.scanned_by);
-                    setTicketDetails(response.data);
-
-                    // Check if the first ticket is already scanned, and set the success state accordingly
-                    const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
-                    setCheckInSuccess(isScanned);
-
-                    setUserDetails({
-                        purchaseDate: response.data[0]?.formatted_date,
-                        name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
-                        email: response.data[0]?.user_email || 'No Record',
-                        firstName: response.data[0]?.user_first_name || '',
-                        lastName: response.data[0]?.user_last_name || '',
-                        fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
-                        category: response.data[0]?.category || 'No Record',
-                        ticketClass: response.data[0]?.ticket_class || 'No Record',
-                        scannedBy: response.data[0]?.scanned_by?.name || 'No Record',
-                        staffId: response.data[0]?.scanned_by?.staff_id || 'No Record',
-                        scannedOn: response.data[0]?.scanned_by?.scanned_on || 'No Record',
-                    });
-                } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
-                    //setError('No tickets found for this order.');
-                    setTicketDetails([]);
-                    setUserDetails(null);
-                    setShowErrorPopup(true);
-                } else {
-                    //setError('Invalid ticket details response.');
-                    setTicketDetails(null);
-                    setUserDetails(null);
-                    setShowErrorPopup(true);
+    const [isOffline, setIsOffline] = useState(false);
+    const [isQueued, setIsQueued] = useState(false);
+    const { isOnline, queueSize, triggerSync } = useOfflineSync();
+    
+    // Function to refresh ticket details
+    const fetchTicketDetails = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
+            logger.log('Ticket Details Response:', JSON.stringify(response, null, 2));
+            
+            // Check if response is from offline cache
+            if (response?.offline) {
+                setIsOffline(true);
+                logger.log('Using offline cached ticket details');
+            } else {
+                setIsOffline(false);
+                // If we got fresh data and were queued, clear queued state
+                if (isQueued) {
+                    setIsQueued(false);
                 }
-            } catch (err) {
-                //setError(err.message || 'Failed to fetch ticket details.');
-                setShowErrorPopup(true);
-                logger.error('Error fetching ticket details:', err);
-            } finally {
-                setLoading(false);
             }
-        };
+            
+            if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+                logger.log('📋First ticket data:', response.data[0]);
+                logger.log('📋Scanned by:', response.data[0]?.scanned_by);
+                setTicketDetails(response.data);
 
+                // Check if the first ticket is already scanned, and set the success state accordingly
+                const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
+                setCheckInSuccess(isScanned);
+
+                setUserDetails({
+                    purchaseDate: response.data[0]?.formatted_date,
+                    name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                    email: response.data[0]?.user_email || 'No Record',
+                    firstName: response.data[0]?.user_first_name || '',
+                    lastName: response.data[0]?.user_last_name || '',
+                    fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                    category: response.data[0]?.category || 'No Record',
+                    ticketClass: response.data[0]?.ticket_class || 'No Record',
+                    scannedBy: response.data[0]?.scanned_by?.name || 'No Record',
+                    staffId: response.data[0]?.scanned_by?.staff_id || 'No Record',
+                    scannedOn: response.data[0]?.scanned_by?.scanned_on || 'No Record',
+                });
+            } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
+                //setError('No tickets found for this order.');
+                setTicketDetails([]);
+                setUserDetails(null);
+                setShowErrorPopup(true);
+            } else {
+                //setError('Invalid ticket details response.');
+                setTicketDetails(null);
+                setUserDetails(null);
+                setShowErrorPopup(true);
+            }
+        } catch (err) {
+            //setError(err.message || 'Failed to fetch ticket details.');
+            setShowErrorPopup(true);
+            logger.error('Error fetching ticket details:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        // Monitor network status
+        const isOnline = networkService.isConnected();
+        setIsOffline(!isOnline);
+        
+        // When coming back online, refresh data and trigger sync
+        if (isOnline && isQueued) {
+            logger.log('Back online - will sync and refresh ticket details');
+            // Sync will happen automatically via useOfflineSync hook
+            // The sync listener will handle refreshing the data
+        }
+    }, [isOnline]);
+
+    // Listen for sync completion
+    useEffect(() => {
+        const unsubscribe = syncService.addListener(async (syncResult) => {
+            if (syncResult.success && syncResult.synced > 0) {
+                logger.log('Sync completed - refreshing ticket details');
+                // Clear cached order details to force fresh fetch from server
+                await offlineStorage.clearOrderDetails(orderNumber, eventUuid);
+                // Clear queued state since sync completed
+                setIsQueued(false);
+                // Refresh ticket details after successful sync
+                setTimeout(() => {
+                    fetchTicketDetails();
+                }, 1000); // Give sync a moment to complete
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [orderNumber, eventUuid]);
+
+    useEffect(() => {
         if (orderNumber && eventUuid) {
             fetchTicketDetails();
         } else {
@@ -94,6 +151,68 @@ const ManualCheckInAllTickets = () => {
             try {
                 const response = await ticketService.manualDetailCheckin(eventInfo.eventUuid, ticket.code);
                 logger.log('Full Single Ticket Check-in Response:', JSON.stringify(response, null, 2)); // Log the entire response
+
+                // Check if check-in was queued (offline mode)
+                if (response?.offline && response?.queued) {
+                    setIsQueued(true);
+                    setIsOffline(true);
+                    logger.log('Check-in queued for offline sync');
+                    
+                    // Show success but indicate it's queued
+                    setCheckInSuccess(true);
+                    setShowSuccessPopup(true);
+                    
+                    // Update ticket locally to show as scanned (will sync later)
+                    const updatedTicket = {
+                        ...ticket,
+                        checkin_status: 'SCANNED',
+                        scan_count: (ticket.scan_count || 0) + 1,
+                        last_scanned_on: new Date().toISOString(),
+                        last_scanned_by_name: 'Queued for sync',
+                        scanned_by: {
+                            name: 'Queued for sync',
+                            staff_id: 'N/A',
+                            scanned_on: new Date().toISOString(),
+                        },
+                    };
+                    setTicketDetails([updatedTicket]);
+                    
+                    // IMPORTANT: Update cached order details so it persists when screen remounts
+                    try {
+                        const currentCachedDetails = await offlineStorage.getOrderDetails(orderNumber, eventUuid);
+                        if (currentCachedDetails && Array.isArray(currentCachedDetails)) {
+                            // Update the ticket in cached details
+                            const updatedCachedDetails = currentCachedDetails.map(t => 
+                                t.uuid === ticket.uuid ? updatedTicket : t
+                            );
+                            await offlineStorage.saveOrderDetails(orderNumber, eventUuid, updatedCachedDetails);
+                            logger.log('Updated cached order details after offline check-in');
+                        }
+                    } catch (cacheError) {
+                        logger.error('Error updating cached order details:', cacheError);
+                    }
+                    
+                    // IMPORTANT: Also update the cached tickets list
+                    try {
+                        await offlineStorage.updateTicketInCache(eventInfo.eventUuid, ticket.code, {
+                            checkin_status: 'SCANNED',
+                            scan_count: updatedTicket.scan_count,
+                            last_scanned_on: updatedTicket.last_scanned_on,
+                            last_scanned_by_name: updatedTicket.last_scanned_by_name,
+                            scanned_by: updatedTicket.scanned_by,
+                        });
+                        logger.log('Updated ticket in cached tickets list after offline check-in');
+                    } catch (cacheError) {
+                        logger.error('Error updating ticket in tickets cache:', cacheError);
+                    }
+                    
+                    // Update scan count callback
+                    if (route.params?.onScanCountUpdate) {
+                        route.params.onScanCountUpdate();
+                    }
+                    
+                    return; // Exit early for queued check-in
+                }
 
                 if (response?.data?.status === 'SCANNED') { // Adjust based on your actual response structure
                     logger.log('Check-in successful according to response.');
@@ -134,17 +253,60 @@ const ManualCheckInAllTickets = () => {
 
                     setTicketDetails([updatedTicket]);
 
+                    // IMPORTANT: Update cached order details immediately with the updated ticket
+                    try {
+                        const currentCachedDetails = await offlineStorage.getOrderDetails(orderNumber, eventUuid);
+                        if (currentCachedDetails && Array.isArray(currentCachedDetails)) {
+                            // Update the ticket in cached details
+                            const updatedCachedDetails = currentCachedDetails.map(t => 
+                                t.uuid === ticket.uuid ? updatedTicket : t
+                            );
+                            await offlineStorage.saveOrderDetails(orderNumber, eventUuid, updatedCachedDetails);
+                            logger.log('Updated cached order details after online check-in');
+                        }
+                    } catch (cacheError) {
+                        logger.error('Error updating cached order details:', cacheError);
+                    }
+
+                    // IMPORTANT: Also update the cached tickets list
+                    try {
+                        await offlineStorage.updateTicketInCache(eventInfo.eventUuid, ticket.code, {
+                            checkin_status: 'SCANNED',
+                            scan_count: updatedTicket.scan_count,
+                            last_scanned_on: updatedTicket.last_scanned_on,
+                            last_scanned_by_name: updatedTicket.last_scanned_by_name,
+                            scanned_by: updatedTicket.scanned_by,
+                        });
+                        logger.log('Updated ticket in cached tickets list after online check-in');
+                    } catch (cacheError) {
+                        logger.error('Error updating ticket in tickets cache:', cacheError);
+                    }
+
                     // Update scan count when ticket is successfully checked in
                     if (route.params?.onScanCountUpdate) {
                         route.params.onScanCountUpdate();
                     }
 
-                    // Optionally refetch ticket details to get updated server data
+                    // Refetch ticket details to get updated server data (this will also update cache)
                     try {
                         const updatedResponse = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
                         if (updatedResponse?.data && Array.isArray(updatedResponse.data) && updatedResponse.data.length > 0) {
                             logger.log(' Refetched ticket data after check-in:', updatedResponse.data[0]);
                             setTicketDetails(updatedResponse.data);
+                            
+                            // Update check-in success state based on fresh data
+                            const isScanned = updatedResponse.data.some(ticket => ticket.checkin_status === 'SCANNED');
+                            setCheckInSuccess(isScanned);
+                            
+                            // Update user details with fresh scanned_by info
+                            if (updatedResponse.data[0]?.scanned_by) {
+                                setUserDetails(prev => ({
+                                    ...prev,
+                                    scannedBy: updatedResponse.data[0].scanned_by?.name || prev.scannedBy,
+                                    staffId: updatedResponse.data[0].scanned_by?.staff_id || prev.staffId,
+                                    scannedOn: updatedResponse.data[0].scanned_by?.scanned_on || prev.scannedOn,
+                                }));
+                            }
                         }
                     } catch (refetchError) {
                         logger.warn('Could not refetch ticket details:', refetchError);
@@ -165,22 +327,52 @@ const ManualCheckInAllTickets = () => {
     };
 
     // Add handleTicketStatusChange function
-    const handleTicketStatusChange = (ticketUuid, newStatus, scannedByInfo = null) => {
-        setTicketDetails(prevTickets =>
-            prevTickets.map(ticket =>
-                ticket.uuid === ticketUuid
-                    ? {
-                        ...ticket,
-                        checkin_status: newStatus,
-                        scanned_by: scannedByInfo ? {
-                            name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
-                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record',
-                            scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'No Record',
-                        } : ticket.scanned_by
-                    }
-                    : ticket
-            )
+    const handleTicketStatusChange = async (ticketUuid, newStatus, scannedByInfo = null) => {
+        const updatedTickets = ticketDetails.map(ticket =>
+            ticket.uuid === ticketUuid
+                ? {
+                    ...ticket,
+                    checkin_status: newStatus,
+                    scan_count: newStatus === 'SCANNED' ? (ticket.scan_count || 0) + 1 : ticket.scan_count,
+                    last_scanned_on: scannedByInfo?.scanned_on || new Date().toISOString(),
+                    last_scanned_by_name: scannedByInfo?.name || ticket.last_scanned_by_name,
+                    scanned_by: scannedByInfo ? {
+                        name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
+                        staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record',
+                        scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'No Record',
+                    } : ticket.scanned_by
+                }
+                : ticket
         );
+        
+        setTicketDetails(updatedTickets);
+        
+        // IMPORTANT: Update cached order details so it persists when screen remounts
+        try {
+            await offlineStorage.saveOrderDetails(orderNumber, eventUuid, updatedTickets);
+            logger.log('Updated cached order details after ticket status change');
+        } catch (cacheError) {
+            logger.error('Error updating cached order details:', cacheError);
+        }
+
+        // IMPORTANT: Also update the cached tickets list for each updated ticket
+        if (newStatus === 'SCANNED') {
+            try {
+                const updatedTicket = updatedTickets.find(t => t.uuid === ticketUuid);
+                if (updatedTicket) {
+                    await offlineStorage.updateTicketInCache(eventInfo.eventUuid, updatedTicket.code, {
+                        checkin_status: 'SCANNED',
+                        scan_count: updatedTicket.scan_count,
+                        last_scanned_on: updatedTicket.last_scanned_on,
+                        last_scanned_by_name: updatedTicket.last_scanned_by_name,
+                        scanned_by: updatedTicket.scanned_by,
+                    });
+                    logger.log('Updated ticket in cached tickets list after status change');
+                }
+            } catch (cacheError) {
+                logger.error('Error updating ticket in tickets cache:', cacheError);
+            }
+        }
     };
 
     const handleCloseSuccessPopup = () => {
@@ -227,6 +419,14 @@ const ManualCheckInAllTickets = () => {
     return (
         <SafeAreaView style={styles.container}>
             <Header eventInfo={eventInfo} />
+            <OfflineIndicator />
+            {isQueued && (
+                <View style={styles.queuedBanner}>
+                    <Text style={styles.queuedText}>
+                        ⚠️ Check-in queued for sync when online
+                    </Text>
+                </View>
+            )}
             <View style={styles.wrapper}>
                 <View style={styles.popUp}>
                     <SvgIcons.successBrownSVG width={81} height={80} fill="transparent" style={styles.successImageIcon} />
@@ -236,16 +436,24 @@ const ManualCheckInAllTickets = () => {
                     <Text style={styles.ticketPurchaseDate}>Purchase Date: {userDetails?.purchaseDate}</Text>
                     {total === 1 && (
                         <TouchableOpacity
-                            style={styles.button}
+                            style={[
+                                styles.button,
+                                (isOffline && !checkInSuccess) && styles.buttonOffline,
+                                isQueued && styles.buttonQueued
+                            ]}
                             onPress={handleSingleCheckIn}
                             disabled={isCheckingIn || checkInSuccess}
                         >
                             {isCheckingIn ? (
                                 <ActivityIndicator color={color.btnTxt_FFF6DF} />
                             ) : checkInSuccess ? (
-                                <Text style={styles.buttonText}>Scanned</Text>
+                                <Text style={styles.buttonText}>
+                                    {isQueued ? 'Queued' : 'Scanned'}
+                                </Text>
                             ) : (
-                                <Text style={styles.buttonText}>Check-In</Text>
+                                <Text style={styles.buttonText}>
+                                    {isOffline ? 'Check-In (Offline)' : 'Check-In'}
+                                </Text>
                             )}
                         </TouchableOpacity>
                     )}
@@ -344,15 +552,24 @@ const ManualCheckInAllTickets = () => {
             <SuccessPopup
                 visible={showSuccessPopup}
                 onClose={handleCloseSuccessPopup}
-                title="Check-In Successful"
-                subtitle={total === 1 ? "Ticket checked in successfully" : "Tickets checked in successfully"}
+                title={isQueued ? "Check-In Queued" : "Check-In Successful"}
+                subtitle={
+                    isQueued 
+                        ? "Check-in will sync when you're back online" 
+                        : total === 1 
+                            ? "Ticket checked in successfully" 
+                            : "Tickets checked in successfully"
+                }
             />
             <ErrorPopup
                 visible={showErrorPopup}
                 onClose={handleCloseErrorPopup}
                 title="Check-In Failed"
-                subtitle="We couldn’t check in this ticket. Please try again
-or contact support."
+                subtitle={
+                    isOffline 
+                        ? "Cannot check in while offline. Please connect to internet and try again."
+                        : "We couldn't check in this ticket. Please try again or contact support."
+                }
             />
         </SafeAreaView>
     );
@@ -518,6 +735,26 @@ const styles = StyleSheet.create({
         color: color.brown_766F6A,
         opacity: 0.7,
         marginTop: 5
+    },
+    queuedBanner: {
+        backgroundColor: '#FFA726',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    queuedText: {
+        color: color.white_FFFFFF,
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    buttonOffline: {
+        backgroundColor: '#9E9E9E',
+        borderColor: '#9E9E9E',
+    },
+    buttonQueued: {
+        backgroundColor: '#FFA726',
+        borderColor: '#FFA726',
     },
 });
 

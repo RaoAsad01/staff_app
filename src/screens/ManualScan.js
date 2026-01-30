@@ -2,52 +2,93 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import Header from '../components/header';
 import { color } from '../color/color';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import NoResults from '../components/NoResults';
 import { logger } from '../utils/logger';
+import { useOfflineSync } from '../hooks/useOfflineSync';
+import { syncService } from '../utils/syncService';
+import { offlineStorage } from '../utils/offlineStorage';
 
 const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [ticketOrders, setTicketOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const { isOnline, queueSize } = useOfflineSync();
+
+  // Function to fetch orders
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!eventInfo) {
+        setError("Event UUID is not available.");
+        setLoading(false);
+        return; // Important: Exit if eventUuid is missing
+      }
+
+      const response = await ticketService.fetchUserTicketOrders(eventInfo.eventUuid);
+      logger.log('manual scan response', response);
+      
+      // Check if data is from offline cache
+      if (response?.offline) {
+        setIsOffline(true);
+        logger.log('Using offline cached manual orders');
+      } else {
+        setIsOffline(false);
+      }
+      
+      if (response?.data) {
+        setTicketOrders(response.data);
+      } else {
+        setTicketOrders([]);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch ticket orders.');
+      logger.error('Error fetching ticket orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!eventInfo) {
-          setError("Event UUID is not available.");
-          setLoading(false);
-          return; // Important: Exit if eventUuid is missing
-        }
-
-        const response = await ticketService.fetchUserTicketOrders(eventInfo.eventUuid);
-        logger.log('manual scan response', response);
-        if (response?.data) {
-          setTicketOrders(response.data);
-        } else {
-          setTicketOrders([]);
-        }
-      } catch (err) {
-        setError(err.message || 'Failed to fetch ticket orders.');
-        logger.error('Error fetching ticket orders:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (!eventInfo) {
       setLoading(false); // Immediately stop loading if eventInfo is missing
       return;
     }
     fetchOrders();
   }, [eventInfo]);
+
+  // Refresh when screen comes into focus (user navigates back)
+  useEffect(() => {
+    if (isFocused && eventInfo) {
+      logger.log('ManualScan screen focused - refreshing orders');
+      fetchOrders();
+    }
+  }, [isFocused, eventInfo]);
+
+  // Listen for sync completion to refresh data
+  useEffect(() => {
+    const unsubscribe = syncService.addListener(async (syncResult) => {
+      if (syncResult.success && syncResult.synced > 0 && isFocused && eventInfo) {
+        logger.log('Sync completed - refreshing manual orders');
+        // Refresh orders after successful sync (will fetch fresh data)
+        setTimeout(() => {
+          fetchOrders();
+        }, 1000);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isFocused, eventInfo]);
 
   const filterTickets = () => {
     if (!searchText) return ticketOrders;
@@ -116,7 +157,11 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
-
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>Offline Mode - Using cached data</Text>
+        </View>
+      )}
       <Header eventInfo={eventInfo} />
       <View style={styles.contentContainer}>
         <View style={[
@@ -250,7 +295,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
 
 });
 

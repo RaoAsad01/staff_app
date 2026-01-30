@@ -10,6 +10,7 @@ import NoteModal from '../constants/noteModal';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
 import { logger } from '../utils/logger';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
@@ -30,6 +31,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const animatedWidth = useRef(new Animated.Value(0)).current;
   const [showAnimation, setShowAnimation] = useState(false);
   const [scanResponse, setScanResponse] = useState(null);
+  const { isOnline } = useOfflineSync(false);
 
 
   useFocusEffect(
@@ -101,8 +103,17 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
         icon: 'check'
       };
 
+      // Handle offline/queued scans
+      if (response.offline || response.queued) {
+        scanData = {
+          text: response.queued ? 'Queued for Sync' : 'Scan Successful (Offline)',
+          color: '#FFA500',
+          icon: 'check'
+        };
+        logger.log('Scan queued for offline sync');
+      }
       // Handle different response statuses
-      if (response.data.scan_count > 1) {
+      else if (response.data?.scan_count > 1) {
         scanData = {
           text: 'Scanned Already',
           color: '#D8A236',
@@ -225,7 +236,11 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 
   return (
     <View style={styles.mainContainer}>
-
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>Offline Mode - Scans will be queued for sync</Text>
+        </View>
+      )}
       <Header eventInfo={eventInfo} />
       <View style={styles.darkBackground}>
         {scanResult && (
@@ -465,6 +480,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 5,
     fontSize: 14
+  },
+  offlineBanner: {
+    backgroundColor: '#FFA500',
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  offlineText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 

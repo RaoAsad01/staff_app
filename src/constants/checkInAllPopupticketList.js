@@ -6,6 +6,7 @@ import SuccessPopup from './SuccessPopup';
 import ErrorPopup from './ErrorPopup';
 import { useState } from 'react';
 import { logger } from '../utils/logger';
+import { networkService } from '../utils/network';
 
 const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate, userEmail }) => {
     const { eventInfo } = useRoute().params;
@@ -13,6 +14,7 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [showErrorPopup, setShowErrorPopup] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    const [isQueued, setIsQueued] = useState(false);
 
     const handleStatusChange = async (ticketToCheckIn) => {
         logger.log("Check-in ticket data:", ticketToCheckIn)
@@ -20,6 +22,37 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             logger.log("Sending:", ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             const response = await ticketService.manualDetailCheckin(ticketToCheckIn.eventUuid, ticketToCheckIn.code);
             logger.log("API Response:", response);
+
+            // Check if check-in was queued (offline mode)
+            if (response?.offline && response?.queued) {
+                logger.log('Check-in queued for offline sync');
+                setIsQueued(true);
+                
+                // Update ticket locally to show as scanned (will sync later)
+                if (onTicketStatusChange) {
+                    onTicketStatusChange(
+                        ticketToCheckIn.uuid,
+                        'SCANNED',
+                        {
+                            name: 'Queued for sync',
+                            staff_id: 'N/A',
+                            scanned_on: new Date().toISOString(),
+                        }
+                    );
+                }
+
+                // Update scan count callback
+                if (onScanCountUpdate) {
+                    onScanCountUpdate();
+                }
+
+                // Show success but indicate it's queued
+                setShowSuccessPopup(true);
+                return;
+            }
+            
+            // Reset queued state for online check-ins
+            setIsQueued(false);
 
             if (response?.data?.status === 'SCANNED') {
                 // Extract scanned_by information from response
@@ -52,9 +85,32 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             }
         } catch (error) {
             logger.error('Check-in error:', error);
-            const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
-            setErrorMessage(errorMsg);
-            setShowErrorPopup(true);
+            
+            // Check if it's a network error and we're offline
+            if (networkService.isNetworkError(error) && !networkService.isConnected()) {
+                // Queue the check-in
+                logger.log('Network error - check-in will be queued');
+                setIsQueued(true);
+                if (onTicketStatusChange) {
+                    onTicketStatusChange(
+                        ticketToCheckIn.uuid,
+                        'SCANNED',
+                        {
+                            name: 'Queued for sync',
+                            staff_id: 'N/A',
+                            scanned_on: new Date().toISOString(),
+                        }
+                    );
+                }
+                if (onScanCountUpdate) {
+                    onScanCountUpdate();
+                }
+                setShowSuccessPopup(true);
+            } else {
+                const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
+                setErrorMessage(errorMsg);
+                setShowErrorPopup(true);
+            }
         }
     };
 
@@ -155,8 +211,12 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
             <SuccessPopup
                 visible={showSuccessPopup}
                 onClose={handleCloseSuccessPopup}
-                title="Check-In Successful"
-                subtitle="Ticket checked in successfully"
+                title={isQueued ? "Check-In Queued" : "Check-In Successful"}
+                subtitle={
+                    isQueued 
+                        ? "Check-in will sync when you're back online" 
+                        : "Ticket checked in successfully"
+                }
             />
 
             <ErrorPopup

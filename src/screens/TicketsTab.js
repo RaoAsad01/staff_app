@@ -8,6 +8,11 @@ import { ticketService, BASE_URL } from '../api/apiService';
 import QRCode from 'react-native-qrcode-svg';
 import NoResults from '../components/NoResults';
 import { logger } from '../utils/logger';
+import { useOfflineSync } from '../hooks/useOfflineSync';
+import { syncService } from '../utils/syncService';
+import { offlineStorage } from '../utils/offlineStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import OfflineIndicator from '../components/OfflineIndicator';
 
 const TicketsTab = ({ eventInfo, initialTab }) => {
     const navigation = useNavigation()
@@ -20,6 +25,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
     const [fetchedTickets, setFetchedTickets] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const flatListRef = useRef(null);
+    const { isOnline, triggerSync, queueSize } = useOfflineSync();
 
     // Calculate dynamic marginTop based on safe area insets
     // Samsung devices typically have larger top insets (25+), so we adjust accordingly
@@ -34,7 +40,44 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
         if (isFocused && eventInfo?.eventUuid) {
             fetchTicketStats(eventInfo.eventUuid);
             fetchTicketList(eventInfo.eventUuid);
+            
+            // Auto-sync when online and there are queued actions
+            if (isOnline && queueSize > 0) {
+                triggerSync();
+            }
         }
+    }, [isFocused, eventInfo?.eventUuid, isOnline, queueSize]);
+
+    // Listen for sync completion to refresh ticket list
+    useEffect(() => {
+        const unsubscribe = syncService.addListener(async (syncResult) => {
+            if (syncResult.success && syncResult.synced > 0 && isFocused && eventInfo?.eventUuid) {
+                logger.log('Sync completed - refreshing tickets list');
+                // Clear tickets cache to force fresh fetch after sync
+                // This ensures we get the latest data from server
+                try {
+                    const allKeys = await AsyncStorage.getAllKeys();
+                    const ticketKeys = allKeys.filter(key => 
+                        key.includes(`offline_tickets_${eventInfo.eventUuid}`)
+                    );
+                    if (ticketKeys.length > 0) {
+                        await AsyncStorage.multiRemove(ticketKeys);
+                        logger.log('Cleared tickets cache after sync');
+                    }
+                } catch (error) {
+                    logger.error('Error clearing tickets cache:', error);
+                }
+                // Refresh tickets after successful sync
+                setTimeout(() => {
+                    fetchTicketStats(eventInfo.eventUuid);
+                    fetchTicketList(eventInfo.eventUuid);
+                }, 1000);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
     }, [isFocused, eventInfo?.eventUuid]);
 
     // Separate useEffect to handle initialTab changes
@@ -49,6 +92,11 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
             setIsLoading(true);
             const res = await ticketService.ticketStatsListing(eventUuid, 'PAID');
             const list = res?.data || [];
+            
+            // Check if data is from offline cache
+            if (res?.offline) {
+                logger.log('Using offline cached tickets');
+            }
 
             const mappedTickets = list.map((ticket) => {
                 const qrCodeUrl = `${BASE_URL}ticket/scan/${ticket.event}/${ticket.code}/`;
@@ -99,6 +147,12 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
         try {
             const res = await ticketService.ticketStatsInfo(eventUuid);
             const statsData = res?.data?.data || {};
+            
+            // Check if data is from offline cache
+            if (res?.offline) {
+                setIsOffline(true);
+                logger.log('Using offline cached stats');
+            }
 
             setStats({
                 total: statsData.total || 0,
@@ -263,6 +317,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <OfflineIndicator />
 
             <View style={[
                 styles.searchContainer,
@@ -587,6 +642,32 @@ const styles = StyleSheet.create({
     },
     flatListContent: {
         paddingBottom: 50,
+    },
+    offlineBanner: {
+        backgroundColor: '#FFA500',
+        padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 10,
+        marginTop: 5,
+        borderRadius: 5,
+    },
+    offlineText: {
+        color: '#000',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    syncButton: {
+        backgroundColor: '#000',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 4,
+    },
+    syncButtonText: {
+        color: '#FFF',
+        fontSize: 12,
+        fontWeight: '600',
     }
 });
 

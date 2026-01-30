@@ -3,11 +3,15 @@ import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import Navigation from './src/navigation/navigation';
 import * as SplashScreen from 'expo-splash-screen';
+import { useOfflineSync } from './src/hooks/useOfflineSync';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
+  
+  // Initialize offline sync - will auto-sync when connection is restored
+  useOfflineSync();
 
   useEffect(() => {
     let timeoutId;

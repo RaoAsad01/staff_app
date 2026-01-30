@@ -2,6 +2,9 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { API_BASE_URL } from '../config/env';
 import { logger } from '../utils/logger';
+import { networkService } from '../utils/network';
+import { offlineStorage } from '../utils/offlineStorage';
+import { offlineQueue } from '../utils/offlineQueue';
 
 // Base URL configuration (kept exported for backwards compatibility)
 export const BASE_URL = API_BASE_URL;
@@ -37,12 +40,22 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling auth errors
+// Response interceptor for handling auth errors and network status
 apiClient.interceptors.response.use(
   (response) => {
+    // Mark as online when we get a successful response
+    networkService.setOnlineStatus(true);
     return response;
   },
   async (error) => {
+    // Check if it's a network error (offline)
+    if (networkService.isNetworkError(error)) {
+      networkService.setOnlineStatus(false);
+      logger.log('Network error detected - device appears to be offline');
+    } else {
+      networkService.setOnlineStatus(true);
+    }
+
     // If we get a 401 Unauthorized response, the token is invalid/expired
     if (error.response?.status === 401) {
       try {
@@ -206,6 +219,73 @@ export const ticketService = {
       logger.log('Extracted Event UUID:', eventUuidFromScan);
       logger.log('Extracted Ticket Code:', ticketCodeFromScan);
 
+      // Check if offline
+      const isOnline = networkService.isConnected();
+      
+      // If offline, queue the action and return cached data if available
+      if (!isOnline) {
+        logger.log('Offline mode: Queueing scan ticket action');
+        
+        // Queue the action for later sync
+        await offlineQueue.addToQueue(
+          'scanTicket',
+          { scannedData, note },
+          ticketService.scanTicket.toString()
+        );
+
+        // Save to offline storage
+        await offlineStorage.saveScannedTicket(ticketCodeFromScan, {
+          scannedData,
+          note,
+          eventUuid: eventUuidFromScan,
+          ticketCode: ticketCodeFromScan,
+          status: 'queued',
+        });
+
+        // IMPORTANT: Update the cached tickets list to reflect the scan (offline)
+        try {
+          await offlineStorage.updateTicketInCache(eventUuidFromScan, ticketCodeFromScan, {
+            checkin_status: 'SCANNED',
+            scan_count: 1, // Will be updated after sync
+            last_scanned_on: new Date().toISOString(),
+            last_scanned_by_name: 'Queued for sync',
+            scanned_by: {
+              name: 'Queued for sync',
+              staff_id: 'N/A',
+              scanned_on: new Date().toISOString(),
+            },
+          });
+          logger.log('Updated ticket in cached tickets list after offline scan');
+        } catch (cacheError) {
+          logger.error('Error updating ticket in cache:', cacheError);
+        }
+
+        // Try to get cached scan data
+        const cachedData = await offlineStorage.getScannedTicket(ticketCodeFromScan);
+        if (cachedData && cachedData.scanResponse) {
+          logger.log('Returning cached scan data');
+          return {
+            data: cachedData.scanResponse,
+            offline: true,
+            queued: true,
+          };
+        }
+
+        // Return a pending response
+        return {
+          data: {
+            message: 'Ticket scan queued for sync',
+            ticket_code: ticketCodeFromScan,
+            status: 'SCANNED',
+            scan_count: 1,
+            offline: true,
+            queued: true,
+          },
+          offline: true,
+          queued: true,
+        };
+      }
+
       const token = await SecureStore.getItemAsync('accessToken');
       logger.log('Current token:', token);
       const requestData = {
@@ -231,6 +311,31 @@ export const ticketService = {
       });
 
       const response = await apiClient.post(requestUrl, requestData);
+      
+      // Save successful scan to offline storage
+      await offlineStorage.saveScannedTicket(ticketCodeFromScan, {
+        scannedData,
+        note,
+        eventUuid: eventUuidFromScan,
+        ticketCode: ticketCodeFromScan,
+        scanResponse: response.data,
+        synced: true,
+      });
+      
+      // IMPORTANT: Update the cached tickets list to reflect the scan
+      try {
+        await offlineStorage.updateTicketInCache(eventUuidFromScan, ticketCodeFromScan, {
+          checkin_status: 'SCANNED',
+          scan_count: response.data?.scan_count || 1,
+          last_scanned_on: response.data?.scanned_by?.scanned_on || new Date().toISOString(),
+          last_scanned_by_name: response.data?.scanned_by?.name || 'No Record',
+          scanned_by: response.data?.scanned_by || null,
+        });
+        logger.log('Updated ticket in cached tickets list after scan');
+      } catch (cacheError) {
+        logger.error('Error updating ticket in cache:', cacheError);
+      }
+      
       return response.data
 
       // ... rest of your response handling ...
@@ -245,6 +350,75 @@ export const ticketService = {
         requestUrl: error.config?.url,
         requestData: error.config?.data
       });
+
+      // If network error and we're offline, queue it
+      if (networkService.isNetworkError(error) && !networkService.isConnected()) {
+        logger.log('Network error - queueing scan for offline sync');
+        
+        try {
+          const parts = scannedData.split('/ticket/scan/')[1].split('/');
+          const eventUuidFromScan = parts[0];
+          const ticketCodeFromScan = parts[1];
+          
+          await offlineQueue.addToQueue(
+            'scanTicket',
+            { scannedData, note },
+            ticketService.scanTicket.toString()
+          );
+
+          await offlineStorage.saveScannedTicket(ticketCodeFromScan, {
+            scannedData,
+            note,
+            eventUuid: eventUuidFromScan,
+            ticketCode: ticketCodeFromScan,
+            status: 'queued',
+          });
+
+          // IMPORTANT: Update the cached tickets list to reflect the scan (offline)
+          try {
+            await offlineStorage.updateTicketInCache(eventUuidFromScan, ticketCodeFromScan, {
+              checkin_status: 'SCANNED',
+              scan_count: 1, // Will be updated after sync
+              last_scanned_on: new Date().toISOString(),
+              last_scanned_by_name: 'Queued for sync',
+              scanned_by: {
+                name: 'Queued for sync',
+                staff_id: 'N/A',
+                scanned_on: new Date().toISOString(),
+              },
+            });
+            logger.log('Updated ticket in cached tickets list after network error (queued)');
+          } catch (cacheError) {
+            logger.error('Error updating ticket in cache:', cacheError);
+          }
+
+          // Try to get cached scan data
+          const cachedData = await offlineStorage.getScannedTicket(ticketCodeFromScan);
+          if (cachedData && cachedData.scanResponse) {
+            logger.log('Returning cached scan data');
+            return {
+              data: cachedData.scanResponse,
+              offline: true,
+              queued: true,
+            };
+          }
+
+          return {
+            data: {
+              message: 'Ticket scan queued for sync',
+              ticket_code: ticketCodeFromScan,
+              status: 'SCANNED',
+              scan_count: 1,
+              offline: true,
+              queued: true,
+            },
+            offline: true,
+            queued: true,
+          };
+        } catch (queueError) {
+          logger.error('Error queueing scan:', queueError);
+        }
+      }
 
       if (error.response?.data) {
         throw {
@@ -261,14 +435,61 @@ export const ticketService = {
   // Update ticket note service
   updateTicketNote: async (code, note, eventUuid) => {
     try {
+      const isOnline = networkService.isConnected();
+      
+      // If offline, queue the action
+      if (!isOnline) {
+        logger.log('Offline mode: Queueing update note action');
+        await offlineQueue.addToQueue(
+          'updateNote',
+          { code, note, eventUuid },
+          ticketService.updateTicketNote.toString()
+        );
+        return {
+          success: true,
+          offline: true,
+          queued: true,
+          message: 'Note update queued for sync',
+        };
+      }
+
       const requestUrl = endpoints.updateNote
         .replace('{event_uuid}', eventUuid)
-        .replace('{code}', code); // This part looks correct
+        .replace('{code}', code);
       logger.log('update note:', requestUrl);
 
-      // ... (rest of the updateTicketNote function)
+      const response = await apiClient.patch(requestUrl, { note });
+      return response.data;
     } catch (error) {
-      // ... (error handling)
+      logger.error('Update note error:', error);
+      
+      // If network error, queue the action
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, queueing update note');
+        await offlineQueue.addToQueue(
+          'updateNote',
+          { code, note, eventUuid },
+          ticketService.updateTicketNote.toString()
+        );
+        return {
+          success: true,
+          offline: true,
+          queued: true,
+          message: 'Note update queued for sync',
+        };
+      }
+      
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.message || 'Failed to update note.',
+          response: error.response
+        };
+      }
+      throw {
+        message: 'Network error. Please check your connection.',
+        error: error
+      };
     }
   },
 
@@ -298,8 +519,27 @@ export const ticketService = {
 
   fetchUserTicketOrders: async (event_uuid) => {
     try {
+      const isOnline = networkService.isConnected();
+      
+      // If offline, return cached data
+      if (!isOnline) {
+        logger.log('Offline mode: Returning cached manual orders');
+        const cachedOrders = await offlineStorage.getManualOrders(event_uuid);
+        return {
+          data: cachedOrders || [],
+          offline: true,
+        };
+      }
+
       const response = await apiClient.get(`${endpoints.userTicketOrdersManual}?event_uuid=${event_uuid}`); // Include event_uuid as a query parameter
       logger.log('User Ticket Orders Response:', response.data);
+      
+      // Cache the response for offline use
+      if (response.data?.data) {
+        await offlineStorage.saveManualOrders(event_uuid, response.data.data);
+        await offlineStorage.saveLastSync(event_uuid);
+      }
+      
       return response.data;
     } catch (error) {
       logger.error('Fetch User Ticket Orders Error:', {
@@ -307,6 +547,18 @@ export const ticketService = {
         data: error.response?.data,
         message: error.message,
       });
+      
+      // If network error, try to return cached data
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, returning cached orders');
+        const cachedOrders = await offlineStorage.getManualOrders(event_uuid);
+        return {
+          data: cachedOrders || [],
+          offline: true,
+        };
+      }
+      
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch ticket orders.',
@@ -322,11 +574,56 @@ export const ticketService = {
 
   fetchUserTicketOrdersDetail: async (orderNumber, eventUuid) => {
     try {
+      const isOnline = networkService.isConnected();
+      
+      // If offline, return cached data
+      if (!isOnline) {
+        logger.log('Offline mode: Returning cached order details');
+        const cachedDetails = await offlineStorage.getOrderDetails(orderNumber, eventUuid);
+        if (cachedDetails) {
+          return {
+            data: cachedDetails,
+            offline: true,
+          };
+        }
+        // Return empty if no cache
+        return {
+          data: [],
+          offline: true,
+        };
+      }
+
       const response = await apiClient.get(endpoints.userTicketOrdersManualDetail(orderNumber, eventUuid)); // Use the endpoint definition
       logger.log('Ticket Details Response:', response.data);
+      
+      // Cache the response for offline use
+      if (response.data?.data) {
+        await offlineStorage.saveOrderDetails(orderNumber, eventUuid, response.data.data);
+        await offlineStorage.saveLastSync(eventUuid);
+      }
+      
       return response.data;
     } catch (error) {
       logger.error('Fetch Ticket Details Error:', error);
+      
+      // If network error, try to return cached data
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, returning cached order details');
+        const cachedDetails = await offlineStorage.getOrderDetails(orderNumber, eventUuid);
+        if (cachedDetails) {
+          return {
+            data: cachedDetails,
+            offline: true,
+          };
+        }
+        // Return empty if no cache
+        return {
+          data: [],
+          offline: true,
+        };
+      }
+      
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch ticket orders Detail.',
@@ -343,11 +640,63 @@ export const ticketService = {
   manualDetailCheckin: async (uuid, code) => {
     logger.log('Manual Checkin Params:', uuid, code);
     try {
+      const isOnline = networkService.isConnected();
+      
+      // If offline, queue the action
+      if (!isOnline) {
+        logger.log('Offline mode: Queueing manual checkin action');
+        await offlineQueue.addToQueue(
+          'manualCheckin',
+          { uuid, code },
+          ticketService.manualDetailCheckin.toString()
+        );
+        return {
+          data: {
+            status: 'SCANNED',
+            message: 'Check-in queued for sync',
+            offline: true,
+            queued: true,
+            scan_count: 1,
+          },
+          offline: true,
+          queued: true,
+        };
+      }
+
       const response = await apiClient.post(endpoints.manualDetailChekin(uuid, code));
       logger.log('Manual Ticket Details Response:', response.data);
+      
+      // After successful check-in, we should clear cached order details
+      // so fresh data is fetched next time. We need orderNumber to clear cache,
+      // but we don't have it here. The screen will handle refreshing.
+      // For now, we'll let the screen refresh after sync.
+      
       return response.data;
     } catch (error) {
       logger.error('Fetch Manual Ticket Details Error:', error);
+      
+      // If network error, queue the action
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, queueing manual checkin');
+        await offlineQueue.addToQueue(
+          'manualCheckin',
+          { uuid, code },
+          ticketService.manualDetailCheckin.toString()
+        );
+        return {
+          data: {
+            status: 'SCANNED',
+            message: 'Check-in queued for sync',
+            offline: true,
+            queued: true,
+            scan_count: 1,
+          },
+          offline: true,
+          queued: true,
+        };
+      }
+      
       if (error.response?.data) {
         throw {
           message: error.response.data.message || 'Failed to fetch manual ticket orders Detail.',
@@ -384,17 +733,64 @@ export const ticketService = {
 
   ticketStatsInfo: async (eventUuid) => {
     try {
+      const isOnline = networkService.isConnected();
+      
+      // If offline, return cached data
+      if (!isOnline) {
+        logger.log('Offline mode: Returning cached ticket stats');
+        const cachedStats = await offlineStorage.getTicketStats(eventUuid);
+        if (cachedStats) {
+          return {
+            data: { data: cachedStats },
+            offline: true,
+          };
+        }
+        // Return empty stats if no cache
+        return {
+          data: { data: { total: 0, scanned: 0, unscanned: 0 } },
+          offline: true,
+        };
+      }
+
       const response = await apiClient.get(`${endpoints.ticketStats}${eventUuid}/stats/`);
       logger.log(' Ticket Tab Response:', response.data);
+      
+      // Cache the response for offline use
+      if (response.data?.data?.data) {
+        await offlineStorage.saveTicketStats(eventUuid, response.data.data);
+        await offlineStorage.saveLastSync(eventUuid);
+      }
+      
       return response.data;
     } catch (error) {
       logger.error('Failed to fetch ticket stats:', error);
+      
+      // If network error, try to return cached data
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, returning cached stats');
+        const cachedStats = await offlineStorage.getTicketStats(eventUuid);
+        if (cachedStats) {
+          return {
+            data: { data: cachedStats },
+            offline: true,
+          };
+        }
+        // Return empty stats if no cache
+        return {
+          data: { data: { total: 0, scanned: 0, unscanned: 0 } },
+          offline: true,
+        };
+      }
+      
       throw error;
     }
   },
 
   ticketStatsListing: async (event_uuid, page = 1, staffUuid = null, status = 'PAID') => {
     try {
+      const isOnline = networkService.isConnected();
+      
       let url = `${endpoints.ticketStatslist}?event_uuid=${event_uuid}&page=${page}&page_size=-1`;
       
       // Add status filter
@@ -407,11 +803,40 @@ export const ticketService = {
         url += `&staff_uuid=${staffUuid}`;
       }
 
+      // If offline, return cached data
+      if (!isOnline) {
+        logger.log('Offline mode: Returning cached tickets');
+        const cachedTickets = await offlineStorage.getTickets(event_uuid);
+        return {
+          data: cachedTickets || [],
+          offline: true,
+        };
+      }
+
       const response = await apiClient.get(url);
       logger.log('Ticket Tab listing Response:', response.data);
+      
+      // Cache the response for offline use
+      if (response.data?.data) {
+        await offlineStorage.saveTickets(event_uuid, response.data.data);
+        await offlineStorage.saveLastSync(event_uuid);
+      }
+      
       return response.data;
     } catch (error) {
       logger.error('Failed to fetch ticket stats:', error);
+      
+      // If network error, try to return cached data
+      if (networkService.isNetworkError(error)) {
+        networkService.setOnlineStatus(false);
+        logger.log('Network error, returning cached tickets');
+        const cachedTickets = await offlineStorage.getTickets(event_uuid);
+        return {
+          data: cachedTickets || [],
+          offline: true,
+        };
+      }
+      
       throw error;
     }
   },
