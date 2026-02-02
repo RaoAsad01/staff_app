@@ -11,6 +11,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ticketService } from '../api/apiService';
 import { logger } from '../utils/logger';
 import { useOfflineSync } from '../hooks/useOfflineSync';
+import { userService } from '../api/apiService';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
@@ -32,6 +33,29 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [scanResponse, setScanResponse] = useState(null);
   const { isOnline } = useOfflineSync(false);
+  const [userRole, setUserRole] = useState(null);
+
+  // Fetch user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const profile = await userService.getProfile();
+        const role = profile?.role ||
+          profile?.user_role ||
+          profile?.type ||
+          profile?.permission ||
+          profile?.user_type ||
+          profile?.data?.role ||
+          profile?.user?.role;
+        logger.log('User role in CheckIn:', role);
+        setUserRole(role || null);
+      } catch (error) {
+        logger.error('Error fetching user role in CheckIn:', error);
+        setUserRole(null);
+      }
+    };
+    fetchUserRole();
+  }, []);
 
 
   useFocusEffect(
@@ -242,7 +266,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
         </View>
       )}
       <Header eventInfo={eventInfo} />
-      <View style={styles.darkBackground}>
+      <View style={userRole === 'ADMIN' ? styles.darkBackgroundAdmin : styles.darkBackground}>
         {scanResult && (
           <View style={styles.scanResultContainer}>
             {showAnimation && (
@@ -311,6 +335,10 @@ const styles = StyleSheet.create({
   darkBackground: {
     flex: 1,
     backgroundColor: color.btnBrown_AE6F28,
+  },
+  darkBackgroundAdmin: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
   cameraContainer: {
     flex: 1,

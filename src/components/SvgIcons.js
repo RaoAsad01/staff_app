@@ -51,6 +51,20 @@ import DownArrowWhite from '../../assets/svgs/downarrow_white.svg';
 import IconBarsInactive from '../../assets/svgs/icon_bars_inactive.svg';
 import IconBarsActive from '../../assets/svgs/icon_bars_active.svg';
 import RightArrowWhite from '../../assets/svgs/right-arrow-white.svg';
+import AdminDashboardActiveTab from '../../assets/svgs/admin_dashboard_active_tab.svg';
+import AdminDashboardInactiveTab from '../../assets/svgs/admin_dashboard_inactive_tab.svg';
+import AdminEventsActiveTab from '../../assets/svgs/admin_events_active_tab.svg';
+import AdminEventsInactiveTab from '../../assets/svgs/admin_events_inactive_tab.svg';
+import AdminServicesInactiveTab from '../../assets/svgs/admin_services_inactive_tab.svg';
+import AdminServicesActiveTab from '../../assets/svgs/admin_services_active_tab.svg';
+import AdminCheckinInactiveTab from '../../assets/svgs/admin_checkin_inactive_tab.svg';
+import EarningArrow from '../../assets/svgs/earning_arrow.svg';
+import AttendeesPerson from '../../assets/svgs/attendees_person.svg';
+import CalendarIcon from '../../assets/svgs/calendar_icon.svg';
+import TicketIcon from '../../assets/svgs/ticket_icon.svg';
+import BellIcon from '../../assets/svgs/bell_icon.svg';
+import ProfileImage from '../../assets/svgs/profile_image.svg';
+import BackArrowIcon from '../../assets/svgs/back_arrow_icon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -106,5 +120,19 @@ export default {
     iconBarsInactive: IconBarsInactive,
     iconBarsActive: IconBarsActive,
     rightArrowWhite: RightArrowWhite,
+    adminDashboardActiveTab: AdminDashboardActiveTab,
+    adminDashboardInactiveTab: AdminDashboardInactiveTab,
+    adminEventsActiveTab: AdminEventsActiveTab,
+    adminEventsInactiveTab: AdminEventsInactiveTab,
+    adminServicesInactiveTab: AdminServicesInactiveTab,
+    adminCheckinInactiveTab: AdminCheckinInactiveTab,
+    adminServicesActiveTab: AdminServicesActiveTab,
+    earningArrow: EarningArrow,
+    attendeesPerson: AttendeesPerson,
+    calendarIcon: CalendarIcon,
+    ticketIcon: TicketIcon,
+    bellIcon: BellIcon,
+    profileImage: ProfileImage,
+    backArrowIcon: BackArrowIcon
 };
 

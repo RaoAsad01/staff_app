@@ -9,17 +9,17 @@ import { logger } from './logger';
 class OfflineStorageService {
   constructor() {
     this.STORAGE_KEYS = {
-      TICKETS: 'offline_tickets',
-      TICKET_STATS: 'offline_ticket_stats',
-      MANUAL_ORDERS: 'offline_manual_orders',
+  TICKETS: 'offline_tickets',
+  TICKET_STATS: 'offline_ticket_stats',
+  MANUAL_ORDERS: 'offline_manual_orders',
       ORDER_DETAILS: 'offline_order_details', // Order details cache
-      SCANNED_TICKETS: 'offline_scanned_tickets',
+  SCANNED_TICKETS: 'offline_scanned_tickets',
       EVENT_DATA: 'offline_event_data',
-      LAST_SYNC: 'offline_last_sync',
-      CACHE_TIMESTAMP: 'offline_cache_timestamp',
+  LAST_SYNC: 'offline_last_sync',
+  CACHE_TIMESTAMP: 'offline_cache_timestamp',
       TICKET_INDEX: 'offline_ticket_index', // Index for fast lookups
-    };
-    
+};
+
     // Configuration for large dataset handling
     this.CONFIG = {
       CHUNK_SIZE: 1000, // Number of items per chunk
@@ -64,7 +64,7 @@ class OfflineStorageService {
           await AsyncStorage.setItem(chunkKey, JSON.stringify({
             tickets: chunks[i],
             chunkIndex: i,
-            timestamp: Date.now(),
+        timestamp: Date.now(),
           }));
           chunkKeys.push(chunkKey);
         }
@@ -88,8 +88,8 @@ class OfflineStorageService {
           tickets,
           timestamp: Date.now(),
           isChunked: false,
-        }));
-        logger.log(`Saved ${tickets.length} tickets for event ${eventUuid}`);
+      }));
+      logger.log(`Saved ${tickets.length} tickets for event ${eventUuid}`);
       }
 
       // Create index for fast lookups (only for frequently accessed fields)
@@ -149,9 +149,9 @@ class OfflineStorageService {
       } else {
         // Single item storage
         const key = `${this.STORAGE_KEYS.TICKETS}_${eventUuid}`;
-        const data = await AsyncStorage.getItem(key);
-        if (data) {
-          const parsed = JSON.parse(data);
+      const data = await AsyncStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
           let tickets = parsed.tickets || [];
           
           // Apply pagination if requested
@@ -523,7 +523,7 @@ class OfflineStorageService {
       let totalSize = 0;
       for (const key of eventKeys) {
         const data = await AsyncStorage.getItem(key);
-        if (data) {
+      if (data) {
           totalSize += data.length * 2; // Approximate: 2 bytes per char in UTF-16
         }
       }

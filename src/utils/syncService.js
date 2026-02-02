@@ -70,7 +70,7 @@ class SyncService {
             });
           }
 
-          try {
+      try {
             await this.processQueueItem(item);
             await offlineQueue.removeFromQueue(item.id);
             synced++;
@@ -100,8 +100,8 @@ class SyncService {
         // Add delay between batches to prevent overwhelming the server
         if (batchIndex < totalBatches - 1) {
           await new Promise(resolve => setTimeout(resolve, this.DELAY_BETWEEN_BATCHES));
-        }
       }
+    }
 
       const result = {
         success: true,
@@ -116,7 +116,7 @@ class SyncService {
       return result;
     } catch (error) {
       logger.error('Sync error:', error);
-      return {
+    return {
         success: false,
         message: error.message,
         synced,
@@ -189,7 +189,7 @@ class SyncService {
     return () => {
       this.syncListeners = this.syncListeners.filter(listener => listener !== callback);
     };
-  }
+      }
 
   /**
    * Notify listeners of sync completion
@@ -199,7 +199,7 @@ class SyncService {
     this.syncListeners.forEach(listener => {
       try {
         listener(result);
-      } catch (error) {
+    } catch (error) {
         logger.error('Error in sync listener:', error);
       }
     });

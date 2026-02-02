@@ -5,7 +5,7 @@ import { color } from '../../color/color';
 import OverallStatistics from './OverallStatistics';
 import AdminOverallStatistics from './AdminOverallStatistics';
 import BoxOfficeSales from './BoxOfficeSales';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../components/SvgIcons';
 import { dashboardstatuslist } from '../../constants/dashboardstatuslist';
 import CheckInSoldTicketsCard from './CheckInSolidTicketsCard';
@@ -33,11 +33,16 @@ import { truncateCityName } from '../../utils/stringUtils';
 import { truncateEventName } from '../../utils/stringUtils';
 import { formatDateWithMonthName } from '../../constants/dateAndTime';
 import { logger } from '../../utils/logger';
+import AdminAllEventsDashboard from '../dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
 
-const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
+const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventChange }) => {
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
+  
+  // Get eventInfo from props or route params (route params take precedence for navigation updates)
+  const eventInfo = route.params?.eventInfo || propEventInfo;
   
   // Calculate top padding: use safe area insets, or StatusBar height on Android
   const topPadding = Platform.OS === 'android' 
@@ -995,6 +1000,11 @@ const DashboardScreen = ({ eventInfo, onScanCountUpdate, onEventChange }) => {
       </Text>
     </TouchableOpacity>
   );
+
+  // For ADMIN users, show AdminAllEventsDashboard in Dashboard tab
+  if (userRole === 'ADMIN') {
+    return <AdminAllEventsDashboard />;
+  }
 
   return (
     <View style={styles.mainContainer}>

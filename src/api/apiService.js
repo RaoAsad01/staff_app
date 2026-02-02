@@ -235,10 +235,10 @@ export const ticketService = {
 
         // Save to offline storage
         await offlineStorage.saveScannedTicket(ticketCodeFromScan, {
-          scannedData,
-          note,
-          eventUuid: eventUuidFromScan,
-          ticketCode: ticketCodeFromScan,
+            scannedData,
+            note,
+            eventUuid: eventUuidFromScan,
+            ticketCode: ticketCodeFromScan,
           status: 'queued',
         });
 
@@ -253,8 +253,8 @@ export const ticketService = {
               name: 'Queued for sync',
               staff_id: 'N/A',
               scanned_on: new Date().toISOString(),
-            },
-          });
+          },
+        });
           logger.log('Updated ticket in cached tickets list after offline scan');
         } catch (cacheError) {
           logger.error('Error updating ticket in cache:', cacheError);
@@ -553,10 +553,10 @@ export const ticketService = {
         networkService.setOnlineStatus(false);
         logger.log('Network error, returning cached orders');
         const cachedOrders = await offlineStorage.getManualOrders(event_uuid);
-        return {
+          return {
           data: cachedOrders || [],
-          offline: true,
-        };
+            offline: true,
+          };
       }
       
       if (error.response?.data) {
@@ -831,10 +831,10 @@ export const ticketService = {
         networkService.setOnlineStatus(false);
         logger.log('Network error, returning cached tickets');
         const cachedTickets = await offlineStorage.getTickets(event_uuid);
-        return {
+          return {
           data: cachedTickets || [],
-          offline: true,
-        };
+            offline: true,
+          };
       }
       
       throw error;

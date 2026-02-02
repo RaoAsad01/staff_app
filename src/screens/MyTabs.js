@@ -11,11 +11,23 @@ import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
 import { useRoute } from '@react-navigation/native';
 import { fetchUpdatedScanCount, updateEventInfoScanCount } from '../utils/scanCountUpdater';
-import { eventService } from '../api/apiService';
+import { eventService, userService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
 import { logger } from '../utils/logger';
+import AdminAllEventsDashboard from './dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
+import EventsScreen from './eventsTab/EventsScreen';
 
 const Tab = createBottomTabNavigator();
+
+// Placeholder Services Screen
+const ServicesScreen = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F7F5' }}>
+      <Text style={{ fontSize: 18, color: '#2D2A26' }}>Services</Text>
+      <Text style={{ fontSize: 14, color: '#9B9189', marginTop: 8 }}>Services coming soon</Text>
+    </View>
+  );
+};
 
 function MyTabs() {
   const route = useRoute();
@@ -23,10 +35,33 @@ function MyTabs() {
   const initialEventInfo = route?.params?.eventInfo;
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   
   // Calculate dynamic tab bar height with safe area insets
   // Base height (66) + bottom safe area inset (for devices with navigation bars)
   const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
+
+  // Fetch user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const profile = await userService.getProfile();
+        const role = profile?.role ||
+          profile?.user_role ||
+          profile?.type ||
+          profile?.permission ||
+          profile?.user_type ||
+          profile?.data?.role ||
+          profile?.user?.role;
+        logger.log('User role in MyTabs:', role);
+        setUserRole(role || null);
+      } catch (error) {
+        logger.error('Error fetching user role in MyTabs:', error);
+        setUserRole(null);
+      }
+    };
+    fetchUserRole();
+  }, []);
 
   // Update eventInfo when route params change
   useEffect(() => {
@@ -185,33 +220,33 @@ function MyTabs() {
     );
   };
 
-  const CustomIcon = ({ route, focused, isCheckInActive }) => {
+  const CustomIcon = ({ route, focused, isCheckInActive, userRole }) => {
     let IconComponent;
 
-    if (route.name === 'Dashboard') {
-      if (isCheckInActive && !focused) {
-        IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
-      } else {
-        IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
-      }
-    } else if (route.name === 'Tickets') {
-      if (isCheckInActive && !focused) {
+    // Use admin icons for ADMIN users
+    if (userRole === 'ADMIN') {
+      if (route.name === 'Dashboard') {
+        IconComponent = focused ? SvgIcons.adminDashboardActiveTab : SvgIcons.adminDashboardInactiveTab;
+      } else if (route.name === 'Events') {
+        IconComponent = focused ? SvgIcons.adminEventsActiveTab : SvgIcons.adminEventsInactiveTab;
+      } else if (route.name === 'Check In') {
+        IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.adminCheckinInactiveTab;
+      } else if (route.name === 'Services') {
+        IconComponent = focused ? SvgIcons.adminServicesActiveTab : SvgIcons.adminServicesInactiveTab;
+      } else if (route.name === 'Tickets') {
         IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
-      } else {
+      }
+    } else {
+      // Regular icons for non-ADMIN users
+      if (route.name === 'Dashboard') {
+        IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
+      } else if (route.name === 'Tickets') {
         IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
-      }
-    } else if (route.name === 'Check In') {
-      IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.checkinInActiveTabSVG;
-    } else if (route.name === 'Manual') {
-      if (isCheckInActive && !focused) {
+      } else if (route.name === 'Check In') {
+        IconComponent = focused ? SvgIcons.checkinActiveTabSVG : SvgIcons.checkinInActiveTabSVG;
+      } else if (route.name === 'Manual') {
         IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
-      } else {
-        IconComponent = focused ? SvgIcons.manualActiveTabSVG : SvgIcons.manualInActiveTabSVG;
-      }
-    } else if (route.name === 'Profile') {
-      if (isCheckInActive && !focused) {
-        IconComponent = focused ? SvgIcons.profileIconActive : SvgIcons.profileIconInActive;
-      } else {
+      } else if (route.name === 'Profile') {
         IconComponent = focused ? SvgIcons.profileIconActive : SvgIcons.profileIconInActive;
       }
     }
@@ -233,6 +268,7 @@ function MyTabs() {
                 route={route}
                 focused={focused}
                 isCheckInActive={isCheckInActive}
+                userRole={userRole}
               />
             );
 
@@ -273,13 +309,13 @@ function MyTabs() {
             height: tabBarHeight,
             backgroundColor: isCheckInActive ? '#f3f3f3' : '#f3f3f3',
             paddingBottom: Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom,
-            paddingTop: 8,
             borderTopWidth: 0,
             elevation: 8,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: -2 },
             shadowOpacity: 0.1,
             shadowRadius: 4,
+            paddingHorizontal: 10,
           },
           tabBarShowLabel: false,
           tabBarButton: (props) => (
@@ -302,70 +338,143 @@ function MyTabs() {
         {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} onEventChange={handleEventChange} />}
       </Tab.Screen>
 
-      <Tab.Screen
-        name="Tickets"
-        options={{ 
-          headerShown: false, 
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.reset({
-              index: 0,
-              routes: [
-                {
-                  name: 'Tickets',
-                  params: { fromTab: true, eventInfo: eventInformation },
-                },
-              ],
-            });
-          },
-        })}
-      >
-        {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
-      </Tab.Screen>
+      {/* Conditional tabs based on user role */}
+      {userRole === 'ADMIN' ? (
+        <>
+          <Tab.Screen
+            name="Events"
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <EventsScreen eventInfo={eventInformation} onEventChange={handleEventChange} />}
+          </Tab.Screen>
 
-      <Tab.Screen
-        name="Check In"
-        options={{
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
-        }}
-      >
-        {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
-      </Tab.Screen>
+          <Tab.Screen
+            name="Check In"
+            options={{
+              headerShown: false,
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+          </Tab.Screen>
 
-      <Tab.Screen
-        name="Manual"
-        options={{ 
-          headerShown: false, 
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
-        }}
-      >
-        {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
-      </Tab.Screen>
+          <Tab.Screen
+            name="Services"
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <ServicesScreen />}
+          </Tab.Screen>
 
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ 
-          headerShown: false, 
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: false
-        }}
-      />
+          <Tab.Screen
+            name="Tickets"
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+            listeners={({ navigation }) => ({
+              tabPress: (e) => {
+                e.preventDefault();
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'Tickets',
+                      params: { fromTab: true, eventInfo: eventInformation },
+                    },
+                  ],
+                });
+              },
+            })}
+          >
+            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+          </Tab.Screen>
+        </>
+      ) : (
+        <>
+          <Tab.Screen
+            name="Tickets"
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+            listeners={({ navigation }) => ({
+              tabPress: (e) => {
+                e.preventDefault();
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'Tickets',
+                      params: { fromTab: true, eventInfo: eventInformation },
+                    },
+                  ],
+                });
+              },
+            })}
+          >
+            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+          </Tab.Screen>
+
+          <Tab.Screen
+            name="Check In"
+            options={{
+              headerShown: false,
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+          </Tab.Screen>
+
+          <Tab.Screen
+            name="Manual"
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+          </Tab.Screen>
+
+          <Tab.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{ 
+              headerShown: false, 
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          />
+        </>
+      )}
     </Tab.Navigator>
   );
 }

@@ -72,7 +72,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     fetchTicketStats(eventInfo.eventUuid);
                     fetchTicketList(eventInfo.eventUuid);
                 }, 1000);
-            }
+        }
         });
 
         return () => {

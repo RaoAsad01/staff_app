@@ -18,7 +18,7 @@ export const useOfflineSync = () => {
     // Listen for network status changes
     const unsubscribeNetwork = networkService.addListener((online) => {
       setIsOnline(online);
-      
+
       // When coming back online, trigger sync
       if (online) {
         logger.log('Device came back online, starting sync...');
@@ -65,7 +65,7 @@ export const useOfflineSync = () => {
     } finally {
       setIsSyncing(false);
       setSyncProgress(null);
-    }
+      }
   };
 
   return {

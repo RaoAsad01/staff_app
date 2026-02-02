@@ -107,9 +107,9 @@ const CheckInAllPopup = ({ ticketslist, onTicketStatusChange, onScanCountUpdate,
                 }
                 setShowSuccessPopup(true);
             } else {
-                const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
-                setErrorMessage(errorMsg);
-                setShowErrorPopup(true);
+            const errorMsg = error?.response?.data?.message || error?.message || "We couldn't check in this ticket. Please try again or contact support.";
+            setErrorMessage(errorMsg);
+            setShowErrorPopup(true);
             }
         }
     };

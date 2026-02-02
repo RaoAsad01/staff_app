@@ -35,12 +35,12 @@ const ManualCheckInAllTickets = () => {
     const { isOnline, queueSize, triggerSync } = useOfflineSync();
     
     // Function to refresh ticket details
-    const fetchTicketDetails = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
-            logger.log('Ticket Details Response:', JSON.stringify(response, null, 2));
+        const fetchTicketDetails = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await ticketService.fetchUserTicketOrdersDetail(orderNumber, eventUuid);
+                logger.log('Ticket Details Response:', JSON.stringify(response, null, 2));
             
             // Check if response is from offline cache
             if (response?.offline) {
@@ -54,47 +54,47 @@ const ManualCheckInAllTickets = () => {
                 }
             }
             
-            if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
-                logger.log('📋First ticket data:', response.data[0]);
-                logger.log('📋Scanned by:', response.data[0]?.scanned_by);
-                setTicketDetails(response.data);
+                if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+                    logger.log('📋First ticket data:', response.data[0]);
+                    logger.log('📋Scanned by:', response.data[0]?.scanned_by);
+                    setTicketDetails(response.data);
 
-                // Check if the first ticket is already scanned, and set the success state accordingly
-                const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
-                setCheckInSuccess(isScanned);
+                    // Check if the first ticket is already scanned, and set the success state accordingly
+                    const isScanned = response.data.some(ticket => ticket.checkin_status === 'SCANNED');
+                    setCheckInSuccess(isScanned);
 
-                setUserDetails({
-                    purchaseDate: response.data[0]?.formatted_date,
-                    name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
-                    email: response.data[0]?.user_email || 'No Record',
-                    firstName: response.data[0]?.user_first_name || '',
-                    lastName: response.data[0]?.user_last_name || '',
-                    fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
-                    category: response.data[0]?.category || 'No Record',
-                    ticketClass: response.data[0]?.ticket_class || 'No Record',
-                    scannedBy: response.data[0]?.scanned_by?.name || 'No Record',
-                    staffId: response.data[0]?.scanned_by?.staff_id || 'No Record',
-                    scannedOn: response.data[0]?.scanned_by?.scanned_on || 'No Record',
-                });
-            } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
-                //setError('No tickets found for this order.');
-                setTicketDetails([]);
-                setUserDetails(null);
+                    setUserDetails({
+                        purchaseDate: response.data[0]?.formatted_date,
+                        name: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                        email: response.data[0]?.user_email || 'No Record',
+                        firstName: response.data[0]?.user_first_name || '',
+                        lastName: response.data[0]?.user_last_name || '',
+                        fullName: `${response.data[0]?.user_first_name || ''} ${response.data[0]?.user_last_name || ''}`.trim() || 'No Record',
+                        category: response.data[0]?.category || 'No Record',
+                        ticketClass: response.data[0]?.ticket_class || 'No Record',
+                        scannedBy: response.data[0]?.scanned_by?.name || 'No Record',
+                        staffId: response.data[0]?.scanned_by?.staff_id || 'No Record',
+                        scannedOn: response.data[0]?.scanned_by?.scanned_on || 'No Record',
+                    });
+                } else if (response?.data && Array.isArray(response.data) && response.data.length === 0) {
+                    //setError('No tickets found for this order.');
+                    setTicketDetails([]);
+                    setUserDetails(null);
+                    setShowErrorPopup(true);
+                } else {
+                    //setError('Invalid ticket details response.');
+                    setTicketDetails(null);
+                    setUserDetails(null);
+                    setShowErrorPopup(true);
+                }
+            } catch (err) {
+                //setError(err.message || 'Failed to fetch ticket details.');
                 setShowErrorPopup(true);
-            } else {
-                //setError('Invalid ticket details response.');
-                setTicketDetails(null);
-                setUserDetails(null);
-                setShowErrorPopup(true);
+                logger.error('Error fetching ticket details:', err);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            //setError(err.message || 'Failed to fetch ticket details.');
-            setShowErrorPopup(true);
-            logger.error('Error fetching ticket details:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
     useEffect(() => {
         // Monitor network status
@@ -329,20 +329,20 @@ const ManualCheckInAllTickets = () => {
     // Add handleTicketStatusChange function
     const handleTicketStatusChange = async (ticketUuid, newStatus, scannedByInfo = null) => {
         const updatedTickets = ticketDetails.map(ticket =>
-            ticket.uuid === ticketUuid
-                ? {
-                    ...ticket,
-                    checkin_status: newStatus,
+                ticket.uuid === ticketUuid
+                    ? {
+                        ...ticket,
+                        checkin_status: newStatus,
                     scan_count: newStatus === 'SCANNED' ? (ticket.scan_count || 0) + 1 : ticket.scan_count,
                     last_scanned_on: scannedByInfo?.scanned_on || new Date().toISOString(),
                     last_scanned_by_name: scannedByInfo?.name || ticket.last_scanned_by_name,
-                    scanned_by: scannedByInfo ? {
-                        name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
-                        staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record',
-                        scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'No Record',
-                    } : ticket.scanned_by
-                }
-                : ticket
+                        scanned_by: scannedByInfo ? {
+                            name: scannedByInfo.name || ticket.scanned_by?.name || 'No Record',
+                            staff_id: scannedByInfo.staff_id || ticket.scanned_by?.staff_id || 'No Record',
+                            scanned_on: scannedByInfo?.scanned_on || ticket.scanned_by?.scanned_on || 'No Record',
+                        } : ticket.scanned_by
+                    }
+                    : ticket
         );
         
         setTicketDetails(updatedTickets);
