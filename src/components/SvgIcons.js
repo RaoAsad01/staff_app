@@ -61,10 +61,17 @@ import AdminCheckinInactiveTab from '../../assets/svgs/admin_checkin_inactive_ta
 import EarningArrow from '../../assets/svgs/earning_arrow.svg';
 import AttendeesPerson from '../../assets/svgs/attendees_person.svg';
 import CalendarIcon from '../../assets/svgs/calendar_icon.svg';
-import TicketIcon from '../../assets/svgs/ticket_icon.svg';
+import TicketIcon from '../../assets/svgs/tickets_icon.svg';
 import BellIcon from '../../assets/svgs/bell_icon.svg';
 import ProfileImage from '../../assets/svgs/profile_image.svg';
-import BackArrowIcon from '../../assets/svgs/back_arrow_icon.svg';
+import TicketsRefunded from '../../assets/svgs/ticket_refunded_icon.svg';
+import TicketCanceled from '../../assets/svgs/ticket_canceled_icon.svg';
+import CouponIcon from '../../assets/svgs/coupon_icon.svg';
+import TotalActiveCoupon from '../../assets/svgs/total_active_coupon.svg';
+import TotalUsedCoupon from '../../assets/svgs/total_used_coupon.svg';
+import TotalUnusedCoupon from '../../assets/svgs/total_unused_coupon.svg';
+import LeftArrow from '../../assets/svgs/left_arrow.svg';
+import RightArrow from '../../assets/svgs/right_arrow.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -133,6 +140,13 @@ export default {
     ticketIcon: TicketIcon,
     bellIcon: BellIcon,
     profileImage: ProfileImage,
-    backArrowIcon: BackArrowIcon
+    ticketsRefunded: TicketsRefunded,
+    ticketCanceled: TicketCanceled,
+    couponIcon: CouponIcon,
+    totalActiveCoupon: TotalActiveCoupon,
+    totalUsedCoupon: TotalUsedCoupon,
+    totalUnusedCoupon: TotalUnusedCoupon,
+    leftArrow: LeftArrow,
+    rightArrow: RightArrow
 };
 

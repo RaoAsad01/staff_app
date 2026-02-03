@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -7,7 +7,7 @@ import {
     Modal,
     Dimensions,
 } from 'react-native';
-import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop, Line } from 'react-native-svg';
 import SvgIcons from '../../../components/SvgIcons';
 import { color } from '../../../color/color';
 import Typography from '../../../components/Typography';
@@ -69,17 +69,120 @@ const Card = ({ children, style }) => (
     <View style={[styles.card, style]}>{children}</View>
 );
 
+// Dashed Line Component using SVG
+const DashedLine = () => (
+    <Svg height="2" width="100%" style={{ flex: 1 }}>
+        <Line
+            x1="0"
+            y1="1"
+            x2="100%"
+            y2="1"
+            stroke={color.btnBrown_AE6F28}
+            strokeWidth="1"
+            strokeDasharray="8,6"
+        />
+    </Svg>
+);
+
+// Ticket Stat Box Component with Ticket Shape
+const TicketStatBox = ({ icon, label, count, grossAmount, netAmount }) => {
+    const [topSectionHeight, setTopSectionHeight] = useState(92);
+
+    return (
+        <View style={styles.ticketWrapper}>
+            <View style={styles.ticketContainer}>
+                {/* Top Section */}
+                <View
+                    style={styles.ticketTopSection}
+                    onLayout={(event) => {
+                        const { height } = event.nativeEvent.layout;
+                        setTopSectionHeight(height);
+                    }}
+                >
+                    <View style={styles.ticketHeader}>
+                        <View style={styles.ticketIconCircle}>
+                            {icon}
+                        </View>
+                        <View>
+                            <Typography
+                                weight="400"
+                                size={12}
+                                color={color.grey_87807C}
+                            >
+                                {label}
+                            </Typography>
+                            <Typography
+                                weight="700"
+                                size={14}
+                                color={color.brown_3C200A}
+                            >
+                                Count: {count}
+                            </Typography>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Dashed Line */}
+                <View style={styles.ticketDividerContainer}>
+                    <DashedLine />
+                </View>
+
+                {/* Bottom Section */}
+                <View style={styles.ticketBottomSection}>
+                    <View style={styles.ticketAmountItem}>
+                        <Typography
+                            weight="400"
+                            size={12}
+                            color={color.grey_87807C}
+                        >
+                            Gross:
+                        </Typography>
+                        <Typography
+                            weight="700"
+                            size={16}
+                            color={color.black_2F251D}
+                        >
+                            {grossAmount}
+                        </Typography>
+                    </View>
+                    <View style={styles.ticketAmountItem}>
+                        <Typography
+                            weight="400"
+                            size={12}
+                            color={color.grey_87807C}
+                        >
+                            Net:
+                        </Typography>
+                        <Typography
+                            weight="700"
+                            size={16}
+                            color={color.black_2F251D}
+                        >
+                            {netAmount}
+                        </Typography>
+                    </View>
+                </View>
+            </View>
+
+            {/* Left Cutout */}
+            <View style={[styles.cutoutAbsolute, { left: -12, top: topSectionHeight - 12 }]} />
+            {/* Right Cutout */}
+            <View style={[styles.cutoutAbsolute, { right: -12, top: topSectionHeight - 12 }]} />
+        </View>
+    );
+};
+
 // Mini Stat Card Component
-const MiniStatCard = ({ icon, label, count, amount, iconColor = color.btnBrown_AE6F28 }) => (
+const MiniStatCard = ({ icon, label, count, amount }) => (
     <View style={styles.miniStatCard}>
-        <View style={[styles.miniStatIcon, { backgroundColor: color.lightBrown_FFF6DF }]}>
+        <View style={styles.miniStatIcon}>
             {icon}
         </View>
         <Typography
             style={styles.miniStatLabel}
-            weight="400"
-            size={12}
-            color={color.brown_766F6A}
+            weight="500"
+            size={10}
+            color={color.grey_87807C}
         >
             {label}
         </Typography>
@@ -93,9 +196,9 @@ const MiniStatCard = ({ icon, label, count, amount, iconColor = color.btnBrown_A
         </Typography>
         <Typography
             style={styles.miniStatAmount}
-            weight="400"
+            weight="500"
             size={12}
-            color={color.grey_87807C}
+            color={color.black_544B45}
         >
             {amount}
         </Typography>
@@ -205,16 +308,13 @@ const EarningsChart = () => {
 
 // Attendees Line Chart Component
 const AttendeesChart = () => {
-    const [selectedIndex, setSelectedIndex] = useState(2); // May is selected by default
-    const displayData = [23000, 25000, 45000, 27000, 29000, 30000, 35000]; // Values in actual numbers
+    const [selectedIndex, setSelectedIndex] = useState(2);
+    const displayData = [23000, 25000, 45000, 27000, 29000, 30000, 35000];
     const months = ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Oct', 'Dec'];
 
-    // Dynamic Y-axis calculation
     const maxDataValue = Math.max(...displayData);
-    const minDataValue = Math.min(...displayData);
-    const maxValue = Math.ceil(maxDataValue / 10000) * 10000; // Round up to nearest 10k
+    const maxValue = Math.ceil(maxDataValue / 10000) * 10000;
 
-    // Generate dynamic Y-axis labels
     const yAxisSteps = 5;
     const stepValue = maxValue / yAxisSteps;
     const yAxisLabels = [];
@@ -233,7 +333,6 @@ const AttendeesChart = () => {
         y: chartHeight - (val / maxValue) * chartHeight + chartPaddingTop,
     }));
 
-    // Create smooth curve path
     const pathD = points.reduce((acc, point, i) => {
         if (i === 0) return `M ${point.x} ${point.y}`;
         const prev = points[i - 1];
@@ -242,7 +341,6 @@ const AttendeesChart = () => {
         return `${acc} C ${cp1x} ${prev.y}, ${cp2x} ${point.y}, ${point.x} ${point.y}`;
     }, '');
 
-    // Grid line Y positions
     const gridLines = yAxisLabels.map((_, i) => {
         return chartPaddingTop + (i * chartHeight) / (yAxisLabels.length - 1);
     });
@@ -273,7 +371,6 @@ const AttendeesChart = () => {
                             </LinearGradient>
                         </Defs>
 
-                        {/* Horizontal grid lines */}
                         {gridLines.map((y, i) => (
                             <Path
                                 key={i}
@@ -284,27 +381,37 @@ const AttendeesChart = () => {
                             />
                         ))}
 
-                        {/* Area fill */}
                         <Path
                             d={`${pathD} L ${points[points.length - 1].x} ${chartHeight + chartPaddingTop} L ${points[0].x} ${chartHeight + chartPaddingTop} Z`}
                             fill="url(#areaGradient)"
                         />
 
-                        {/* Line */}
                         <Path d={pathD} stroke={color.btnBrown_AE6F28} strokeWidth={2.5} fill="none" />
 
-                        {/* Selected point indicator - vertical line */}
                         {selectedIndex !== null && (
                             <>
+                                <Defs>
+                                    <LinearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <Stop offset="0%" stopColor={color.btnBrown_AE6F28} stopOpacity={1} />
+                                        <Stop offset="85%" stopColor={color.btnBrown_AE6F28} stopOpacity={0.3} />
+                                        <Stop offset="100%" stopColor={color.btnBrown_AE6F28} stopOpacity={0.05} />
+                                    </LinearGradient>
+                                </Defs>
                                 <Path
-                                    d={`M ${points[selectedIndex].x} ${points[selectedIndex].y} L ${points[selectedIndex].x} ${chartHeight + chartPaddingTop}`}
-                                    stroke={color.btnBrown_AE6F28}
-                                    strokeWidth={1}
+                                    d={`M ${points[selectedIndex].x} ${chartPaddingTop - 15} L ${points[selectedIndex].x} ${points[selectedIndex].y + 5}`}
+                                    stroke="url(#lineGradient)"
+                                    strokeWidth={2}
                                 />
                                 <Circle
                                     cx={points[selectedIndex].x}
-                                    cy={points[selectedIndex].y}
-                                    r={6}
+                                    cy={chartPaddingTop - 15}
+                                    r={8}
+                                    fill="#F3F3F3"
+                                />
+                                <Circle
+                                    cx={points[selectedIndex].x}
+                                    cy={chartPaddingTop - 15}
+                                    r={5}
                                     fill={color.btnBrown_AE6F28}
                                 />
                             </>
@@ -338,21 +445,28 @@ const AttendeesChart = () => {
 // Donut Chart for Events
 const DonutChart = ({ data }) => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
-    const size = 80;
-    const strokeWidth = 12;
+    const size = 140;
+    const strokeWidth = 10;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
+    const gapAngle = 15;
 
-    let currentAngle = 0;
+    const totalGapAngle = gapAngle * data.length;
+    const availableAngle = 360 - totalGapAngle;
+
+    let currentAngle = -90 + (gapAngle / 2);
 
     return (
         <View style={styles.donutContainer}>
             <Svg width={size} height={size}>
                 {data.map((item, index) => {
                     const percentage = item.value / total;
-                    const strokeDasharray = `${percentage * circumference} ${circumference}`;
-                    const rotation = currentAngle - 90;
-                    currentAngle += percentage * 360;
+                    const segmentAngle = percentage * availableAngle;
+                    const segmentLength = (segmentAngle / 360) * circumference;
+                    const gapLength = circumference - segmentLength;
+
+                    const rotation = currentAngle;
+                    currentAngle += segmentAngle + gapAngle;
 
                     return (
                         <Circle
@@ -363,7 +477,8 @@ const DonutChart = ({ data }) => {
                             stroke={item.color}
                             strokeWidth={strokeWidth}
                             fill="none"
-                            strokeDasharray={strokeDasharray}
+                            strokeDasharray={`${segmentLength} ${gapLength}`}
+                            strokeLinecap="round"
                             transform={`rotate(${rotation} ${size / 2} ${size / 2})`}
                         />
                     );
@@ -373,7 +488,7 @@ const DonutChart = ({ data }) => {
                 <Typography
                     style={styles.donutTotal}
                     weight="700"
-                    size={18}
+                    size={24}
                     color={color.black_2F251D}
                 >
                     {total}
@@ -381,7 +496,7 @@ const DonutChart = ({ data }) => {
                 <Typography
                     style={styles.donutLabel}
                     weight="400"
-                    size={10}
+                    size={12}
                     color={color.grey_87807C}
                 >
                     Total
@@ -391,12 +506,107 @@ const DonutChart = ({ data }) => {
     );
 };
 
+// Year Picker Component
+const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
+    const currentYear = new Date().getFullYear();
+    const [decadeStart, setDecadeStart] = useState(Math.floor(currentYear / 10) * 10);
+
+    const years = [];
+    years.push(decadeStart - 1);
+    for (let i = 0; i < 10; i++) {
+        years.push(decadeStart + i);
+    }
+    years.push(decadeStart + 10);
+
+    const handlePrevDecade = () => {
+        setDecadeStart(decadeStart - 10);
+    };
+
+    const handleNextDecade = () => {
+        setDecadeStart(decadeStart + 10);
+    };
+
+    const handleYearPress = (year) => {
+        onYearSelect(year);
+        onClose();
+    };
+
+    const isOutsideDecade = (year) => {
+        return year < decadeStart || year >= decadeStart + 10;
+    };
+
+    const isCurrentYear = (year) => {
+        return year === currentYear;
+    };
+
+    const isSelectedYear = (year) => {
+        return year === selectedYear;
+    };
+
+    return (
+        <View style={styles.yearPickerContainer}>
+            <View style={styles.yearPickerNav}>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handlePrevDecade}>
+                    <Typography weight="600" size={18} color={color.grey_87807C}>
+                        {'<<'}
+                    </Typography>
+                </TouchableOpacity>
+                <Typography
+                    style={styles.decadeTitle}
+                    weight="600"
+                    size={18}
+                    color={color.black_2F251D}
+                >
+                    {decadeStart}-{decadeStart + 9}
+                </Typography>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handleNextDecade}>
+                    <Typography weight="600" size={18} color={color.grey_87807C}>
+                        {'>>'}
+                    </Typography>
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.yearsGrid}>
+                {years.map((year, index) => (
+                    <TouchableOpacity
+                        key={year}
+                        style={[
+                            styles.yearCell,
+                            isOutsideDecade(year) && styles.yearCellOutside,
+                            isSelectedYear(year) && styles.yearCellSelected,
+                            isCurrentYear(year) && !isSelectedYear(year) && styles.yearCellCurrent,
+                        ]}
+                        onPress={() => handleYearPress(year)}
+                    >
+                        <Typography
+                            weight={isSelectedYear(year) || isCurrentYear(year) ? "600" : "400"}
+                            size={16}
+                            color={
+                                isSelectedYear(year)
+                                    ? color.btnBrown_AE6F28
+                                    : isOutsideDecade(year)
+                                        ? color.grey_87807C
+                                        : color.black_2F251D
+                            }
+                        >
+                            {year}
+                        </Typography>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+};
+
 // Date Range Picker Component
 const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
-    const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // January 2026
+    const today = new Date();
+    const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [activeFilter, setActiveFilter] = useState('Today');
+    const [showYearPicker, setShowYearPicker] = useState(false);
+    const [selectedYear, setSelectedYear] = useState(null);
 
     const filters = ['Today', 'Yesterday', 'Last Week', 'This Week', 'Last Month', 'This Month', 'Last Quarter', 'This Quarter', 'Last Year', 'This Year'];
 
@@ -405,6 +615,19 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
+
+    useEffect(() => {
+        if (visible) {
+            const todayDate = new Date();
+            const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+            setStartDate(todayStart);
+            setEndDate(todayStart);
+            setCurrentDate(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
+            setActiveFilter('Today');
+            setShowYearPicker(false);
+            setSelectedYear(null);
+        }
+    }, [visible]);
 
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -423,7 +646,6 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         const weeks = [];
         let week = [];
 
-        // Previous month days
         for (let i = firstDay - 1; i >= 0; i--) {
             week.push({
                 day: prevMonthDays - i,
@@ -432,7 +654,6 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
             });
         }
 
-        // Current month days
         for (let day = 1; day <= daysInMonth; day++) {
             week.push({
                 day,
@@ -446,9 +667,8 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
             }
         }
 
-        // Next month days
         let nextMonthDay = 1;
-        while (week.length < 7) {
+        while (week.length < 7 && week.length > 0) {
             week.push({
                 day: nextMonthDay,
                 month: 'next',
@@ -463,26 +683,35 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
 
     const weeks = generateCalendar();
 
+    const isSameDay = (date1, date2) => {
+        if (!date1 || !date2) return false;
+        return date1.getFullYear() === date2.getFullYear() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate();
+    };
+
     const isInRange = (dayObj) => {
         if (!startDate || !endDate) return false;
-        const dayDate = dayObj.date;
-        return dayDate >= startDate && dayDate <= endDate;
+        const dayDate = new Date(dayObj.date.getFullYear(), dayObj.date.getMonth(), dayObj.date.getDate());
+        const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        return dayDate > start && dayDate < end;
     };
 
     const isStartDate = (dayObj) => {
-        if (!startDate) return false;
-        return dayObj.date.getTime() === startDate.getTime();
+        return isSameDay(dayObj.date, startDate);
     };
 
     const isEndDate = (dayObj) => {
-        if (!endDate) return false;
-        return dayObj.date.getTime() === endDate.getTime();
+        return isSameDay(dayObj.date, endDate);
     };
 
     const handleDayPress = (dayObj) => {
         if (dayObj.month !== 'current') return;
 
-        const selectedDate = dayObj.date;
+        const selectedDate = new Date(dayObj.date.getFullYear(), dayObj.date.getMonth(), dayObj.date.getDate());
+        setActiveFilter(null);
+        setShowYearPicker(false);
 
         if (!startDate || (startDate && endDate)) {
             setStartDate(selectedDate);
@@ -495,66 +724,84 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         }
     };
 
+    const handleYearSelect = (year) => {
+        setSelectedYear(year);
+        const start = new Date(year, 0, 1);
+        const end = new Date(year, 11, 31);
+        setStartDate(start);
+        setEndDate(end);
+        setCurrentDate(new Date(year, 0, 1));
+        setShowYearPicker(false);
+    };
+
     const handleFilterPress = (filter) => {
         setActiveFilter(filter);
-        const today = new Date();
+        const todayDate = new Date();
         let start, end;
+
+        if (filter === 'Last Year') {
+            setShowYearPicker(true);
+            setSelectedYear(todayDate.getFullYear());
+            return;
+        }
+
+        setShowYearPicker(false);
 
         switch (filter) {
             case 'Today':
-                start = new Date(today);
-                end = new Date(today);
+                start = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+                end = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
                 break;
             case 'Yesterday':
-                start = new Date(today);
-                start.setDate(start.getDate() - 1);
-                end = new Date(start);
+                const yesterday = new Date(todayDate);
+                yesterday.setDate(yesterday.getDate() - 1);
+                start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+                end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
                 break;
             case 'This Week':
-                start = new Date(today);
+                start = new Date(todayDate);
                 start.setDate(start.getDate() - start.getDay());
+                start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
                 end = new Date(start);
                 end.setDate(end.getDate() + 6);
+                end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
                 break;
             case 'Last Week':
-                start = new Date(today);
+                start = new Date(todayDate);
                 start.setDate(start.getDate() - start.getDay() - 7);
+                start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
                 end = new Date(start);
                 end.setDate(end.getDate() + 6);
+                end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
                 break;
             case 'This Month':
-                start = new Date(today.getFullYear(), today.getMonth(), 1);
-                end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                start = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
+                end = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
                 break;
             case 'Last Month':
-                start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                end = new Date(today.getFullYear(), today.getMonth(), 0);
+                start = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1);
+                end = new Date(todayDate.getFullYear(), todayDate.getMonth(), 0);
                 break;
             case 'This Quarter': {
-                const currentQuarter = Math.floor(today.getMonth() / 3);
-                start = new Date(today.getFullYear(), currentQuarter * 3, 1);
-                end = new Date(today.getFullYear(), currentQuarter * 3 + 3, 0);
+                const currentQuarter = Math.floor(todayDate.getMonth() / 3);
+                start = new Date(todayDate.getFullYear(), currentQuarter * 3, 1);
+                end = new Date(todayDate.getFullYear(), currentQuarter * 3 + 3, 0);
                 break;
             }
             case 'Last Quarter': {
-                const lastQuarter = Math.floor(today.getMonth() / 3) - 1;
+                const lastQuarter = Math.floor(todayDate.getMonth() / 3) - 1;
                 if (lastQuarter < 0) {
-                    // Previous year's Q4
-                    start = new Date(today.getFullYear() - 1, 9, 1); // October
-                    end = new Date(today.getFullYear() - 1, 12, 0); // December 31
+                    start = new Date(todayDate.getFullYear() - 1, 9, 1);
+                    end = new Date(todayDate.getFullYear() - 1, 12, 0);
                 } else {
-                    start = new Date(today.getFullYear(), lastQuarter * 3, 1);
-                    end = new Date(today.getFullYear(), lastQuarter * 3 + 3, 0);
+                    start = new Date(todayDate.getFullYear(), lastQuarter * 3, 1);
+                    end = new Date(todayDate.getFullYear(), lastQuarter * 3 + 3, 0);
                 }
                 break;
             }
             case 'This Year':
-                start = new Date(today.getFullYear(), 0, 1); // January 1
-                end = new Date(today.getFullYear(), 11, 31); // December 31
-                break;
-            case 'Last Year':
-                start = new Date(today.getFullYear() - 1, 0, 1); // January 1 of last year
-                end = new Date(today.getFullYear() - 1, 11, 31); // December 31 of last year
+                start = new Date(todayDate.getFullYear(), 0, 1);
+                end = new Date(todayDate.getFullYear(), 11, 31);
                 break;
             default:
                 return;
@@ -562,7 +809,7 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
 
         setStartDate(start);
         setEndDate(end);
-        setCurrentDate(start);
+        setCurrentDate(new Date(start.getFullYear(), start.getMonth(), 1));
     };
 
     const handlePrevMonth = () => {
@@ -619,84 +866,97 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                         ))}
                     </ScrollView>
 
-                    <View style={styles.calendarNav}>
-                        <TouchableOpacity style={styles.navButton} onPress={handlePrevMonth}>
-                            <SvgIcons.backArrowIcon width={20} height={20} fill="transparent" />
-                        </TouchableOpacity>
-                        <Typography
-                            style={styles.monthTitle}
-                            weight="600"
-                            size={20}
-                            color={color.black_2F251D}
-                        >
-                            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                        </Typography>
-                        <TouchableOpacity style={styles.navButton} onPress={handleNextMonth}>
-                            <SvgIcons.backArrowIcon width={20} height={20} fill="transparent" />
-                        </TouchableOpacity>
-                    </View>
+                    {showYearPicker ? (
+                        <YearPicker
+                            visible={showYearPicker}
+                            onClose={() => setShowYearPicker(false)}
+                            onYearSelect={handleYearSelect}
+                            selectedYear={selectedYear}
+                        />
+                    ) : (
+                        <>
+                            <View style={styles.calendarNav}>
+                                <TouchableOpacity style={styles.navButton} onPress={handlePrevMonth}>
+                                    <SvgIcons.leftArrow width={20} height={20} fill="transparent" />
+                                </TouchableOpacity>
+                                <Typography
+                                    style={styles.monthTitle}
+                                    weight="600"
+                                    size={20}
+                                    color={color.black_2F251D}
+                                >
+                                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                                </Typography>
+                                <TouchableOpacity style={styles.navButton} onPress={handleNextMonth}>
+                                    <SvgIcons.rightArrow width={10} height={10} fill="transparent" />
+                                </TouchableOpacity>
+                            </View>
 
-                    <View style={styles.dayHeaders}>
-                        {days.map((day) => (
-                            <Typography
-                                key={day}
-                                style={styles.dayHeader}
-                                weight="400"
-                                size={14}
-                                color={color.grey_87807C}
-                            >
-                                {day}
-                            </Typography>
-                        ))}
-                    </View>
-
-                    {weeks.map((week, weekIndex) => (
-                        <View key={weekIndex} style={styles.weekRow}>
-                            {week.map((dayObj, dayIndex) => {
-                                const inRange = isInRange(dayObj);
-                                const isStart = isStartDate(dayObj);
-                                const isEnd = isEndDate(dayObj);
-                                const isPrevMonth = dayObj.month === 'prev';
-                                const isNextMonth = dayObj.month === 'next';
-
-                                return (
-                                    <TouchableOpacity
-                                        key={dayIndex}
-                                        style={[
-                                            styles.dayCell,
-                                            inRange && !isStart && !isEnd && styles.dayCellInRange,
-                                            isStart && styles.dayCellStart,
-                                            isEnd && styles.dayCellEnd,
-                                        ]}
-                                        onPress={() => handleDayPress(dayObj)}
-                                        disabled={isPrevMonth || isNextMonth}
+                            <View style={styles.dayHeaders}>
+                                {days.map((day) => (
+                                    <Typography
+                                        key={day}
+                                        style={styles.dayHeader}
+                                        weight="400"
+                                        size={14}
+                                        color={color.grey_87807C}
                                     >
-                                        <Typography
-                                            style={[
-                                                styles.dayText,
-                                                (isPrevMonth || isNextMonth) && styles.dayTextMuted,
-                                                inRange && !isStart && !isEnd && styles.dayTextInRange,
-                                                (isStart || isEnd) && styles.dayTextEnd,
-                                            ]}
-                                            weight={(isStart || isEnd) ? "600" : "400"}
-                                            size={16}
-                                            color={
-                                                (isPrevMonth || isNextMonth)
-                                                    ? color.grey_87807C
-                                                    : (isStart || isEnd)
-                                                        ? "white"
-                                                        : inRange && !isStart && !isEnd
-                                                            ? color.btnBrown_AE6F28
-                                                            : color.black_2F251D
-                                            }
-                                        >
-                                            {dayObj.day.toString().padStart(2, '0')}
-                                        </Typography>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    ))}
+                                        {day}
+                                    </Typography>
+                                ))}
+                            </View>
+
+                            {weeks.map((week, weekIndex) => (
+                                <View key={weekIndex} style={styles.weekRow}>
+                                    {week.map((dayObj, dayIndex) => {
+                                        const inRange = isInRange(dayObj);
+                                        const isStart = isStartDate(dayObj);
+                                        const isEnd = isEndDate(dayObj);
+                                        const isBothStartAndEnd = isStart && isSameDay(startDate, endDate);
+                                        const isPrevMonth = dayObj.month === 'prev';
+                                        const isNextMonth = dayObj.month === 'next';
+
+                                        return (
+                                            <TouchableOpacity
+                                                key={dayIndex}
+                                                style={[
+                                                    styles.dayCell,
+                                                    inRange && styles.dayCellInRange,
+                                                    isStart && !isBothStartAndEnd && styles.dayCellStart,
+                                                    isEnd && !isBothStartAndEnd && styles.dayCellEnd,
+                                                    isBothStartAndEnd && isStart && styles.dayCellSingle,
+                                                ]}
+                                                onPress={() => handleDayPress(dayObj)}
+                                                disabled={isPrevMonth || isNextMonth}
+                                            >
+                                                <Typography
+                                                    style={[
+                                                        styles.dayText,
+                                                        (isPrevMonth || isNextMonth) && styles.dayTextMuted,
+                                                        inRange && styles.dayTextInRange,
+                                                        (isStart || isEnd) && styles.dayTextEnd,
+                                                    ]}
+                                                    weight={(isStart || isEnd) ? "600" : "400"}
+                                                    size={16}
+                                                    color={
+                                                        (isPrevMonth || isNextMonth)
+                                                            ? color.grey_87807C
+                                                            : (isStart || isEnd)
+                                                                ? "white"
+                                                                : inRange
+                                                                    ? color.btnBrown_AE6F28
+                                                                    : color.black_2F251D
+                                                    }
+                                                >
+                                                    {dayObj.day.toString().padStart(2, '0')}
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            ))}
+                        </>
+                    )}
 
                     {startDate && endDate && (
                         <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
@@ -734,7 +994,11 @@ const AdminAllEventsDashboard = () => {
         };
 
         if (startDate && endDate) {
-            setSelectedDate(`${formatDate(startDate)} - ${formatDate(endDate)}`);
+            if (startDate.getTime() === endDate.getTime()) {
+                setSelectedDate(formatDate(startDate));
+            } else {
+                setSelectedDate(`${formatDate(startDate)} - ${formatDate(endDate)}`);
+            }
         } else if (startDate) {
             setSelectedDate(formatDate(startDate));
         }
@@ -792,10 +1056,11 @@ const AdminAllEventsDashboard = () => {
                     <SvgIcons.downArrow />
                 </TouchableOpacity>
 
+                {/* Earnings Card */}
                 <Card>
                     <Typography
                         style={styles.cardTitle}
-                        weight="600"
+                        weight="700"
                         size={13}
                         color={color.placeholderTxt_24282C}
                     >
@@ -838,13 +1103,14 @@ const AdminAllEventsDashboard = () => {
                     <EarningsChart />
                 </Card>
 
+                {/* Attendees Card */}
                 <Card>
                     <View style={styles.attendeesHeader}>
                         <Typography
                             style={styles.cardTitle}
-                            weight="600"
-                            size={18}
-                            color={color.black_2F251D}
+                            weight="700"
+                            size={13}
+                            color={color.placeholderTxt_24282C}
                         >
                             Attendees
                         </Typography>
@@ -886,12 +1152,13 @@ const AdminAllEventsDashboard = () => {
                     <AttendeesChart />
                 </Card>
 
+                {/* Event Card */}
                 <Card>
                     <Typography
                         style={styles.cardTitle}
-                        weight="600"
-                        size={18}
-                        color={color.black_2F251D}
+                        weight="700"
+                        size={13}
+                        color={color.placeholderTxt_24282C}
                     >
                         Event
                     </Typography>
@@ -903,17 +1170,17 @@ const AdminAllEventsDashboard = () => {
                                     <View style={[styles.eventLegendDot, { backgroundColor: item.color }]} />
                                     <Typography
                                         style={styles.eventLegendLabel}
-                                        weight="400"
-                                        size={14}
-                                        color={color.brown_766F6A}
+                                        weight="500"
+                                        size={16}
+                                        color={color.placeholderTxt_24282C}
                                     >
                                         {item.label}
                                     </Typography>
                                     <Typography
                                         style={styles.eventLegendValue}
-                                        weight="600"
-                                        size={14}
-                                        color={color.black_2F251D}
+                                        weight="400"
+                                        size={16}
+                                        color={color.black_544B45}
                                     >
                                         {item.value.toString().padStart(2, '0')}
                                     </Typography>
@@ -923,226 +1190,87 @@ const AdminAllEventsDashboard = () => {
                     </View>
                 </Card>
 
-                <Card>
+                {/* Statistics Card */}
+                <Card style={styles.statisticsCard}>
                     <Typography
                         style={styles.cardTitle}
-                        weight="600"
-                        size={18}
-                        color={color.black_2F251D}
+                        weight="700"
+                        size={13}
+                        color={color.placeholderTxt_24282C}
                     >
                         Statistics
                     </Typography>
-                    <View style={styles.mainStatBox}>
-                        <View style={styles.mainStatHeader}>
-                            <SvgIcons.ticketIcon />
-                            <View>
-                                <Typography
-                                    style={styles.mainStatLabel}
-                                    weight="400"
-                                    size={14}
-                                    color={color.brown_766F6A}
-                                >
-                                    Ticket Sold
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatCount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    Count: 102
-                                </Typography>
-                            </View>
-                        </View>
-                        <View style={styles.statDivider} />
-                        <View style={styles.mainStatAmounts}>
-                            <View>
-                                <Typography
-                                    style={styles.statAmountLabel}
-                                    weight="400"
-                                    size={12}
-                                    color={color.grey_87807C}
-                                >
-                                    Gross:
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatAmount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    GHS 100,000.00
-                                </Typography>
-                            </View>
-                            <View>
-                                <Typography
-                                    style={styles.statAmountLabel}
-                                    weight="400"
-                                    size={12}
-                                    color={color.grey_87807C}
-                                >
-                                    Net:
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatAmount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    GHS 95,000.00
-                                </Typography>
-                            </View>
-                        </View>
-                    </View>
+
+                    <TicketStatBox
+                        icon={<SvgIcons.ticketIcon width={32} height={32} />}
+                        label="Ticket Sold"
+                        count="102"
+                        grossAmount="GHS 100,000.00"
+                        netAmount="GHS 95,000.00"
+                    />
 
                     <View style={styles.statRow}>
                         <MiniStatCard
-                            icon={
-                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                    <Path
-                                        d="M3 10h10a5 5 0 010 10H9M3 10l4-4M3 10l4 4"
-                                        stroke={color.btnBrown_AE6F28}
-                                        strokeWidth={2}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </Svg>
-                            }
+                            icon={<SvgIcons.ticketsRefunded width={32} height={32} />}
                             label="Tickets Refunded"
                             count="102"
-                            amount="GHS 50,000.00"
+                            amount="GHS 50,0000.00"
                         />
                         <MiniStatCard
-                            icon={<SvgIcons.crossIconRed width={24} height={24} fill="transparent" />}
+                            icon={<SvgIcons.ticketCanceled width={32} height={32} />}
                             label="Tickets Canceled"
                             count="102"
-                            amount="GHS 20,000.00"
-                            iconColor={color.brown_D58E00}
+                            amount="GHS 20,0000.00"
                         />
                     </View>
                 </Card>
 
-                <Card style={styles.lastCard}>
+                {/* Coupons Card */}
+                <Card style={[styles.lastCard, styles.statisticsCard]}>
                     <Typography
                         style={styles.cardTitle}
-                        weight="600"
-                        size={18}
-                        color={color.black_2F251D}
+                        weight="700"
+                        size={13}
+                        color={color.placeholderTxt_24282C}
                     >
                         Coupons
                     </Typography>
-                    <View style={styles.mainStatBox}>
-                        <View style={styles.mainStatHeader}>
-                            <View style={[styles.iconCircle, { backgroundColor: color.lightBrown_FFF6DF }]}>
-                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                    <Rect x={2} y={6} width={20} height={12} rx={2} stroke={color.btnBrown_AE6F28} strokeWidth={2} />
-                                    <Path d="M9 6v12" stroke={color.btnBrown_AE6F28} strokeWidth={2} strokeDasharray="2 2" />
-                                </Svg>
-                            </View>
-                            <View>
-                                <Typography
-                                    style={styles.mainStatLabel}
-                                    weight="400"
-                                    size={14}
-                                    color={color.brown_766F6A}
-                                >
-                                    Total Issued
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatCount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    Count: 102
-                                </Typography>
-                            </View>
-                        </View>
-                        <View style={styles.statDivider} />
-                        <View style={styles.mainStatAmounts}>
-                            <View>
-                                <Typography
-                                    style={styles.statAmountLabel}
-                                    weight="400"
-                                    size={12}
-                                    color={color.grey_87807C}
-                                >
-                                    Gross:
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatAmount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    GHS 100,000.00
-                                </Typography>
-                            </View>
-                            <View>
-                                <Typography
-                                    style={styles.statAmountLabel}
-                                    weight="400"
-                                    size={12}
-                                    color={color.grey_87807C}
-                                >
-                                    Net:
-                                </Typography>
-                                <Typography
-                                    style={styles.mainStatAmount}
-                                    weight="700"
-                                    size={16}
-                                    color={color.black_2F251D}
-                                >
-                                    GHS 95,000.00
-                                </Typography>
-                            </View>
-                        </View>
-                    </View>
+
+                    <TicketStatBox
+                        icon={<SvgIcons.couponIcon width={32} height={32} />}
+                        label="Total Issued"
+                        count="102"
+                        grossAmount="GHS 100,000.00"
+                        netAmount="GHS 95,000.00"
+                    />
 
                     <View style={styles.statRow}>
                         <MiniStatCard
-                            icon={
-                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                    <Rect x={2} y={6} width={20} height={12} rx={2} stroke={color.btnBrown_AE6F28} strokeWidth={2} />
-                                    <Path d="M9 6v12" stroke={color.btnBrown_AE6F28} strokeWidth={2} strokeDasharray="2 2" />
-                                </Svg>
-                            }
+                            icon={<SvgIcons.totalActiveCoupon width={32} height={32} />}
                             label="Total Active"
                             count="05"
                             amount="GHS 50,000.00"
                         />
                         <MiniStatCard
-                            icon={
-                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                    <Path d="M9 12l2 2 4-4" stroke={color.brown_D58E00} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                                    <Circle cx={12} cy={12} r={10} stroke={color.brown_D58E00} strokeWidth={2} />
-                                </Svg>
-                            }
+                            icon={<SvgIcons.totalUsedCoupon width={32} height={32} />}
                             label="Total Used"
                             count="10"
                             amount="GHS 20,000.00"
-                            iconColor={color.brown_D58E00}
                         />
                     </View>
 
                     <View style={styles.statRow}>
                         <MiniStatCard
-                            icon={
-                                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                                    <Circle cx={12} cy={12} r={10} stroke={color.btnBrown_AE6F28} strokeWidth={2} />
-                                    <Path d="M12 8v4M12 16h.01" stroke={color.btnBrown_AE6F28} strokeWidth={2} strokeLinecap="round" />
-                                </Svg>
-                            }
+                            icon={<SvgIcons.totalUnusedCoupon width={32} height={32} />}
                             label="Total Unused"
                             count="10"
                             amount="GHS 20,000.00"
                         />
                         <MiniStatCard
-                            icon={<SvgIcons.crossIconRed width={24} height={24} fill="transparent" />}
+                            icon={<SvgIcons.ticketCanceled width={32} height={32} />}
                             label="Total Canceled"
                             count="102"
                             amount="GHS 20,000.00"
-                            iconColor={color.brown_D58E00}
                         />
                     </View>
                 </Card>
@@ -1267,6 +1395,9 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginBottom: 16,
     },
+    statisticsCard: {
+        overflow: 'visible',
+    },
     lastCard: {
         marginBottom: 40,
     },
@@ -1285,24 +1416,6 @@ const styles = StyleSheet.create({
         gap: 12,
         flex: 1,
         marginRight: 12,
-    },
-    iconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    currencyContainer: {
-        alignItems: 'flex-end',
-        flex: 0,
-        minWidth: 100,
-        maxWidth: 150,
-    },
-    currencyLabel: {
-        fontSize: 12,
-        color: color.grey_87807C,
-        marginBottom: 4,
     },
     yAxisLabels: {
         position: 'absolute',
@@ -1403,12 +1516,6 @@ const styles = StyleSheet.create({
     filterByEvent: {
         marginBottom: 4,
     },
-    xAxisLabels: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 40,
-        marginTop: 8,
-    },
     attendeesChartContainer: {
         marginTop: 8,
     },
@@ -1427,6 +1534,7 @@ const styles = StyleSheet.create({
     },
     chartAreaAttendees: {
         flex: 1,
+        position: 'relative',
     },
     xAxisLabelsAttendees: {
         flexDirection: 'row',
@@ -1441,12 +1549,12 @@ const styles = StyleSheet.create({
     eventContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 20,
+        gap: 24,
     },
     donutContainer: {
         position: 'relative',
-        width: 80,
-        height: 80,
+        width: 140,
+        height: 140,
     },
     donutCenter: {
         position: 'absolute',
@@ -1458,96 +1566,107 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     donutTotal: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: '700',
         color: color.black_2F251D,
     },
     donutLabel: {
-        fontSize: 10,
+        fontSize: 12,
         color: color.grey_87807C,
     },
     eventLegend: {
         flex: 1,
-        gap: 12,
+        gap: 16,
     },
     eventLegendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
     },
     eventLegendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 2,
+        width: 12,
+        height: 12,
+        borderRadius: 4,
     },
     eventLegendLabel: {
         flex: 1,
-        fontSize: 14,
-        color: color.brown_766F6A,
-    },
-    eventLegendValue: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 16,
         color: color.black_2F251D,
     },
-    mainStatBox: {
-        backgroundColor: '#F8F7F5',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
+    eventLegendValue: {
+        fontSize: 16,
+        fontWeight: '400',
+        color: color.grey_87807C,
     },
-    mainStatHeader: {
+    // Ticket Stat Box Styles
+    ticketWrapper: {
+        position: 'relative',
+        marginBottom: 16,
+    },
+    ticketContainer: {
+        backgroundColor: color.lightBrown_FFF6DF,
+        borderRadius: 16,
+    },
+    ticketTopSection: {
+        padding: 16,
+        paddingBottom: 12,
+    },
+    ticketHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
     },
-    mainStatLabel: {
-        fontSize: 14,
-        color: color.brown_766F6A,
+    ticketIconCircle: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: color.white_FFFFFF,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    mainStatCount: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: color.black_2F251D,
+    ticketDividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 2,
+        paddingHorizontal: 24,
     },
-    statDivider: {
-        height: 1,
-        backgroundColor: color.borderBrown_CEBCA0,
-        marginVertical: 12,
-        borderStyle: 'dashed',
-    },
-    mainStatAmounts: {
+    ticketBottomSection: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        padding: 16,
+        paddingTop: 12,
     },
-    statAmountLabel: {
-        fontSize: 12,
-        color: color.grey_87807C,
+    ticketAmountItem: {
+        flex: 1,
     },
-    mainStatAmount: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: color.black_2F251D,
+    cutoutAbsolute: {
+        position: 'absolute',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: color.white_FFFFFF,
     },
+    // Mini Stat Card Styles
     statRow: {
         flexDirection: 'row',
         gap: 12,
     },
     miniStatCard: {
         flex: 1,
-        backgroundColor: '#F8F7F5',
+        backgroundColor: "#FAFAFA",
         borderRadius: 16,
         padding: 16,
         alignItems: 'center',
         marginBottom: 12,
     },
     miniStatIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: color.white_FFFFFF,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     miniStatLabel: {
         fontSize: 12,
@@ -1563,8 +1682,8 @@ const styles = StyleSheet.create({
     },
     miniStatAmount: {
         fontSize: 12,
-        color: color.grey_87807C,
     },
+    // Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
@@ -1581,21 +1700,21 @@ const styles = StyleSheet.create({
     modalHandle: {
         width: 40,
         height: 4,
-        backgroundColor: color.borderBrown_CEBCA0,
+        backgroundColor: color.grey_AFAFAF,
         borderRadius: 2,
         alignSelf: 'center',
         marginBottom: 16,
     },
     datePickerTitle: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: '700',
-        color: color.black_2F251D,
+        color: color.brown_3C200A,
         marginBottom: 16,
     },
     filtersScroll: {
         marginBottom: 20,
         marginHorizontal: -20,
-        paddingHorizontal: 5,
+        paddingHorizontal: 20,
         paddingVertical: 5,
         backgroundColor: color.grey_E5E7EB,
     },
@@ -1623,10 +1742,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     navButton: {
-        width: 44,
-        height: 44,
+        width: 30,
+        height: 30,
         borderRadius: 22,
-        backgroundColor: '#F8F7F5',
+        backgroundColor: '#DDDDDD',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -1662,9 +1781,15 @@ const styles = StyleSheet.create({
     },
     dayCellStart: {
         backgroundColor: color.brown_D58E00,
-        borderRadius: 12,
+        borderTopLeftRadius: 12,
+        borderBottomLeftRadius: 12,
     },
     dayCellEnd: {
+        backgroundColor: color.brown_D58E00,
+        borderTopRightRadius: 12,
+        borderBottomRightRadius: 12,
+    },
+    dayCellSingle: {
         backgroundColor: color.brown_D58E00,
         borderRadius: 12,
     },
@@ -1693,6 +1818,51 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+    // Year Picker Styles
+    yearPickerContainer: {
+        paddingVertical: 10,
+    },
+    yearPickerNav: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 10,
+    },
+    yearNavButton: {
+        padding: 10,
+    },
+    decadeTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: color.btnBrown_AE6F28,
+    },
+    yearsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    yearCell: {
+        width: '30%',
+        paddingVertical: 16,
+        marginBottom: 12,
+        borderRadius: 12,
+        backgroundColor: '#F0F0F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    yearCellOutside: {
+        backgroundColor: 'transparent',
+    },
+    yearCellSelected: {
+        backgroundColor: color.white_FFFFFF,
+        borderWidth: 2,
+        borderColor: color.btnBrown_AE6F28,
+    },
+    yearCellCurrent: {
+        backgroundColor: color.lightBrown_FFF6DF,
     },
 });
 
