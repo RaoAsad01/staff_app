@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, ScrollView, Text } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, SafeAreaView, ScrollView, Text, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../../../color/color';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SvgIcons from '../../../components/SvgIcons';
@@ -26,7 +27,13 @@ import { logger } from '../../../utils/logger';
 const StaffDashboard = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const { eventInfo, staffUuid, staffName, onEventChange } = route.params;
+
+  // Calculate top padding: use safe area insets, or StatusBar height on Android
+  const topPadding = Platform.OS === 'android'
+    ? (StatusBar.currentHeight || 0)
+    : insets.top;
 
   // Local state for current event info
   const [currentEventInfo, setCurrentEventInfo] = useState(eventInfo);
@@ -614,18 +621,11 @@ const StaffDashboard = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.statusBarPlaceholder} />
-      <SafeAreaView style={styles.safeAreaContainer}>
+      <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
               <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(currentEventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
-              {/* <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setEventsModalVisible(true)}
-              >
-                <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
-              </TouchableOpacity> */}
             </View>
             <Text style={styles.separator}>   </Text>
             <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(currentEventInfo?.cityName) || 'Accra'}</Text>
@@ -650,10 +650,6 @@ const StaffDashboard = () => {
       <View style={styles.overallStatisticsContainer}>
         <OverallStatistics
           stats={dashboardStats}
-          // onTotalTicketsPress={handleTotalTicketsPress}
-          // onTotalScannedPress={handleTotalScannedPress}
-          // onTotalUnscannedPress={handleTotalUnscannedPress}
-          // onAvailableTicketsPress={handleAvailableTicketsPress}
           showHeading={false}
         />
       </View>
@@ -711,15 +707,14 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
   },
+  safeAreaContainer: {
+    backgroundColor: color.btnBrown_AE6F28,
+  },
   scrollContainer: {
     flexGrow: 1
   },
   wrapper: {
     flex: 1,
-  },
-  statusBarPlaceholder: {
-    height: Platform.OS === 'android' ? 0 : 0,
-    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',

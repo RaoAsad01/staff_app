@@ -35,7 +35,7 @@ import { formatDateWithMonthName } from '../../constants/dateAndTime';
 import { logger } from '../../utils/logger';
 import AdminAllEventsDashboard from '../dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
 
-const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventChange }) => {
+const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventChange, showEventDashboard }) => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
@@ -1002,7 +1002,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   );
 
   // For ADMIN users, show AdminAllEventsDashboard in Dashboard tab
-  if (userRole === 'ADMIN') {
+  if (userRole === 'ADMIN' && !showEventDashboard) {
     return <AdminAllEventsDashboard />;
   }
 

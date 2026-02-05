@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   FlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
+import { color } from '../../color/color';
 
 const { width } = Dimensions.get('window');
 
@@ -27,10 +28,6 @@ const colors = {
   border: '#EDE9E3',
   accent: '#C75D3A',
 };
-
-// Note: Event and EventSection are used as object shapes in the code
-// Event: { id, title, image, date, time, location, isBookmarked?, attendees? }
-// EventSection: { title, subtitle?, countdown?, events }
 
 // Icons
 const BackIcon = () => (
@@ -83,11 +80,7 @@ const ChevronRightIcon = () => (
 );
 
 // Countdown Timer Component
-const CountdownTimer = ({
-  days,
-  hours,
-  mins,
-}) => (
+const CountdownTimer = ({ days, hours, mins }) => (
   <View style={styles.countdownContainer}>
     <View style={styles.countdownBox}>
       <Text style={styles.countdownNumber}>
@@ -107,25 +100,6 @@ const CountdownTimer = ({
       </Text>
       <Text style={styles.countdownLabel}>Min</Text>
     </View>
-  </View>
-);
-
-// Attendee Avatars Component
-const AttendeeAvatars = ({
-  attendees,
-}) => (
-  <View style={styles.attendeesContainer}>
-    {attendees.map((attendee, index) => (
-      <View
-        key={index}
-        style={[
-          styles.attendeeAvatar,
-          { backgroundColor: attendee.color, marginLeft: index > 0 ? -8 : 0 },
-        ]}
-      >
-        <Text style={styles.attendeeInitial}>{attendee.initial}</Text>
-      </View>
-    ))}
   </View>
 );
 
@@ -150,12 +124,12 @@ const LargeEventCard = ({ event, onPress }) => (
 );
 
 // Small Event Card (for multiple events - horizontal scroll)
-const SmallEventCard = ({
-  event,
-  isFirst,
-  onPress,
-}) => (
-  <TouchableOpacity style={[styles.smallCard, isFirst && { marginLeft: 20 }]} onPress={onPress} activeOpacity={0.8}>
+const SmallEventCard = ({ event, isFirst, onPress }) => (
+  <TouchableOpacity 
+    style={[styles.smallCard, isFirst && { marginLeft: 20 }]} 
+    onPress={onPress} 
+    activeOpacity={0.8}
+  >
     <View style={styles.smallImageContainer}>
       <Image source={{ uri: event.image }} style={styles.smallImage} />
       <TouchableOpacity style={styles.bookmarkButtonSmall}>
@@ -194,32 +168,19 @@ const UpcomingEventItem = ({ event, onPress }) => (
   </TouchableOpacity>
 );
 
-// Section Header Component
-const SectionHeader = ({
-  title,
-  subtitle,
-  countdown,
-  onPress,
-}) => (
-  <View style={styles.sectionHeader}>
-    <TouchableOpacity style={styles.sectionTitleContainer} onPress={onPress}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <ChevronRightIcon />
-    </TouchableOpacity>
-    {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
-    {countdown && <CountdownTimer {...countdown} />}
-  </View>
-);
-
 // Event Section Component - handles single vs multiple events
-const EventSection = ({ section, onEventPress }) => {
+const EventSection = ({ section, onEventPress, onSectionPress }) => {
   const isSingleEvent = section.events.length === 1;
+  const isHappeningToday = section.title === 'Happening Today';
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isHappeningToday && styles.happeningTodaySection]}>
       <View style={styles.sectionHeaderRow}>
         <View>
-          <TouchableOpacity style={styles.sectionTitleContainer}>
+          <TouchableOpacity 
+            style={styles.sectionTitleContainer}
+            onPress={() => onSectionPress && onSectionPress(section)}
+          >
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <ChevronRightIcon />
           </TouchableOpacity>
@@ -231,19 +192,24 @@ const EventSection = ({ section, onEventPress }) => {
       </View>
 
       {isSingleEvent ? (
-        // Single event - show large card
         <View style={styles.singleEventContainer}>
-          <LargeEventCard event={section.events[0]} onPress={() => onEventPress && onEventPress(section.events[0])} />
+          <LargeEventCard 
+            event={section.events[0]} 
+            onPress={() => onEventPress && onEventPress(section.events[0])} 
+          />
         </View>
       ) : (
-        // Multiple events - show horizontal scroll
         <FlatList
           data={section.events}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <SmallEventCard event={item} isFirst={index === 0} onPress={() => onEventPress && onEventPress(item)} />
+            <SmallEventCard 
+              event={item} 
+              isFirst={index === 0} 
+              onPress={() => onEventPress && onEventPress(item)} 
+            />
           )}
           contentContainerStyle={styles.horizontalList}
         />
@@ -255,6 +221,7 @@ const EventSection = ({ section, onEventPress }) => {
 // Main Events Screen Component
 const EventsScreen = ({ eventInfo, onEventChange }) => {
   const navigation = useNavigation();
+  
   // Sample data - in real app this would come from API/props
   const [eventSections, setEventSections] = useState([
     {
@@ -270,10 +237,6 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
           time: '7:00pm - 12:00 am',
           location: 'Natioanl Theatre, London, Great...',
           isBookmarked: false,
-          attendees: [
-            { initial: 'H', color: '#9B8AFB' },
-            { initial: 'M', color: '#34D399' },
-          ],
         },
       ],
     },
@@ -384,26 +347,49 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
   const currentSections = isMultipleMode ? multipleEventSections : eventSections;
   const currentUpcoming = isMultipleMode ? multipleUpcomingEvents : upcomingEvents;
 
-  // Handle event press - navigate to Dashboard
+  // Handle event press - call onEventChange (MyTabs fetches full data) then navigate to Dashboard
   const handleEventPress = (event) => {
-    // Transform event data to match expected format
-    const transformedEvent = {
-      uuid: event.id || event.uuid,
-      eventUuid: event.id || event.uuid,
-      event_title: event.title,
-      cityName: event.location || 'Accra',
-      date: event.date || new Date().toISOString().split('T')[0],
-      time: event.time || '7:00 PM',
+    // Pass the event's uuid so MyTabs.handleEventChangeFromEvents can:
+    // 1. Set showEventDashboard = true
+    // 2. Fetch full event info from eventService.fetchEventInfo()
+    // 3. Set eventInformation with all fields (staff_name, scanCount, userId, etc.)
+    // 4. DashboardScreen re-renders with complete data
+    const eventForChange = {
+      uuid: event.uuid || event.eventUuid || event.id,
+      title: event.title || event.event_title,
+      event_title: event.title || event.event_title,
+      cityName: event.cityName || event.location,
+      date: event.date,
+      time: event.time,
     };
 
-    // If onEventChange callback exists, call it
     if (onEventChange) {
-      onEventChange(transformedEvent);
+      onEventChange(eventForChange);
     }
 
-    // Navigate to Dashboard tab
-    navigation.navigate('Dashboard', {
-      eventInfo: transformedEvent,
+    // Navigate to the Dashboard tab
+    navigation.navigate('Dashboard');
+  };
+
+  // Handle section title press - navigate to ExploreEventsScreen
+  const handleSectionPress = (section) => {
+    const eventsWithAttendees = section.events.map((event) => ({
+      ...event,
+    }));
+
+    navigation.navigate('ExploreEventScreen', {
+      sectionTitle: section.title === 'Happening Today' ? 'Explore Events' : section.title,
+      events: eventsWithAttendees,
+    });
+  };
+
+  // Handle upcoming section press
+  const handleUpcomingSectionPress = () => {
+    navigation.navigate('ExploreEventScreen', {
+      sectionTitle: 'Upcoming Events',
+      events: currentUpcoming.map((event) => ({
+        ...event,
+      })),
     });
   };
 
@@ -433,18 +419,30 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Event Sections */}
         {currentSections.map((section, index) => (
-          <EventSection key={index} section={section} onEventPress={handleEventPress} />
+          <EventSection 
+            key={index} 
+            section={section} 
+            onEventPress={handleEventPress}
+            onSectionPress={handleSectionPress}
+          />
         ))}
 
         {/* Upcoming Section */}
         <View style={styles.upcomingSection}>
-          <TouchableOpacity style={styles.sectionTitleContainer}>
+          <TouchableOpacity 
+            style={styles.sectionTitleContainer}
+            onPress={handleUpcomingSectionPress}
+          >
             <Text style={styles.sectionTitle}>Upcoming</Text>
             <ChevronRightIcon />
           </TouchableOpacity>
 
           {currentUpcoming.map((event) => (
-            <UpcomingEventItem key={event.id} event={event} onPress={() => handleEventPress(event)} />
+            <UpcomingEventItem 
+              key={event.id} 
+              event={event} 
+              onPress={() => handleEventPress(event)} 
+            />
           ))}
         </View>
 
@@ -495,6 +493,12 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  happeningTodaySection: {
+    backgroundColor: '#FFF6DF',
+    paddingTop: 16,
+    paddingBottom: 20,
+    marginBottom: 24,
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -512,9 +516,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
+    color: color.placeholderTxt_24282C,
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -526,49 +530,36 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   countdownBox: {
-    backgroundColor: colors.cardBg,
+    backgroundColor: color.white_FFFFFF,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',
-    minWidth: 48,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    minWidth: 55,
   },
   countdownNumber: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    color: colors.text,
+    color: color.brown_3C200A,
   },
   countdownLabel: {
-    fontSize: 10,
-    color: colors.textMuted,
+    fontSize: 11,
+    color: color.brown_3C200A,
+    fontWeight: '400',
     marginTop: 2,
   },
   singleEventContainer: {
     paddingHorizontal: 20,
   },
-  largeCard: {
-    backgroundColor: colors.cardBg,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
+  largeCard: {},
   largeImageContainer: {
-    position: 'relative',
     height: 200,
   },
   largeImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    borderRadius: 8,
   },
   bookmarkButton: {
     position: 'absolute',
@@ -601,7 +592,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cardContent: {
-    padding: 16,
+    paddingTop: 10,
   },
   eventTitle: {
     fontSize: 18,
@@ -628,24 +619,15 @@ const styles = StyleSheet.create({
   },
   smallCard: {
     width: width * 0.55,
-    backgroundColor: colors.cardBg,
-    borderRadius: 16,
-    overflow: 'hidden',
     marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   smallImageContainer: {
-    position: 'relative',
     height: 140,
   },
   smallImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    borderRadius: 16,
   },
   bookmarkButtonSmall: {
     position: 'absolute',
@@ -656,7 +638,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   smallCardContent: {
-    padding: 12,
+    paddingTop: 10,
   },
   smallEventTitle: {
     fontSize: 16,
@@ -683,16 +665,11 @@ const styles = StyleSheet.create({
   },
   upcomingItem: {
     flexDirection: 'row',
-    backgroundColor: colors.cardBg,
     borderRadius: 16,
     padding: 12,
     marginTop: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: color.white_FFFFFF,
   },
   upcomingImage: {
     width: 70,
@@ -736,6 +713,7 @@ const styles = StyleSheet.create({
   },
   upcomingBookmark: {
     padding: 8,
+    paddingBottom: 65,
   },
   bottomSpacer: {
     height: 40,

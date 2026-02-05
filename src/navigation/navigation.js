@@ -15,6 +15,7 @@ import TicketScanned from '../screens/TicketScanned';
 import SplashScreenComponent from '../screens/SplashScreen';
 import InitialScreen from '../screens/InitialScreen';
 import StaffDashboard from '../screens/dashboard/StaffDashboard';
+import ExploreEventScreen from '../screens/eventsTab/Exploreeventscreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -171,6 +172,17 @@ function Navigation({ route }) {
       <Stack.Screen 
         name="StaffDashboard" 
         component={StaffDashboard} 
+        options={{ 
+          headerShown: false,
+          unmountOnBlur: true,
+          statusBarStyle: 'dark',
+          statusBarBackgroundColor: 'white',
+          statusBarTranslucent: true
+        }} 
+      />
+       <Stack.Screen 
+        name="ExploreEventScreen" 
+        component={ExploreEventScreen} 
         options={{ 
           headerShown: false,
           unmountOnBlur: true,

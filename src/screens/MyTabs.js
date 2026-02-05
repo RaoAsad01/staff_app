@@ -36,9 +36,12 @@ function MyTabs() {
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  
+
+  // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
+  // Set to true when navigating from EventsScreen, reset to false when tapping Dashboard tab.
+  const [showEventDashboard, setShowEventDashboard] = useState(false);
+
   // Calculate dynamic tab bar height with safe area insets
-  // Base height (66) + bottom safe area inset (for devices with navigation bars)
   const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
 
   // Fetch user role
@@ -77,15 +80,14 @@ function MyTabs() {
         try {
           setIsLoadingEventInfo(true);
           logger.log('No eventInfo found, fetching from backend...');
-          
-          // Try to get the last selected event from secure storage
+
           const lastEventUuid = await SecureStore.getItemAsync('lastSelectedEventUuid');
           logger.log('Retrieved stored UUID:', lastEventUuid);
-          
+
           if (lastEventUuid) {
             logger.log('Found last event UUID in storage:', lastEventUuid);
             const eventInfoData = await eventService.fetchEventInfo(lastEventUuid);
-            
+
             const transformedEventInfo = {
               staff_name: eventInfoData?.data?.staff_name,
               event_title: eventInfoData?.data?.event_title,
@@ -97,40 +99,34 @@ function MyTabs() {
               event_uuid: eventInfoData?.data?.location?.uuid,
               eventUuid: lastEventUuid
             };
-            
+
             logger.log('Fetched event info from backend:', transformedEventInfo);
             setEventInformation(transformedEventInfo);
-            } else {
-              logger.log('No last event UUID found in storage, fetching user events...');
-            // Fallback: fetch user events and use the first available event
+          } else {
+            logger.log('No last event UUID found in storage, fetching user events...');
             try {
               const staffEventsData = await eventService.fetchStaffEvents();
               const eventsList = staffEventsData?.data;
-              
+
               if (eventsList && eventsList.length > 0) {
                 let selectedEvent = null;
-                
-                // Handle different data structures for ADMIN vs Organizer roles
+
                 if (eventsList[0].events && Array.isArray(eventsList[0].events)) {
-                  // For organizer role: eventsList[0] contains {events: [...], staff: "..."}
                   if (eventsList[0].events.length > 0) {
                     selectedEvent = eventsList[0].events[0];
                   }
                 } else {
-                  // For admin role or direct event structure
                   selectedEvent = eventsList[0];
                 }
-                
+
                 if (selectedEvent) {
                   const eventUuid = selectedEvent.uuid || selectedEvent.eventUuid;
                   logger.log('Using first available event:', eventUuid);
-                  
-                  // Store this event UUID for future use
+
                   await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
-                  
-                  // Fetch event info
+
                   const eventInfoData = await eventService.fetchEventInfo(eventUuid);
-                  
+
                   const transformedEventInfo = {
                     staff_name: eventInfoData?.data?.staff_name,
                     event_title: eventInfoData?.data?.event_title,
@@ -142,7 +138,7 @@ function MyTabs() {
                     event_uuid: eventInfoData?.data?.location?.uuid,
                     eventUuid: eventUuid
                   };
-                  
+
                   logger.log('Fetched fallback event info from backend:', transformedEventInfo);
                   setEventInformation(transformedEventInfo);
                 } else {
@@ -181,31 +177,80 @@ function MyTabs() {
     }
   };
 
-  // Function to handle event change from dashboard
+  // ─── Core event change handler ───
+  // Fetches FULL event details from the backend so all screens get complete data
   const handleEventChange = async (newEvent) => {
     logger.log('Event changed to:', newEvent);
-    // Transform the event data to match the expected format
-    const transformedEvent = {
-      eventUuid: newEvent.uuid,
-      event_title: newEvent.title,
-      uuid: newEvent.uuid,
-      cityName: eventInformation?.cityName || 'Accra',
-      date: eventInformation?.date || '28-12-2024',
-      time: eventInformation?.time || '7:00 PM',
-    };
-    
+
+    const eventUuid = newEvent.uuid || newEvent.eventUuid;
+
     // Store the new event UUID for app restart scenarios
     try {
-      await SecureStore.setItemAsync('lastSelectedEventUuid', newEvent.uuid);
-      logger.log('Stored new selected event UUID:', newEvent.uuid);
+      if (eventUuid) {
+        await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
+        logger.log('Stored new selected event UUID:', eventUuid);
+      }
     } catch (error) {
       logger.error('Error storing event UUID:', error);
     }
-    
+
+    // Fetch full event details from the backend
+    try {
+      if (eventUuid) {
+        const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+        const fullEventInfo = {
+          staff_name: eventInfoData?.data?.staff_name || newEvent.staff_name,
+          event_title: eventInfoData?.data?.event_title || newEvent.event_title || newEvent.title,
+          cityName: eventInfoData?.data?.location?.city || newEvent.cityName,
+          date: eventInfoData?.data?.start_date || newEvent.date,
+          time: eventInfoData?.data?.start_time || newEvent.time,
+          userId: eventInfoData?.data?.staff_id || newEvent.userId,
+          scanCount: eventInfoData?.data?.scan_count ?? newEvent.scanCount ?? 0,
+          event_uuid: eventInfoData?.data?.location?.uuid || newEvent.event_uuid,
+          eventUuid: eventUuid,
+        };
+        logger.log('Full event info after change:', fullEventInfo);
+        setEventInformation(fullEventInfo);
+        return;
+      }
+    } catch (error) {
+      logger.error('Error fetching full event info after change, using fallback:', error);
+    }
+
+    // Fallback: use whatever data was passed in
+    const transformedEvent = {
+      eventUuid: eventUuid,
+      event_title: newEvent.title || newEvent.event_title,
+      uuid: eventUuid,
+      cityName: newEvent.cityName || eventInformation?.cityName || 'Accra',
+      date: newEvent.date || eventInformation?.date,
+      time: newEvent.time || eventInformation?.time,
+      staff_name: newEvent.staff_name || eventInformation?.staff_name,
+      userId: newEvent.userId || eventInformation?.userId,
+      scanCount: newEvent.scanCount ?? eventInformation?.scanCount ?? 0,
+      event_uuid: newEvent.event_uuid || eventInformation?.event_uuid,
+    };
     setEventInformation(transformedEvent);
-    
-    // The dashboard will automatically refresh its data when eventInformation changes
-    // because it depends on eventInfo?.eventUuid in the useEffect
+  };
+
+  // ─── Flow 1: Called from EventsScreen when user taps an event card ───
+  // Sets showEventDashboard=true so ADMIN sees event-specific dashboard
+  const handleEventChangeFromEvents = async (newEvent) => {
+    setShowEventDashboard(true);
+    await handleEventChange(newEvent);
+  };
+
+  // ─── Flow 2: Called from DashboardScreen (e.g. events modal dropdown) ───
+  // Keeps showEventDashboard as-is (already on event dashboard if visible)
+  const handleEventChangeFromDashboard = async (newEvent) => {
+    await handleEventChange(newEvent);
+  };
+
+  // ─── Flow 3: When ADMIN taps the Dashboard tab directly, reset to AdminAllEventsDashboard ───
+  const handleDashboardTabPress = () => {
+    if (userRole === 'ADMIN') {
+      setShowEventDashboard(false);
+    }
   };
 
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
@@ -223,7 +268,6 @@ function MyTabs() {
   const CustomIcon = ({ route, focused, isCheckInActive, userRole }) => {
     let IconComponent;
 
-    // Use admin icons for ADMIN users
     if (userRole === 'ADMIN') {
       if (route.name === 'Dashboard') {
         IconComponent = focused ? SvgIcons.adminDashboardActiveTab : SvgIcons.adminDashboardInactiveTab;
@@ -327,15 +371,28 @@ function MyTabs() {
     >
       <Tab.Screen
         name="Dashboard"
-        options={{ 
-          headerShown: false, 
+        options={{
+          headerShown: false,
           unmountOnBlur: true,
           statusBarStyle: 'dark',
           statusBarBackgroundColor: 'white',
           statusBarTranslucent: false
         }}
+        listeners={{
+          tabPress: () => {
+            // When ADMIN taps Dashboard tab directly, reset to overview
+            handleDashboardTabPress();
+          },
+        }}
       >
-        {() => <DashboardScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} onEventChange={handleEventChange} />}
+        {() => (
+          <DashboardScreen
+            eventInfo={eventInformation}
+            onScanCountUpdate={updateScanCount}
+            onEventChange={handleEventChangeFromDashboard}
+            showEventDashboard={showEventDashboard}
+          />
+        )}
       </Tab.Screen>
 
       {/* Conditional tabs based on user role */}
@@ -343,15 +400,20 @@ function MyTabs() {
         <>
           <Tab.Screen
             name="Events"
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
           >
-            {() => <EventsScreen eventInfo={eventInformation} onEventChange={handleEventChange} />}
+            {() => (
+              <EventsScreen
+                eventInfo={eventInformation}
+                onEventChange={handleEventChangeFromEvents}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen
@@ -369,8 +431,8 @@ function MyTabs() {
 
           <Tab.Screen
             name="Services"
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
@@ -382,8 +444,8 @@ function MyTabs() {
 
           <Tab.Screen
             name="Tickets"
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
@@ -411,8 +473,8 @@ function MyTabs() {
         <>
           <Tab.Screen
             name="Tickets"
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
@@ -451,8 +513,8 @@ function MyTabs() {
 
           <Tab.Screen
             name="Manual"
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
@@ -465,8 +527,8 @@ function MyTabs() {
           <Tab.Screen
             name="Profile"
             component={ProfileScreen}
-            options={{ 
-              headerShown: false, 
+            options={{
+              headerShown: false,
               unmountOnBlur: true,
               statusBarStyle: 'dark',
               statusBarBackgroundColor: 'white',
