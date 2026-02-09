@@ -553,9 +553,9 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
                 </TouchableOpacity>
                 <Typography
                     style={styles.decadeTitle}
-                    weight="600"
-                    size={18}
-                    color={color.black_2F251D}
+                    weight="700"
+                    size={14}
+                    color={color.brown_3C200A}
                 >
                     {decadeStart}-{decadeStart + 9}
                 </Typography>
@@ -580,7 +580,7 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
                     >
                         <Typography
                             weight={isSelectedYear(year) || isCurrentYear(year) ? "600" : "400"}
-                            size={16}
+                            size={14}
                             color={
                                 isSelectedYear(year)
                                     ? color.btnBrown_AE6F28
@@ -835,8 +835,8 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                     <Typography
                         style={styles.datePickerTitle}
                         weight="700"
-                        size={24}
-                        color={color.black_2F251D}
+                        size={16}
+                        color={color.brown_3C200A}
                     >
                         Date Range
                     </Typography>
@@ -877,18 +877,18 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                         <>
                             <View style={styles.calendarNav}>
                                 <TouchableOpacity style={styles.navButton} onPress={handlePrevMonth}>
-                                    <SvgIcons.leftArrow width={20} height={20} fill="transparent" />
+                                    <SvgIcons.leftArrow width={10} height={10} fill="transparent" />
                                 </TouchableOpacity>
                                 <Typography
                                     style={styles.monthTitle}
-                                    weight="600"
-                                    size={20}
-                                    color={color.black_2F251D}
+                                    weight="700"
+                                    size={16}
+                                    color={color.brown_3C200A}
                                 >
                                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                                 </Typography>
                                 <TouchableOpacity style={styles.navButton} onPress={handleNextMonth}>
-                                    <SvgIcons.rightArrow width={10} height={10} fill="transparent" />
+                                    <SvgIcons.rightArrow width={5} height={5} fill="transparent" />
                                 </TouchableOpacity>
                             </View>
 
@@ -937,7 +937,7 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                                                         (isStart || isEnd) && styles.dayTextEnd,
                                                     ]}
                                                     weight={(isStart || isEnd) ? "600" : "400"}
-                                                    size={16}
+                                                    size={14}
                                                     color={
                                                         (isPrevMonth || isNextMonth)
                                                             ? color.grey_87807C
@@ -982,7 +982,7 @@ const AdminAllEventsDashboard = () => {
     const [selectedDate, setSelectedDate] = useState('Jan 23, 2026');
 
     const eventData = [
-        { label: 'Happening Now', value: 12, color: color.btnBrown_AE6F28 },
+        { label: 'Today', value: 12, color: color.btnBrown_AE6F28 },
         { label: 'Upcoming', value: 9, color: color.brown_D58E00 },
         { label: 'Past', value: 8, color: color.grey_87807C },
     ];
@@ -1007,9 +1007,19 @@ const AdminAllEventsDashboard = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity>
-                    <SvgIcons.drawerSvg width={24} height={24} fill="transparent" />
-                </TouchableOpacity>
+                <View style={styles.headerRight}>
+                    <TouchableOpacity>
+                        <SvgIcons.drawerSvg width={24} height={24} fill="transparent" />
+                    </TouchableOpacity>
+                    <Typography
+                        style={styles.pageTitle}
+                        weight="700"
+                        size={20}
+                        color={color.brown_3C200A}
+                    >
+                        Dashboard
+                    </Typography>
+                </View>
                 <View style={styles.headerRight}>
                     <TouchableOpacity style={styles.bellButton}>
                         <SvgIcons.bellIcon width={28} height={28} fill="transparent" />
@@ -1022,14 +1032,7 @@ const AdminAllEventsDashboard = () => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-                <Typography
-                    style={styles.pageTitle}
-                    weight="700"
-                    size={20}
-                    color={color.brown_3C200A}
-                >
-                    Dashboard
-                </Typography>
+
 
                 <View style={styles.filters}>
                     <View style={styles.dropdownWrapper}>
@@ -1171,7 +1174,7 @@ const AdminAllEventsDashboard = () => {
                                     <Typography
                                         style={styles.eventLegendLabel}
                                         weight="500"
-                                        size={16}
+                                        size={14}
                                         color={color.placeholderTxt_24282C}
                                     >
                                         {item.label}
@@ -1179,7 +1182,7 @@ const AdminAllEventsDashboard = () => {
                                     <Typography
                                         style={styles.eventLegendValue}
                                         weight="400"
-                                        size={16}
+                                        size={14}
                                         color={color.black_544B45}
                                     >
                                         {item.value.toString().padStart(2, '0')}
@@ -1322,8 +1325,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: color.brown_3C200A,
-        paddingHorizontal: 20,
-        marginBottom: 16,
     },
     filters: {
         flexDirection: 'row',
@@ -1591,7 +1592,6 @@ const styles = StyleSheet.create({
     eventLegendLabel: {
         flex: 1,
         fontSize: 16,
-        color: color.black_2F251D,
     },
     eventLegendValue: {
         fontSize: 16,
@@ -1706,9 +1706,6 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     datePickerTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: color.brown_3C200A,
         marginBottom: 16,
     },
     filtersScroll: {
@@ -1728,7 +1725,7 @@ const styles = StyleSheet.create({
         backgroundColor: color.btnBrown_AE6F28,
     },
     filterChipText: {
-        fontSize: 14,
+        fontSize: 12,
         color: color.brown_766F6A,
     },
     filterChipTextActive: {
@@ -1750,9 +1747,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     monthTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: color.black_2F251D,
+
     },
     dayHeaders: {
         flexDirection: 'row',
@@ -1794,7 +1789,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     dayText: {
-        fontSize: 16,
+        fontSize: 14,
         color: color.black_2F251D,
     },
     dayTextMuted: {
@@ -1834,9 +1829,6 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     decadeTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: color.btnBrown_AE6F28,
     },
     yearsGrid: {
         flexDirection: 'row',
@@ -1849,7 +1841,6 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         marginBottom: 12,
         borderRadius: 12,
-        backgroundColor: '#F0F0F0',
         justifyContent: 'center',
         alignItems: 'center',
     },

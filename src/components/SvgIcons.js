@@ -27,7 +27,7 @@ import TickIcon from '../../assets/svgs/tick-icon.svg';
 import DashboardInactiveIcon from '../../assets/svgs/dashboard_inactive_icon.svg';
 import DashboardActiveIcon from '../../assets/svgs/dashboard_active_icon.svg';
 import ProfileIconInActive from '../../assets/svgs/profile_icon_inactive.svg';
-import BackArrow from '../../assets/svgs/back_arrow.svg';
+import BackArrow from '../../assets/svgs/back_arrow_icon.svg';
 import RemoveIcon from '../../assets/svgs/remove_icon.svg';
 import AddIcon from '../../assets/svgs/add_icon.svg';
 import PlaceholderImage from '../../assets/svgs/placeholder_img.svg';
@@ -72,6 +72,8 @@ import TotalUsedCoupon from '../../assets/svgs/total_used_coupon.svg';
 import TotalUnusedCoupon from '../../assets/svgs/total_unused_coupon.svg';
 import LeftArrow from '../../assets/svgs/left_arrow.svg';
 import RightArrow from '../../assets/svgs/right_arrow.svg';
+import SearchIconDark from '../../assets/svgs/search_icon_dark_brown';
+import BookmarkedIcon from '../../assets/svgs/bookmarked_icon'
 
 export default {
     totalTickets: TicketSVG,
@@ -147,6 +149,8 @@ export default {
     totalUsedCoupon: TotalUsedCoupon,
     totalUnusedCoupon: TotalUnusedCoupon,
     leftArrow: LeftArrow,
-    rightArrow: RightArrow
+    rightArrow: RightArrow,
+    searchIconDark: SearchIconDark,
+    bookmarkedIcon: BookmarkedIcon,
 };
 

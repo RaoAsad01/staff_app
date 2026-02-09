@@ -40,13 +40,13 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
-  
+
   // Get eventInfo from props or route params (route params take precedence for navigation updates)
   const eventInfo = route.params?.eventInfo || propEventInfo;
-  
+
   // Calculate top padding: use safe area insets, or StatusBar height on Android
-  const topPadding = Platform.OS === 'android' 
-    ? (StatusBar.currentHeight || 0) 
+  const topPadding = Platform.OS === 'android'
+    ? (StatusBar.currentHeight || 0)
     : insets.top;
   const [selectedTab, setSelectedTab] = useState("Check-Ins");
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
@@ -139,7 +139,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
           }
 
           const stats = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam);
-          
+
           // Log for debugging ORGANIZER payment channels
           if (userRole === 'ORGANIZER') {
             logger.log('📊 Dashboard Stats for ORGANIZER:', JSON.stringify(stats, null, 2));
@@ -148,7 +148,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             logger.log('  - stats?.data?.box_office_sales?.payment_channels:', stats?.data?.box_office_sales?.payment_channels);
             logger.log('  - stats?.data?.box_office_sales?.payment_channel:', stats?.data?.box_office_sales?.payment_channel);
           }
-          
+
           setDashboardStats(stats);
           setCurrentSalesType(salesParam);
           setError(null);
@@ -746,21 +746,21 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
           {userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
             <AdminBoxOfficePaymentChannel stats={dashboardStats} />
           )}
-           {userRole === 'ORGANIZER' && (() => {
+          {userRole === 'ORGANIZER' && (() => {
             logger.log('🔍 ORGANIZER Payment Channels Debug:');
             logger.log('dashboardStats?.data?.payment_channels:', dashboardStats?.data?.payment_channels);
             logger.log('dashboardStats?.data?.payment_channel:', dashboardStats?.data?.payment_channel);
             logger.log('dashboardStats?.data?.box_office_sales:', dashboardStats?.data?.box_office_sales);
             logger.log('Full dashboardStats.data keys:', Object.keys(dashboardStats?.data || {}));
-            
+
             // Determine the payment channel data from various possible locations
-            const paymentChannelData = dashboardStats?.data?.payment_channels 
+            const paymentChannelData = dashboardStats?.data?.payment_channels
               || dashboardStats?.data?.payment_channel
               || dashboardStats?.data?.box_office_sales?.payment_channels
               || dashboardStats?.data?.box_office_sales?.payment_channel;
-            
+
             logger.log(' Resolved paymentChannelData:', paymentChannelData);
-            
+
             return (
               <AdminBoxOfficePaymentChannel stats={{
                 ...dashboardStats,
@@ -778,8 +778,8 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
           {/* Total Payment Channel Card - Show for ADMIN Box Office and ORGANIZER */}
           {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
-            <TotalPaymentChannelCard 
-              stats={dashboardStats} 
+            <TotalPaymentChannelCard
+              stats={dashboardStats}
               onPaymentChannelPress={handlePaymentChannelPress}
               activePaymentChannel={activePaymentChannel}
             />
@@ -787,8 +787,8 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
           {/* Payment Channel Analytics - Show for ADMIN Box Office and ORGANIZER */}
           {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
-            <PaymentChannelAnalytics 
-              stats={dashboardStats} 
+            <PaymentChannelAnalytics
+              stats={dashboardStats}
               selectedPaymentChannel={activePaymentChannel}
               eventInfo={eventInfo}
               userRole={userRole}
@@ -1002,7 +1002,9 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   );
 
   // For ADMIN users, show AdminAllEventsDashboard in Dashboard tab
-  if (userRole === 'ADMIN' && !showEventDashboard) {
+  // Check showEventDashboard from props OR route params (for navigation from detail screens)
+  const shouldShowEventDashboard = showEventDashboard || route.params?.showEventDashboard;
+  if (userRole === 'ADMIN' && !shouldShowEventDashboard) {
     return <AdminAllEventsDashboard />;
   }
 
@@ -1027,6 +1029,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             <Text style={styles.separator}>   </Text>
             <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
             <Text style={styles.separator}></Text>
+            <Text style={styles.separator}>at</Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
           </View>

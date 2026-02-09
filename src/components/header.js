@@ -16,10 +16,10 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
   const insets = useSafeAreaInsets();
   const [tabKey, setTabKey] = useState(0);
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
-  
+
   // Calculate top padding: use safe area insets, or StatusBar height on Android
-  const topPadding = Platform.OS === 'android' 
-    ? (StatusBar.currentHeight || 0) 
+  const topPadding = Platform.OS === 'android'
+    ? (StatusBar.currentHeight || 0)
     : insets.top;
 
 
@@ -77,8 +77,9 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
               <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
               <Text style={styles.separator}>   </Text>
               <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
-              <Text style={styles.separator}> </Text>
-              <Text style={styles.separator}> </Text>
+              <Text style={styles.separator}></Text>
+              <Text style={styles.separator}>at</Text>
+              <Text style={styles.separator}></Text>
               <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
             </View>
           </View>

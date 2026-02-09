@@ -68,8 +68,8 @@ const EventCard = ({ event, onPress, onBookmarkPress }) => (
   </TouchableOpacity>
 );
 
-// Main Explore Events Screen Component
-const ExploreEventsScreen = () => {
+// Main Explore Detail Screen for Tickets Tab Component
+const ExploreDetailScreenTicketsTab = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
@@ -106,11 +106,11 @@ const ExploreEventsScreen = () => {
 
     // Validate that we have a real UUID (not a fake id like '1', '2', etc.)
     if (!eventUuid || eventUuid.length < 10) {
-      logger.error('Invalid event UUID in ExploreEventsScreen:', eventUuid);
+      logger.error('Invalid event UUID in ExploreDetailScreenTicketsTab:', eventUuid);
       return;
     }
 
-    logger.log('Event pressed in ExploreEventsScreen with UUID:', eventUuid);
+    logger.log('Event pressed in ExploreDetailScreenTicketsTab with UUID:', eventUuid);
 
     const eventForChange = {
       uuid: eventUuid,
@@ -122,33 +122,16 @@ const ExploreEventsScreen = () => {
       time: event.time,
     };
 
-    // If onEventChange callback is available (passed from EventsScreen via MyTabs),
-    // use it to update the event in MyTabs
-    // This will set showEventDashboard=true and fetch full event info
     if (onEventChange) {
+      // Call the onEventChange callback to update MyTabs state
+      // This will set showEventTickets=true and update eventInformation
       onEventChange(eventForChange);
-      
-      // Navigate after state update completes
-      // The onEventChange sets showEventDashboard=true in MyTabs
-      setTimeout(() => {
-        navigation.navigate('LoggedIn', {
-          screen: 'Dashboard',
-          params: {
-            eventInfo: eventForChange,
-            showEventDashboard: true, // Pass this to indicate we want event dashboard
-          },
-        });
-      }, 200);
+      // Go back to the Tickets tab which will now show the Tickets component
+      navigation.goBack();
     } else {
-      // Fallback: navigate directly without callback
+      // Fallback: navigate directly (for cases where callback isn't passed)
       logger.warn('No onEventChange callback available');
-      navigation.navigate('LoggedIn', {
-        screen: 'Dashboard',
-        params: {
-          eventInfo: eventForChange,
-          showEventDashboard: true,
-        },
-      });
+      navigation.goBack();
     }
   };
 
@@ -285,4 +268,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExploreEventsScreen;
+export default ExploreDetailScreenTicketsTab;

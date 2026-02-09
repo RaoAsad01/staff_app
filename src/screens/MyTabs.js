@@ -16,6 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 import { logger } from '../utils/logger';
 import AdminAllEventsDashboard from './dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
 import EventsScreen from './eventsTab/EventsScreen';
+import EventsTicketsTab from './eventsTicketsTab/EventsTicketsTab';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,6 +41,10 @@ function MyTabs() {
   // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
   // Set to true when navigating from EventsScreen, reset to false when tapping Dashboard tab.
   const [showEventDashboard, setShowEventDashboard] = useState(false);
+
+  // When true, ADMIN sees Tickets component for selected event instead of EventsTicketsTab.
+  // Set to true when selecting an event from EventsTicketsTab, reset to false when tapping Tickets tab.
+  const [showEventTickets, setShowEventTickets] = useState(false);
 
   // Calculate dynamic tab bar height with safe area insets
   const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
@@ -253,6 +258,20 @@ function MyTabs() {
     }
   };
 
+  // ─── Flow 4: Called from EventsTicketsTab when ADMIN taps an event card ───
+  // Sets showEventTickets=true so ADMIN sees Tickets component for that event
+  const handleEventChangeFromTicketsTab = async (newEvent) => {
+    setShowEventTickets(true);
+    await handleEventChange(newEvent);
+  };
+
+  // ─── Flow 5: When ADMIN taps the Tickets tab directly, reset to EventsTicketsTab ───
+  const handleTicketsTabPress = () => {
+    if (userRole === 'ADMIN') {
+      setShowEventTickets(false);
+    }
+  };
+
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
     return (
       <TouchableOpacity
@@ -296,6 +315,25 @@ function MyTabs() {
     }
 
     return <IconComponent width={24} height={24} fill="transparent" />;
+  };
+
+  // Render Tickets tab content for ADMIN
+  // Shows EventsTicketsTab by default, or Tickets component when an event is selected
+  const renderAdminTicketsContent = () => {
+    if (showEventTickets && eventInformation?.eventUuid) {
+      return (
+        <Tickets
+          eventInfo={eventInformation}
+          onScanCountUpdate={updateScanCount}
+        />
+      );
+    }
+    return (
+      <EventsTicketsTab
+        eventInfo={eventInformation}
+        onEventChange={handleEventChangeFromTicketsTab}
+      />
+    );
   };
 
   return (
@@ -439,7 +477,7 @@ function MyTabs() {
               statusBarTranslucent: false
             }}
           >
-            {() => <ServicesScreen />}
+            {() => <ProfileScreen />}
           </Tab.Screen>
 
           <Tab.Screen
@@ -451,22 +489,14 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
-            listeners={({ navigation }) => ({
-              tabPress: (e) => {
-                e.preventDefault();
-                navigation.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: 'Tickets',
-                      params: { fromTab: true, eventInfo: eventInformation },
-                    },
-                  ],
-                });
+            listeners={{
+              tabPress: () => {
+                // When ADMIN taps Tickets tab directly, reset to EventsTicketsTab
+                handleTicketsTabPress();
               },
-            })}
+            }}
           >
-            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+            {() => renderAdminTicketsContent()}
           </Tab.Screen>
         </>
       ) : (

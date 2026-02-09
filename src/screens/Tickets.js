@@ -1,25 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 import Header from '../components/header';
 import TicketsTab from './TicketsTab';
 import BoxOfficeTab from '../screens/BoxOfficeTab';
 import { color } from '../color/color';
 import SvgIcons from '../components/SvgIcons';
 
-const SettingsScreen = ({ route, eventInfo, navigation, onScanCountUpdate }) => {
+const SettingsScreen = (props) => {
+  // Safely get route - may be undefined when rendered directly as component
+  const routeFromHook = useRoute();
+  const route = props.route || routeFromHook;
+  
+  // Get eventInfo from props first (when rendered in MyTabs), 
+  // then fall back to route.params (when navigated to)
+  const routeParams = route?.params || {};
+  const { initialTab, eventInfo: routeEventInfo, selectedTab } = routeParams;
+  
+  // Use eventInfo from props if available, otherwise from route params
+  const finalEventInfo = props.eventInfo || routeEventInfo;
+  
+  // Get other props
+  const { navigation, onScanCountUpdate } = props;
+
   const [activeView, setActiveView] = useState('TicketsTab');
   const [tabKey, setTabKey] = useState(0);
-  const { initialTab, eventInfo: routeEventInfo, selectedTab } = route.params || {};
-  
-  // Use eventInfo from route params if available, otherwise use the prop
-  const finalEventInfo = routeEventInfo || eventInfo;
 
   useEffect(() => {
     // Handle navigation from dashboard
-    if (route.params?.screen === 'BoxOfficeTab') {
+    if (routeParams?.screen === 'BoxOfficeTab') {
       setActiveView('BoxOfficeTab');
     }
-  }, [route.params]);
+  }, [routeParams]);
 
   const tickets = [
     {

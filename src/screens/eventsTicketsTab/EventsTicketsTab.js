@@ -231,7 +231,7 @@ const UpcomingEventItem = ({ event, onPress }) => (
   </TouchableOpacity>
 );
 
-// Event Section Component - handles single vs multiple events
+// Event Section Component
 const EventSection = ({ section, onEventPress, onSectionPress }) => {
   const isSingleEvent = section.events.length === 1;
   const isHappeningToday = section.title === 'Happening Today';
@@ -295,12 +295,11 @@ const EventSection = ({ section, onEventPress, onSectionPress }) => {
   );
 };
 
-// Main Events Screen Component
-const EventsScreen = ({ eventInfo, onEventChange }) => {
+// Main Events Tickets Tab Screen Component
+const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  // Calculate top padding for safe area
   const topPadding = Platform.OS === 'android'
     ? (StatusBar.currentHeight || 0)
     : insets.top;
@@ -312,7 +311,7 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
   // Toggle between single and multiple events display mode (for demo)
   const [isMultipleMode, setIsMultipleMode] = useState(false);
 
-  // Fetch real events from API
+  // Fetch events from API
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -320,7 +319,7 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
         const staffEventsData = await eventService.fetchStaffEvents();
         const eventsList = staffEventsData?.data || [];
 
-        logger.log('Fetched events for EventsScreen:', eventsList);
+        logger.log('Fetched events for Tickets tab:', eventsList);
 
         // Process events - handle both direct events array and nested structure
         let allEvents = [];
@@ -344,7 +343,7 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
               event_title: event.title || event.event_title,
               image: event.image || event.banner_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
               date: event.start_date || event.date || 'TBD',
-              time: event.start_time || event.time || '',
+              time: event.start_time || event.time || 'TBD',
               location: event.location?.city || event.cityName || event.venue || 'TBD',
               cityName: event.location?.city || event.cityName,
               isBookmarked: false,
@@ -401,8 +400,8 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
         setUpcomingEvents(upcoming);
 
       } catch (error) {
-        logger.error('Error fetching events for EventsScreen:', error);
-        // Show empty state instead of sample data
+        logger.error('Error fetching events for Tickets tab:', error);
+        // Show empty state instead of sample data to avoid using fake IDs
         setEventSections([]);
         setUpcomingEvents([]);
       } finally {
@@ -423,8 +422,6 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
       return;
     }
 
-    logger.log('Event pressed with UUID:', eventUuid);
-
     const eventForChange = {
       uuid: eventUuid,
       eventUuid: eventUuid,
@@ -435,17 +432,16 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
       time: event.time,
     };
 
+    logger.log('Event selected in EventsTicketsTab:', eventForChange);
+
     if (onEventChange) {
       onEventChange(eventForChange);
     }
-
-    // Navigate to the Dashboard tab
-    navigation.navigate('Dashboard');
   };
 
-  // Handle section title press - navigate to ExploreEventsScreen
+  // Handle section title press
   const handleSectionPress = (section) => {
-    navigation.navigate('ExploreEventScreen', {
+    navigation.navigate('ExploreDetailScreenTicketsTab', {
       sectionTitle: section.title === 'Happening Today' ? 'Explore Events' : section.title,
       events: section.events,
       onEventChange: onEventChange,
@@ -455,7 +451,7 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
   // Handle upcoming section press
   const handleUpcomingSectionPress = () => {
     if (upcomingEvents.length > 0) {
-      navigation.navigate('ExploreEventScreen', {
+      navigation.navigate('ExploreDetailScreenTicketsTab', {
         sectionTitle: 'Upcoming Events',
         events: upcomingEvents,
         onEventChange: onEventChange,
@@ -483,15 +479,14 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
-        <View style={styles.headerButton}>
-        </View>
+        <View style={styles.headerButton} />
         <Typography
           style={styles.headerTitle}
           weight="700"
           size={18}
           color={color.brown_3C200A}
         >
-          Events
+          Tickets
         </Typography>
         <TouchableOpacity style={styles.headerButton}>
           <SvgIcons.searchIconDark />
@@ -621,10 +616,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  sectionHeader: {
     paddingHorizontal: 20,
     marginBottom: 16,
   },
@@ -782,4 +773,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EventsScreen;
+export default EventsTicketsTab;

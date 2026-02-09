@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, Dimensions, SafeAreaView, Animated } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, Dimensions, SafeAreaView, Animated, ActivityIndicator } from 'react-native';
 import CameraOverlay from '../components/CameraOverlay';
 import Header from '../components/header';
 import { color } from '../color/color';
@@ -12,12 +12,13 @@ import { ticketService } from '../api/apiService';
 import { logger } from '../utils/logger';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import { userService } from '../api/apiService';
+
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const navigation = useNavigation();
   const [facing, setFacing] = useState('back');
-  const [permission, requestPermission] = useCameraPermissions()
+  const [permission, requestPermission] = useCameraPermissions();
   const [scannedData, setScannedData] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -34,11 +35,13 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const [scanResponse, setScanResponse] = useState(null);
   const { isOnline } = useOfflineSync(false);
   const [userRole, setUserRole] = useState(null);
+  const [isLoadingRole, setIsLoadingRole] = useState(true);
 
   // Fetch user role
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
+        setIsLoadingRole(true);
         const profile = await userService.getProfile();
         const role = profile?.role ||
           profile?.user_role ||
@@ -52,25 +55,22 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
       } catch (error) {
         logger.error('Error fetching user role in CheckIn:', error);
         setUserRole(null);
+      } finally {
+        setIsLoadingRole(false);
       }
     };
     fetchUserRole();
   }, []);
 
-
   useFocusEffect(
     useCallback(() => {
-      //setScannedData(null);
-      //setScanResult(null);
       setScanning(false);
-      //setScanTime(null);
     }, [])
   );
 
   useEffect(() => {
     requestPermission();
   }, []);
-
 
   useEffect(() => {
     setNoteCount(Object.keys(notes).length);
@@ -79,7 +79,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       setLinePosition((prevPosition) => {
-        if (movingDown && prevPosition >= 225) { // Reverse at the bottom
+        if (movingDown && prevPosition >= 225) {
           setMovingDown(false);
           return prevPosition - 2;
         } else if (!movingDown && prevPosition <= 0) {
@@ -94,11 +94,34 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     return () => clearInterval(intervalId);
   }, [movingDown]);
 
+  // Determine background color based on user role
+  const getBackgroundStyle = () => {
+    if (isLoadingRole) {
+      // Show neutral/loading background while fetching role
+      return styles.darkBackgroundLoading;
+    }
+    return userRole === 'ADMIN' ? styles.darkBackgroundAdmin : styles.darkBackground;
+  };
+
   if (!permission) return <View />;
   if (!permission.granted) {
     return (
       <View style={styles.container}>
         <Header activeTab={activeTab} />
+      </View>
+    );
+  }
+
+  // Show loading state while fetching user role
+  if (isLoadingRole) {
+    return (
+      <View style={styles.mainContainer}>
+        <Header eventInfo={eventInfo} />
+        <View style={styles.darkBackgroundLoading}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
+          </View>
+        </View>
       </View>
     );
   }
@@ -115,7 +138,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     setScanTime(getFormatDate());
 
     try {
-      // Get the note for this ticket
       const note = notes[data] || '';
       logger.log('Sending note with scan:', note);
 
@@ -127,7 +149,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
         icon: 'check'
       };
 
-      // Handle offline/queued scans
       if (response.offline || response.queued) {
         scanData = {
           text: response.queued ? 'Queued for Sync' : 'Scan Successful (Offline)',
@@ -135,9 +156,7 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
           icon: 'check'
         };
         logger.log('Scan queued for offline sync');
-      }
-      // Handle different response statuses
-      else if (response.data?.scan_count > 1) {
+      } else if (response.data?.scan_count > 1) {
         scanData = {
           text: 'Scanned Already',
           color: '#D8A236',
@@ -151,7 +170,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
         };
       } else {
         logger.log('Ticket scanned successfully');
-        // Update scan count when ticket is successfully scanned
         if (onScanCountUpdate) {
           onScanCountUpdate();
         }
@@ -165,10 +183,9 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
       let errorMessage = 'Scan Unsuccessful';
       let errorColor = '#ED4337';
 
-      // Check for specific error messages
       if (error.response?.data?.non_field_errors?.includes('Scan limit reached.')) {
         errorMessage = 'Scan Limit Reached';
-        errorColor = '#D8A236'; // Use warning color for limit reached
+        errorColor = '#D8A236';
       }
 
       setScanResult({
@@ -181,12 +198,10 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     }
 
     setTimeout(() => {
-      //setScannedData(null);
       setScanning(false);
       setShowAnimation(false);
     }, 2000);
   };
-
 
   const animateProgressBar = () => {
     animatedWidth.setValue(0);
@@ -203,12 +218,9 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
       return;
     }
 
-    // Extract ticket code from scanned URL (more robust approach)
     const parts = scannedData.split('/');
-    const ticketCode = parts[parts.length - 2]; // Assuming ticket code is the second to last part
-
-    // Assuming you have the eventUuid available in your component
-    const currentEventUuid = 'YOUR_EVENT_UUID_HERE'; // Replace with your actual event UUID
+    const ticketCode = parts[parts.length - 2];
+    const currentEventUuid = 'YOUR_EVENT_UUID_HERE';
 
     try {
       if (newNote.trim().length > 0) {
@@ -226,7 +238,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     setNoteModalVisible(false);
   };
 
-
   const handleNoteButtonPress = () => {
     if (noteCount === 1) {
       navigation.navigate('TicketScanned', {
@@ -241,7 +252,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
     }
   };
 
-  // Edit existing note
   const handleEditNote = (editedNote) => {
     setNotes((prevNotes) => ({
       ...prevNotes,
@@ -322,7 +332,15 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
           </View>
         )}
       </View>
-      {noteModalVisible && <NoteModal visible={noteModalVisible} onAddNote={handleAddNote} onCancel={() => setNoteModalVisible(false)} initialNote={noteToEdit} scannedData={scannedData} />}
+      {noteModalVisible && (
+        <NoteModal
+          visible={noteModalVisible}
+          onAddNote={handleAddNote}
+          onCancel={() => setNoteModalVisible(false)}
+          initialNote={noteToEdit}
+          scannedData={scannedData}
+        />
+      )}
     </View>
   );
 };
@@ -330,7 +348,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    //backgroundColor: color.btnBrown_AE6F28,
   },
   darkBackground: {
     flex: 1,
@@ -339,6 +356,15 @@ const styles = StyleSheet.create({
   darkBackgroundAdmin: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  darkBackgroundLoading: {
+    flex: 1,
+    backgroundColor: '#1a1a1a', // Neutral dark color for loading state
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cameraContainer: {
     flex: 1,
@@ -373,35 +399,29 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 10,
   },
-
   scanResultsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     justifyContent: 'space-between',
   },
-
   scanResults: {
     flexDirection: 'column',
     left: 10,
     gap: 5,
   },
-
   scaniconresult: {
     width: 50,
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-
   },
-
   buttonsContainer: {
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'flex-end',
     flex: 1,
   },
-
   detailButton: {
     backgroundColor: '#AE6F28',
     borderRadius: 4,
@@ -410,7 +430,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   noteButton: {
     backgroundColor: '#2F251D',
     borderRadius: 4,
@@ -420,7 +439,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-
   redCircle: {
     position: 'absolute',
     top: 5,
@@ -443,17 +461,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   redCircleText: {
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
   },
-
   detailColor: {
     color: '#FFF6DF',
   },
-
   noteColor: {
     color: '#FFF6DF',
   },
@@ -465,7 +480,7 @@ const styles = StyleSheet.create({
   },
   timeColor: {
     color: '#766F6A',
-    fontSize: 12
+    fontSize: 12,
   },
   noteModal: {
     position: 'absolute',
@@ -497,17 +512,16 @@ const styles = StyleSheet.create({
   animatedBar: {
     position: 'absolute',
     left: 0,
-    height: 30, // Bar height
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   animatedText: {
     color: color.white_FFFFFF,
     fontWeight: '500',
     textAlign: 'center',
     padding: 5,
-    fontSize: 14
+    fontSize: 14,
   },
   offlineBanner: {
     backgroundColor: '#FFA500',

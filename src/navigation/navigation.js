@@ -16,6 +16,7 @@ import SplashScreenComponent from '../screens/SplashScreen';
 import InitialScreen from '../screens/InitialScreen';
 import StaffDashboard from '../screens/dashboard/StaffDashboard';
 import ExploreEventScreen from '../screens/eventsTab/Exploreeventscreen';
+import ExploreDetailScreenTicketsTab from '../screens/eventsTicketsTab/ExploreDetailScreenTicketsTab';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,10 +38,10 @@ function Navigation({ route }) {
   useEffect(() => {
     if (Platform.OS === 'android') {
       NavigationBar.setBehaviorAsync('overlay-swipe');
-      
+
       // Determine if current screen is dark or light
       const isDarkScreen = darkScreens.includes(routeName);
-      
+
       if (isDarkScreen) {
         NavigationBar.setBackgroundColorAsync('#281c10');
         NavigationBar.setButtonStyleAsync('light');
@@ -59,139 +60,150 @@ function Navigation({ route }) {
         backgroundColor="transparent"
       />
       <Stack.Navigator initialRouteName="Initial">
-        <Stack.Screen 
-          name="Initial" 
-          component={InitialScreen} 
-          options={{ 
+        <Stack.Screen
+          name="Initial"
+          component={InitialScreen}
+          options={{
             headerShown: false,
             unmountOnBlur: false,
             statusBarStyle: 'light',
             statusBarTranslucent: true,
             animation: 'none'
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="Splash" 
-          component={SplashScreenComponent} 
-          options={{ 
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreenComponent}
+          options={{
             headerShown: false,
             unmountOnBlur: true,
             statusBarStyle: 'light',
             statusBarTranslucent: true,
             animation: 'fade'
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ 
-            headerShown: false, 
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            headerShown: false,
             unmountOnBlur: true,
             statusBarStyle: 'light',
             statusBarTranslucent: true,
             animation: 'fade'
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="LoggedIn" 
-          component={LoggedInScreen} 
-          options={{ 
+        <Stack.Screen
+          name="LoggedIn"
+          component={LoggedInScreen}
+          options={{
             headerShown: false,
             unmountOnBlur: true,
             statusBarStyle: 'dark',
             statusBarBackgroundColor: 'white',
             statusBarTranslucent: true
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="OtpLogin" 
-          component={OtpLoginScreen} 
-          options={{ 
+        <Stack.Screen
+          name="OtpLogin"
+          component={OtpLoginScreen}
+          options={{
             headerShown: false,
             unmountOnBlur: true,
             statusBarStyle: 'light',
             statusBarTranslucent: true,
             animation: 'fade'
-          }} 
+          }}
         />
-      <Stack.Screen 
-        name="TicketsTab" 
-        component={TicketsTab} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-      <Stack.Screen 
-        name="BoxOfficeTab" 
-        component={BoxOfficeTab} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: false,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-      <Stack.Screen 
-        name="CheckInAllTickets" 
-        component={CheckInAllTickets} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-      <Stack.Screen 
-        name="ManualCheckInAllTickets" 
-        component={ManualCheckInAllTickets} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-      <Stack.Screen 
-        name="TicketScanned" 
-        component={TicketScanned} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-      <Stack.Screen 
-        name="StaffDashboard" 
-        component={StaffDashboard} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-       <Stack.Screen 
-        name="ExploreEventScreen" 
-        component={ExploreEventScreen} 
-        options={{ 
-          headerShown: false,
-          unmountOnBlur: true,
-          statusBarStyle: 'dark',
-          statusBarBackgroundColor: 'white',
-          statusBarTranslucent: true
-        }} 
-      />
-    </Stack.Navigator>
+        <Stack.Screen
+          name="TicketsTab"
+          component={TicketsTab}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="BoxOfficeTab"
+          component={BoxOfficeTab}
+          options={{
+            headerShown: false,
+            unmountOnBlur: false,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="CheckInAllTickets"
+          component={CheckInAllTickets}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="ManualCheckInAllTickets"
+          component={ManualCheckInAllTickets}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="TicketScanned"
+          component={TicketScanned}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="StaffDashboard"
+          component={StaffDashboard}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="ExploreEventScreen"
+          component={ExploreEventScreen}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        <Stack.Screen
+          name="ExploreDetailScreenTicketsTab"
+          component={ExploreDetailScreenTicketsTab}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+      </Stack.Navigator>
     </>
   );
 }

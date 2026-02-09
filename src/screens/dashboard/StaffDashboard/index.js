@@ -632,6 +632,7 @@ const StaffDashboard = () => {
             <Text style={styles.separator}>   </Text>
             <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(currentEventInfo?.date) || '30 Oct 2025'}</Text>
             <Text style={styles.separator}></Text>
+            <Text style={styles.separator}>at</Text>
             <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{currentEventInfo?.time || '7:00 PM'}</Text>
           </View>
@@ -641,7 +642,7 @@ const StaffDashboard = () => {
       {/* Staff Name Display */}
       <View style={styles.staffNameContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <SvgIcons.backArrow width={24} height={24} fill={color.black_544B45} />
+          <SvgIcons.backArrow width={24} height={24} />
         </TouchableOpacity>
         <Text style={styles.staffName}>{staffName}</Text>
       </View>
