@@ -7,44 +7,35 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { truncateCityName } from '../utils/stringUtils';
 import { truncateEventName } from '../utils/stringUtils';
 import { formatDateWithMonthName } from '../constants/dateAndTime';
+import { formatValue } from '../constants/formatValue';
 
 const { width } = Dimensions.get('window');
 
-const Header = ({ eventInfo, onScanCountUpdate }) => {
+const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onBackPress }) => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  const [tabKey, setTabKey] = useState(0);
+  const [activeTab, setActiveTab] = useState('Manual');
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
 
-  // Calculate top padding: use safe area insets, or StatusBar height on Android
+  const tabs = ['Auto', 'Manual', 'Sell'];
+
   const topPadding = Platform.OS === 'android'
     ? (StatusBar.currentHeight || 0)
     : insets.top;
 
-
-
-  // Update scan count when eventInfo changes
   useEffect(() => {
     if (eventInfo?.scanCount !== undefined) {
       setCurrentScanCount(eventInfo.scanCount);
     }
   }, [eventInfo?.scanCount]);
 
-  const formatStaffName = (fullName) => {
-    if (!fullName) return 'A Moeez';
-
-    const nameParts = fullName.trim().split(' ');
-    if (nameParts.length >= 2) {
-      const firstName = nameParts[0];
-      const lastName = nameParts[nameParts.length - 1];
-      return `${firstName.charAt(0)} ${lastName}`;
-    }
-    return fullName;
+  const handleTabPress = (tab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
   };
 
   const handleCountPress = () => {
-    setTabKey(prevKey => prevKey + 1);
     navigation.navigate('LoggedIn', {
       eventInfo: eventInfo,
       screen: 'Tickets',
@@ -55,21 +46,36 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
     });
   };
 
-  // Check if current screen should show back button
+  const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+    } else if (navigation && navigation.goBack) {
+      navigation.goBack();
+    }
+  };
+
+  // Show back button from prop OR from specific detail screens
   const shouldShowBackButton = () => {
+    if (showBackButton) return true;
     const currentRouteName = route.name;
     const detailScreens = ['ManualCheckInAllTickets', 'CheckInAllTickets', 'TicketScanned'];
     return detailScreens.includes(currentRouteName);
-  };
-
-  const handleBackPress = () => {
-    navigation.goBack();
   };
 
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.headerColumn}>
+          {/* Back button - compact row, only when needed */}
+          {shouldShowBackButton() && (
+            <View style={styles.backRow}>
+              <TouchableOpacity onPress={handleBackPress} style={styles.backButtonTouchable}>
+                <SvgIcons.backArrow />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Brown event info bar */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
               <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
@@ -83,26 +89,45 @@ const Header = ({ eventInfo, onScanCountUpdate }) => {
               <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
             </View>
           </View>
-          <View style={styles.profileId}>
-            <View style={styles.userSection}>
-              {shouldShowBackButton() ? (
-                <TouchableOpacity onPress={handleBackPress} style={styles.backButtonContainer}>
-                  <SvgIcons.backArrow width={24} height={24} fill={color.brown_3C200A} />
+
+          {/* Profile / Tab / Scan Section */}
+          <View style={styles.profileRow}>
+            {/* Left: Avatar + Name */}
+            <View style={styles.leftSection}>
+              <SvgIcons.profileImage />
+              <Text style={styles.staffName} numberOfLines={1}>
+                {eventInfo?.staff_name || 'John Doe'}
+              </Text>
+            </View>
+
+            {/* Center: Segmented Tab Control */}
+            <View style={styles.tabContainer}>
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[
+                    styles.tab,
+                    activeTab === tab && styles.activeTab,
+                  ]}
+                  onPress={() => handleTabPress(tab)}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === tab && styles.activeTabText,
+                    ]}
+                  >
+                    {tab}
+                  </Text>
                 </TouchableOpacity>
-              ) : (
-                <View></View>
-              )}
-              <SvgIcons.userSvg width={28} height={28} fill="transparent" />
-              <Text style={styles.userId}>ID: {formatStaffName(eventInfo?.staff_name)}</Text>
+              ))}
             </View>
-            <View style={styles.scanSection}>
-              <Text style={styles.scan}>Scans</Text>
-              <TouchableOpacity
-                style={styles.count}
-                onPress={handleCountPress}>
-                <Text style={styles.countColor}>{currentScanCount}</Text>
-              </TouchableOpacity>
-            </View>
+
+            {/* Right: Scans count */}
+            <TouchableOpacity onPress={handleCountPress} style={styles.rightSection}>
+              <Text style={styles.scansLabel}>Scans: </Text>
+              <Text style={styles.scansCount}>{formatValue(currentScanCount)}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
@@ -115,10 +140,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   safeAreaContainer: {
-    backgroundColor: color.white_FFFFFF,
   },
   headerColumn: {
     flexDirection: 'column',
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2
+  },
+  backButtonTouchable: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -141,23 +177,6 @@ const styles = StyleSheet.create({
     color: color.white_FFFFFF,
     marginHorizontal: 8,
   },
-  profileId: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    width: '100%',
-    backgroundColor: color.brown_F7E4B6,
-    height: 48,
-  },
-  userSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  scanSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   eventName: {
     color: color.white_FFFFFF,
     fontSize: 14,
@@ -178,34 +197,69 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
   },
-  userId: {
-    color: color.brown_3C200A,
-    fontSize: 14,
-    fontWeight: '400',
-    height: 22,
-    marginLeft: 10,
-    lineHeight: 22,
-  },
-  scan: {
-    fontSize: 14,
-    fontWeight: '400',
-  },
-  count: {
-    marginLeft: 15,
-    backgroundColor: color.black_2F251D,
-    borderRadius: 4,
-    width: 49,
-    height: 30,
+  profileRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    width: '100%',
   },
-  countColor: {
-    color: color.white_FFFFFF,
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  staffName: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: color.drak_black_000000,
+    marginLeft: 10,
   },
   backButtonContainer: {
     marginRight: 10,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#00000030',
+    borderRadius: 20,
+    padding: 3,
+    alignItems: 'center',
+  },
+  tab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+  },
+  activeTab: {
+    backgroundColor: color.white_FFFFFF,
+  },
+  tabText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: color.white_FFFFFF,
+  },
+  activeTabText: {
+    color: '241F21',
+    fontWeight: '400',
+    fontSize: 10,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  scansLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#999999',
+  },
+  scansCount: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: color.brown_3C200A,
+  },
 });
 
 export default Header;
-

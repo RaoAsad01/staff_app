@@ -101,17 +101,15 @@ const ExploreEventsScreen = () => {
 
   // Handle event press - use onEventChange callback if available
   const handleEventPress = (event) => {
-    // Get the real UUID
     const eventUuid = event.uuid || event.eventUuid;
-
-    // Validate that we have a real UUID (not a fake id like '1', '2', etc.)
+  
     if (!eventUuid || eventUuid.length < 10) {
       logger.error('Invalid event UUID in ExploreEventsScreen:', eventUuid);
       return;
     }
-
+  
     logger.log('Event pressed in ExploreEventsScreen with UUID:', eventUuid);
-
+  
     const eventForChange = {
       uuid: eventUuid,
       eventUuid: eventUuid,
@@ -121,35 +119,17 @@ const ExploreEventsScreen = () => {
       date: event.date,
       time: event.time,
     };
-
-    // If onEventChange callback is available (passed from EventsScreen via MyTabs),
-    // use it to update the event in MyTabs
-    // This will set showEventDashboard=true and fetch full event info
+  
     if (onEventChange) {
       onEventChange(eventForChange);
-      
-      // Navigate after state update completes
-      // The onEventChange sets showEventDashboard=true in MyTabs
-      setTimeout(() => {
-        navigation.navigate('LoggedIn', {
-          screen: 'Dashboard',
-          params: {
-            eventInfo: eventForChange,
-            showEventDashboard: true, // Pass this to indicate we want event dashboard
-          },
-        });
-      }, 200);
-    } else {
-      // Fallback: navigate directly without callback
-      logger.warn('No onEventChange callback available');
-      navigation.navigate('LoggedIn', {
-        screen: 'Dashboard',
-        params: {
-          eventInfo: eventForChange,
-          showEventDashboard: true,
-        },
-      });
     }
+  
+    // Navigate to DashboardDetail in root stack
+    // Don't call goBack - keep ExploreEventsScreen in stack
+    navigation.navigate('DashboardDetail', {
+      eventInfo: eventForChange,
+      showEventDashboard: true,
+    });
   };
 
   // Handle back press

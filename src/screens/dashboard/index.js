@@ -42,7 +42,12 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const scrollViewRef = useRef(null);
 
   // Get eventInfo from props or route params (route params take precedence for navigation updates)
-  const eventInfo = route.params?.eventInfo || propEventInfo;
+  const isFromRootStack = route?.name === 'DashboardDetail';
+  const initialEventInfo = isFromRootStack ? (route.params?.eventInfo || propEventInfo) : propEventInfo;
+  
+  // Local state to track event changes from dropdown when in root stack
+  const [localEventInfo, setLocalEventInfo] = useState(null);
+  const eventInfo = localEventInfo || (isFromRootStack ? initialEventInfo : propEventInfo);
 
   // Calculate top padding: use safe area insets, or StatusBar height on Android
   const topPadding = Platform.OS === 'android'
@@ -406,15 +411,24 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const handleEventSelect = (event) => {
     setSelectedEvent(event);
     logger.log('Selected event:', event);
-
-    // If the selected event is different from the current event
+  
     if (event.uuid !== eventInfo?.eventUuid) {
-      // Call the callback to update the parent component
+      // Update local event info for immediate UI update
+      const eventUuid = event.uuid || event.eventUuid;
+      setLocalEventInfo({
+        ...eventInfo,
+        eventUuid: eventUuid,
+        event_title: event.title || event.event_title || event.name,
+        cityName: event.cityName || event.location?.city || eventInfo?.cityName,
+        date: event.start_date || event.date || eventInfo?.date,
+        time: event.start_time || event.time || eventInfo?.time,
+      });
+  
+      // Also update parent (MyTabs) state
       if (onEventChange) {
         onEventChange(event);
       }
-
-      // Close the modal
+  
       setEventsModalVisible(false);
     }
   };
@@ -643,6 +657,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
       value,
     }));
   }
+
+  // Handle back press
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
 
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
@@ -1003,7 +1022,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
   // For ADMIN users, show AdminAllEventsDashboard in Dashboard tab
   // Check showEventDashboard from props OR route params (for navigation from detail screens)
-  const shouldShowEventDashboard = showEventDashboard || route.params?.showEventDashboard;
+  const shouldShowEventDashboard = showEventDashboard || isFromRootStack || route.params?.showEventDashboard;
   if (userRole === 'ADMIN' && !shouldShowEventDashboard) {
     return <AdminAllEventsDashboard />;
   }
@@ -1011,6 +1030,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
+        {isFromRootStack && (
+          <TouchableOpacity style={styles.headerButton} onPress={handleBackPress}>
+            <SvgIcons.backArrow />
+          </TouchableOpacity>
+        )}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
@@ -1418,6 +1442,12 @@ const styles = StyleSheet.create({
   },
   overallStatisticsContainer: {
     marginTop: 4,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

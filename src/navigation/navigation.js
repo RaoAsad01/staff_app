@@ -17,10 +17,11 @@ import InitialScreen from '../screens/InitialScreen';
 import StaffDashboard from '../screens/dashboard/StaffDashboard';
 import ExploreEventScreen from '../screens/eventsTab/Exploreeventscreen';
 import ExploreDetailScreenTicketsTab from '../screens/eventsTicketsTab/ExploreDetailScreenTicketsTab';
+import Tickets from '../screens/Tickets';
+import DashboardScreen from '../screens/dashboard';
 
 const Stack = createNativeStackNavigator();
 
-// Dark screens that need black navigation bar
 const darkScreens = ['Initial', 'Splash', 'Login', 'OtpLogin'];
 
 function LoggedInScreen() {
@@ -39,7 +40,6 @@ function Navigation({ route }) {
     if (Platform.OS === 'android') {
       NavigationBar.setBehaviorAsync('overlay-swipe');
 
-      // Determine if current screen is dark or light
       const isDarkScreen = darkScreens.includes(routeName);
 
       if (isDarkScreen) {
@@ -195,6 +195,30 @@ function Navigation({ route }) {
         <Stack.Screen
           name="ExploreDetailScreenTicketsTab"
           component={ExploreDetailScreenTicketsTab}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        {/* NEW: TicketsDetail screen for ADMIN event ticket view */}
+        <Stack.Screen
+          name="TicketsDetail"
+          component={Tickets}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+         {/* NEW: DashboardDetail screen for ADMIN event ticket view */}
+        <Stack.Screen
+          name="DashboardDetail"
+          component={DashboardScreen}
           options={{
             headerShown: false,
             unmountOnBlur: true,

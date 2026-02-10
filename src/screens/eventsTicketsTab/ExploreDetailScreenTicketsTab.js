@@ -101,10 +101,8 @@ const ExploreDetailScreenTicketsTab = () => {
 
   // Handle event press - use onEventChange callback if available
   const handleEventPress = (event) => {
-    // Get the real UUID
     const eventUuid = event.uuid || event.eventUuid;
 
-    // Validate that we have a real UUID (not a fake id like '1', '2', etc.)
     if (!eventUuid || eventUuid.length < 10) {
       logger.error('Invalid event UUID in ExploreDetailScreenTicketsTab:', eventUuid);
       return;
@@ -123,15 +121,10 @@ const ExploreDetailScreenTicketsTab = () => {
     };
 
     if (onEventChange) {
-      // Call the onEventChange callback to update MyTabs state
-      // This will set showEventTickets=true and update eventInformation
       onEventChange(eventForChange);
-      // Go back to the Tickets tab which will now show the Tickets component
-      navigation.goBack();
-    } else {
-      // Fallback: navigate directly (for cases where callback isn't passed)
-      logger.warn('No onEventChange callback available');
-      navigation.goBack();
+      // DON'T call navigation.goBack() here
+      // The parent swaps to SettingsScreen via showEventTickets state
+      // This keeps ExploreDetailScreenTicketsTab in the navigation stack
     }
   };
 

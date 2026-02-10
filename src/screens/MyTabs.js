@@ -9,7 +9,7 @@ import { color } from '../color/color';
 import SvgIcons from '../components/SvgIcons';
 import DashboardScreen from '../screens/dashboard';
 import ProfileScreen from './ProfileScreen';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { fetchUpdatedScanCount, updateEventInfoScanCount } from '../utils/scanCountUpdater';
 import { eventService, userService } from '../api/apiService';
 import * as SecureStore from 'expo-secure-store';
@@ -20,7 +20,6 @@ import EventsTicketsTab from './eventsTicketsTab/EventsTicketsTab';
 
 const Tab = createBottomTabNavigator();
 
-// Placeholder Services Screen
 const ServicesScreen = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F7F5' }}>
@@ -32,19 +31,15 @@ const ServicesScreen = () => {
 
 function MyTabs() {
   const route = useRoute();
+  const rootNavigation = useNavigation();
   const insets = useSafeAreaInsets();
   const initialEventInfo = route?.params?.eventInfo;
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-  // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
-  // Set to true when navigating from EventsScreen, reset to false when tapping Dashboard tab.
-  const [showEventDashboard, setShowEventDashboard] = useState(false);
-
-  // When true, ADMIN sees Tickets component for selected event instead of EventsTicketsTab.
-  // Set to true when selecting an event from EventsTicketsTab, reset to false when tapping Tickets tab.
-  const [showEventTickets, setShowEventTickets] = useState(false);
+  // // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
+  // const [showEventDashboard, setShowEventDashboard] = useState(false);
 
   // Calculate dynamic tab bar height with safe area insets
   const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
@@ -183,13 +178,11 @@ function MyTabs() {
   };
 
   // ─── Core event change handler ───
-  // Fetches FULL event details from the backend so all screens get complete data
   const handleEventChange = async (newEvent) => {
     logger.log('Event changed to:', newEvent);
 
     const eventUuid = newEvent.uuid || newEvent.eventUuid;
 
-    // Store the new event UUID for app restart scenarios
     try {
       if (eventUuid) {
         await SecureStore.setItemAsync('lastSelectedEventUuid', eventUuid);
@@ -199,7 +192,6 @@ function MyTabs() {
       logger.error('Error storing event UUID:', error);
     }
 
-    // Fetch full event details from the backend
     try {
       if (eventUuid) {
         const eventInfoData = await eventService.fetchEventInfo(eventUuid);
@@ -222,7 +214,6 @@ function MyTabs() {
       logger.error('Error fetching full event info after change, using fallback:', error);
     }
 
-    // Fallback: use whatever data was passed in
     const transformedEvent = {
       eventUuid: eventUuid,
       event_title: newEvent.title || newEvent.event_title,
@@ -238,38 +229,82 @@ function MyTabs() {
     setEventInformation(transformedEvent);
   };
 
-  // ─── Flow 1: Called from EventsScreen when user taps an event card ───
-  // Sets showEventDashboard=true so ADMIN sees event-specific dashboard
+  // ─── Flow 1: Called from EventsScreen ───
   const handleEventChangeFromEvents = async (newEvent) => {
-    setShowEventDashboard(true);
-    await handleEventChange(newEvent);
+    const eventUuid = newEvent.uuid || newEvent.eventUuid;
+    
+    // Fetch full event info BEFORE navigating so route params have all data
+    let fullEventInfo = { ...newEvent, eventUuid };
+    try {
+      if (eventUuid) {
+        const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+        fullEventInfo = {
+          staff_name: eventInfoData?.data?.staff_name || newEvent.staff_name,
+          event_title: eventInfoData?.data?.event_title || newEvent.event_title || newEvent.title,
+          cityName: eventInfoData?.data?.location?.city || newEvent.cityName,
+          date: eventInfoData?.data?.start_date || newEvent.date,
+          time: eventInfoData?.data?.start_time || newEvent.time,
+          userId: eventInfoData?.data?.staff_id || newEvent.userId,
+          scanCount: eventInfoData?.data?.scan_count ?? newEvent.scanCount ?? 0,
+          event_uuid: eventInfoData?.data?.location?.uuid || newEvent.event_uuid,
+          eventUuid: eventUuid,
+        };
+        setEventInformation(fullEventInfo);
+      }
+    } catch (error) {
+      logger.error('Error fetching full event info for DashboardDetail:', error);
+      await handleEventChange(newEvent);
+    }
+  
+    rootNavigation.navigate('DashboardDetail', {
+      eventInfo: fullEventInfo,
+      showEventDashboard: true,
+    });
   };
 
-  // ─── Flow 2: Called from DashboardScreen (e.g. events modal dropdown) ───
-  // Keeps showEventDashboard as-is (already on event dashboard if visible)
+  // ─── Flow 2: Called from DashboardScreen ───
   const handleEventChangeFromDashboard = async (newEvent) => {
     await handleEventChange(newEvent);
   };
 
-  // ─── Flow 3: When ADMIN taps the Dashboard tab directly, reset to AdminAllEventsDashboard ───
-  const handleDashboardTabPress = () => {
-    if (userRole === 'ADMIN') {
-      setShowEventDashboard(false);
-    }
-  };
+  // // ─── Flow 3: ADMIN taps Dashboard tab ───
+  // const handleDashboardTabPress = () => {
+  //   if (userRole === 'ADMIN') {
+  //     setShowEventDashboard(false);
+  //   }
+  // };
 
-  // ─── Flow 4: Called from EventsTicketsTab when ADMIN taps an event card ───
-  // Sets showEventTickets=true so ADMIN sees Tickets component for that event
+  // ─── Flow 4: Called from EventsTicketsTab or ExploreDetailScreenTicketsTab ───
+  // Navigate to TicketsDetail in root stack instead of state swap
   const handleEventChangeFromTicketsTab = async (newEvent) => {
-    setShowEventTickets(true);
-    await handleEventChange(newEvent);
-  };
-
-  // ─── Flow 5: When ADMIN taps the Tickets tab directly, reset to EventsTicketsTab ───
-  const handleTicketsTabPress = () => {
-    if (userRole === 'ADMIN') {
-      setShowEventTickets(false);
+    const eventUuid = newEvent.uuid || newEvent.eventUuid;
+  
+    // Fetch full event info BEFORE navigating so route params have all data
+    let fullEventInfo = { ...newEvent, eventUuid };
+    try {
+      if (eventUuid) {
+        const eventInfoData = await eventService.fetchEventInfo(eventUuid);
+        fullEventInfo = {
+          staff_name: eventInfoData?.data?.staff_name || newEvent.staff_name,
+          event_title: eventInfoData?.data?.event_title || newEvent.event_title || newEvent.title,
+          cityName: eventInfoData?.data?.location?.city || newEvent.cityName,
+          date: eventInfoData?.data?.start_date || newEvent.date,
+          time: eventInfoData?.data?.start_time || newEvent.time,
+          userId: eventInfoData?.data?.staff_id || newEvent.userId,
+          scanCount: eventInfoData?.data?.scan_count ?? newEvent.scanCount ?? 0,
+          event_uuid: eventInfoData?.data?.location?.uuid || newEvent.event_uuid,
+          eventUuid: eventUuid,
+        };
+        setEventInformation(fullEventInfo);
+      }
+    } catch (error) {
+      logger.error('Error fetching full event info for TicketsDetail:', error);
+      await handleEventChange(newEvent);
     }
+  
+    rootNavigation.navigate('TicketsDetail', {
+      eventInfo: fullEventInfo,
+    });
   };
 
   const CustomTabBarButton = ({ children, accessibilityState, onPress }) => {
@@ -300,7 +335,6 @@ function MyTabs() {
         IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
       }
     } else {
-      // Regular icons for non-ADMIN users
       if (route.name === 'Dashboard') {
         IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
       } else if (route.name === 'Tickets') {
@@ -315,25 +349,6 @@ function MyTabs() {
     }
 
     return <IconComponent width={24} height={24} fill="transparent" />;
-  };
-
-  // Render Tickets tab content for ADMIN
-  // Shows EventsTicketsTab by default, or Tickets component when an event is selected
-  const renderAdminTicketsContent = () => {
-    if (showEventTickets && eventInformation?.eventUuid) {
-      return (
-        <Tickets
-          eventInfo={eventInformation}
-          onScanCountUpdate={updateScanCount}
-        />
-      );
-    }
-    return (
-      <EventsTicketsTab
-        eventInfo={eventInformation}
-        onEventChange={handleEventChangeFromTicketsTab}
-      />
-    );
   };
 
   return (
@@ -416,24 +431,16 @@ function MyTabs() {
           statusBarBackgroundColor: 'white',
           statusBarTranslucent: false
         }}
-        listeners={{
-          tabPress: () => {
-            // When ADMIN taps Dashboard tab directly, reset to overview
-            handleDashboardTabPress();
-          },
-        }}
       >
         {() => (
           <DashboardScreen
             eventInfo={eventInformation}
             onScanCountUpdate={updateScanCount}
             onEventChange={handleEventChangeFromDashboard}
-            showEventDashboard={showEventDashboard}
           />
         )}
       </Tab.Screen>
 
-      {/* Conditional tabs based on user role */}
       {userRole === 'ADMIN' ? (
         <>
           <Tab.Screen
@@ -489,14 +496,13 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
-            listeners={{
-              tabPress: () => {
-                // When ADMIN taps Tickets tab directly, reset to EventsTicketsTab
-                handleTicketsTabPress();
-              },
-            }}
           >
-            {() => renderAdminTicketsContent()}
+            {() => (
+              <EventsTicketsTab
+                eventInfo={eventInformation}
+                onEventChange={handleEventChangeFromTicketsTab}
+              />
+            )}
           </Tab.Screen>
         </>
       ) : (
@@ -577,7 +583,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   iconLabelWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -586,13 +591,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 5,
   },
-
   focusedTabWrapper: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 6,
     marginVertical: -10
   },
-
   tabBarLabel: {
     fontSize: 10,
     marginTop: 4,

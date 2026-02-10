@@ -169,10 +169,10 @@ const styles = StyleSheet.create({
     // No flex or height constraints - let content determine size
   },
   eventItem: {
-    paddingVertical: 8,
     paddingHorizontal: 16,
+    paddingVertical: 4,
     backgroundColor: color.white_FFFFFF,
-    height: 30, // Fixed height for each item
+   // Fixed height for each item
   },
   selectedEventItem: {
     backgroundColor: color.brown_CEBCA04D,

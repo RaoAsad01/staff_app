@@ -343,9 +343,9 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
               title: event.title || event.event_title,
               event_title: event.title || event.event_title,
               image: event.image || event.banner_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
-              date: event.start_date || event.date || 'TBD',
+              date: event.start_date || event.date || 'N/A',
               time: event.start_time || event.time || '',
-              location: event.location?.city || event.cityName || event.venue || 'TBD',
+              location: event.location?.city || event.cityName || event.venue || 'N/A',
               cityName: event.location?.city || event.cityName,
               isBookmarked: false,
             };
@@ -415,16 +415,15 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
 
   // Handle event press - ONLY use real UUIDs from API
   const handleEventPress = (event) => {
-    // Validate that we have a real UUID
     const eventUuid = event.uuid || event.eventUuid;
-
+  
     if (!eventUuid || eventUuid.length < 10) {
       logger.error('Invalid event UUID, cannot navigate:', eventUuid);
       return;
     }
-
+  
     logger.log('Event pressed with UUID:', eventUuid);
-
+  
     const eventForChange = {
       uuid: eventUuid,
       eventUuid: eventUuid,
@@ -434,13 +433,16 @@ const EventsScreen = ({ eventInfo, onEventChange }) => {
       date: event.date,
       time: event.time,
     };
-
+  
     if (onEventChange) {
       onEventChange(eventForChange);
     }
-
-    // Navigate to the Dashboard tab
-    navigation.navigate('Dashboard');
+  
+    // Navigate to DashboardDetail in root stack
+    navigation.navigate('DashboardDetail', {
+      eventInfo: eventForChange,
+      showEventDashboard: true,
+    });
   };
 
   // Handle section title press - navigate to ExploreEventsScreen
