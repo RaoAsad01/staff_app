@@ -73,7 +73,9 @@ import TotalUnusedCoupon from '../../assets/svgs/total_unused_coupon.svg';
 import LeftArrow from '../../assets/svgs/left_arrow.svg';
 import RightArrow from '../../assets/svgs/right_arrow.svg';
 import SearchIconDark from '../../assets/svgs/search_icon_dark_brown';
-import BookmarkedIcon from '../../assets/svgs/bookmarked_icon'
+import BookmarkedIcon from '../../assets/svgs/bookmarked_icon';
+import LeftArrowGreyBg from '../../assets/svgs/left_arrow_grey_bg';
+import RightArrowGreyBg from '../../assets/svgs/right_arrow_grey_bg';
 
 export default {
     totalTickets: TicketSVG,
@@ -152,5 +154,7 @@ export default {
     rightArrow: RightArrow,
     searchIconDark: SearchIconDark,
     bookmarkedIcon: BookmarkedIcon,
+    leftArrowGreyBg: LeftArrowGreyBg,
+    rightArrowGreyBg: RightArrowGreyBg,
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     StyleSheet,
@@ -6,6 +6,8 @@ import {
     TouchableOpacity,
     Modal,
     Dimensions,
+    PanResponder,
+    Animated,
 } from 'react-native';
 import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop, Line } from 'react-native-svg';
 import SvgIcons from '../../../components/SvgIcons';
@@ -15,14 +17,15 @@ import Typography from '../../../components/Typography';
 const { width } = Dimensions.get('window');
 
 // Dropdown Component
-const Dropdown = ({ label, value }) => (
-    <TouchableOpacity style={styles.dropdown}>
+const Dropdown = ({ label, value, onPress }) => (
+    <TouchableOpacity style={styles.dropdown} onPress={onPress}>
         {label && (
             <Typography
                 style={styles.dropdownLabel}
                 weight="400"
                 size={12}
                 color={color.grey_87807C}
+                numberOfLines={1}
             >
                 {label}
             </Typography>
@@ -32,6 +35,7 @@ const Dropdown = ({ label, value }) => (
             weight="400"
             size={14}
             color={color.brown_766F6A}
+            numberOfLines={1}
         >
             {value}
         </Typography>
@@ -40,14 +44,15 @@ const Dropdown = ({ label, value }) => (
 );
 
 // DropdownEarningAttendeesFilter Component
-const DropdownEarningAttendeesFilter = ({ label, value }) => (
-    <TouchableOpacity style={styles.dropdownEarningAttendeesFilter}>
+const DropdownEarningAttendeesFilter = ({ label, value, onPress }) => (
+    <TouchableOpacity style={styles.dropdownEarningAttendeesFilter} onPress={onPress}>
         {label && (
             <Typography
                 style={styles.dropdownLabel}
                 weight="400"
                 size={12}
                 color={color.grey_87807C}
+                numberOfLines={1}
             >
                 {label}
             </Typography>
@@ -57,12 +62,201 @@ const DropdownEarningAttendeesFilter = ({ label, value }) => (
             weight="400"
             size={14}
             color={color.brown_766F6A}
+            numberOfLines={1}
         >
             {value}
         </Typography>
         <SvgIcons.downArrow />
     </TouchableOpacity>
 );
+
+// Bottom Sheet Radio Picker Component (for Event Type & Ticketing Type)
+const BottomSheetRadioPicker = ({ visible, onClose, title, options, selectedValue, onSelect }) => {
+    const translateY = useRef(new Animated.Value(600)).current;
+    const overlayOpacity = useRef(new Animated.Value(0)).current;
+    const [modalVisible, setModalVisible] = useState(false);
+
+    useEffect(() => {
+        if (visible) {
+            setModalVisible(true);
+            translateY.setValue(600);
+            overlayOpacity.setValue(0);
+            Animated.parallel([
+                Animated.spring(translateY, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    damping: 20,
+                    stiffness: 150,
+                }),
+                Animated.timing(overlayOpacity, {
+                    toValue: 1,
+                    duration: 250,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else if (modalVisible) {
+            closeWithAnimation();
+        }
+    }, [visible]);
+
+    const closeWithAnimation = () => {
+        Animated.parallel([
+            Animated.timing(translateY, {
+                toValue: 600,
+                duration: 250,
+                useNativeDriver: true,
+            }),
+            Animated.timing(overlayOpacity, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+        ]).start(() => {
+            setModalVisible(false);
+        });
+    };
+
+    const handleClose = () => {
+        closeWithAnimation();
+        setTimeout(() => onClose(), 260);
+    };
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => false,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+            },
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    translateY.setValue(gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 100) {
+                    handleClose();
+                } else {
+                    Animated.spring(translateY, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                    }).start();
+                }
+            },
+        })
+    ).current;
+
+    const handleSelect = (option) => {
+        onSelect(option);
+        handleClose();
+    };
+
+    return (
+        <Modal visible={modalVisible} animationType="none" transparent>
+            <View style={styles.bottomSheetOverlayWrapper}>
+                <Animated.View style={[styles.bottomSheetOverlayBg, { opacity: overlayOpacity }]}>
+                    <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={handleClose} />
+                </Animated.View>
+                <Animated.View
+                    style={[styles.bottomSheetPickerModal, { transform: [{ translateY }] }]}
+                    {...panResponder.panHandlers}
+                >
+                    <View style={styles.modalHandle} />
+                    <Typography
+                        style={styles.bottomSheetPickerTitle}
+                        weight="700"
+                        size={18}
+                        color={color.brown_3C200A}
+                    >
+                        {title}
+                    </Typography>
+
+                    <ScrollView style={styles.bottomSheetOptionsList} showsVerticalScrollIndicator={false}>
+                        {options.map((option, index) => {
+                            const isSelected = option.value === selectedValue;
+                            return (
+                                <TouchableOpacity
+                                    key={option.value || index}
+                                    style={styles.radioOptionRow}
+                                    onPress={() => handleSelect(option)}
+                                    activeOpacity={0.7}
+                                >
+                                    <View style={[
+                                        styles.radioOuter,
+                                        isSelected && styles.radioOuterSelected,
+                                    ]}>
+                                        {isSelected && <View style={styles.radioInner} />}
+                                    </View>
+                                    <Typography
+                                        weight={isSelected ? "400" : "400"}
+                                        size={16}
+                                        color={color.black_544B45}
+                                        style={styles.radioLabel}
+                                    >
+                                        {option.label}
+                                    </Typography>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </Animated.View>
+            </View>
+        </Modal>
+    );
+};
+
+// Popover Dropdown Component (for Currency & Filter by Event)
+const PopoverDropdown = ({ visible, onClose, options, selectedValue, onSelect, anchorRef }) => {
+    const [position, setPosition] = useState({ top: 0, right: 0 });
+
+    useEffect(() => {
+        if (visible && anchorRef?.current) {
+            anchorRef.current.measureInWindow((x, y, w, h) => {
+                setPosition({
+                    top: y + h + 4,
+                    right: width - (x + w),
+                });
+            });
+        }
+    }, [visible]);
+
+    if (!visible) return null;
+
+    return (
+        <Modal visible={visible} transparent animationType="fade">
+            <TouchableOpacity
+                style={styles.popoverOverlay}
+                activeOpacity={1}
+                onPress={onClose}
+            >
+                <View style={[styles.popoverContainer, { top: position.top, right: position.right }]}>
+                    <ScrollView style={styles.popoverScroll} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+                        {options.map((option, index) => (
+                            <TouchableOpacity
+                                key={option.value || index}
+                                style={[
+                                    styles.popoverOption,
+                                    index < options.length - 1 && styles.popoverOptionBorder,
+                                ]}
+                                onPress={() => {
+                                    onSelect(option);
+                                    onClose();
+                                }}
+                            >
+                                <Typography
+                                    weight={option.value === selectedValue ? "400" : "400"}
+                                    size={12}
+                                    color={option.value === selectedValue ? color.black_544B45 : color.black_544B45}
+                                >
+                                    {option.label}
+                                </Typography>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
+};
 
 // Card Component
 const Card = ({ children, style }) => (
@@ -512,11 +706,9 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
     const [decadeStart, setDecadeStart] = useState(Math.floor(currentYear / 10) * 10);
 
     const years = [];
-    years.push(decadeStart - 1);
-    for (let i = 0; i < 10; i++) {
+    for (let i = -1; i < 11; i++) {
         years.push(decadeStart + i);
     }
-    years.push(decadeStart + 10);
 
     const handlePrevDecade = () => {
         setDecadeStart(decadeStart - 10);
@@ -547,9 +739,7 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
         <View style={styles.yearPickerContainer}>
             <View style={styles.yearPickerNav}>
                 <TouchableOpacity style={styles.yearNavButton} onPress={handlePrevDecade}>
-                    <Typography weight="600" size={18} color={color.grey_87807C}>
-                        {'<<'}
-                    </Typography>
+                    <SvgIcons.leftArrowGreyBg />
                 </TouchableOpacity>
                 <Typography
                     style={styles.decadeTitle}
@@ -560,9 +750,7 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
                     {decadeStart}-{decadeStart + 9}
                 </Typography>
                 <TouchableOpacity style={styles.yearNavButton} onPress={handleNextDecade}>
-                    <Typography weight="600" size={18} color={color.grey_87807C}>
-                        {'>>'}
-                    </Typography>
+                    <SvgIcons.rightArrowGreyBg />
                 </TouchableOpacity>
             </View>
 
@@ -598,6 +786,245 @@ const YearPicker = ({ visible, onClose, onYearSelect, selectedYear }) => {
     );
 };
 
+// Month Picker Component
+const MonthPicker = ({ visible, onClose, onMonthSelect, selectedMonth, selectedYear }) => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const [displayYear, setDisplayYear] = useState(selectedYear || currentYear);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const handlePrevYear = () => {
+        setDisplayYear(displayYear - 1);
+    };
+
+    const handleNextYear = () => {
+        setDisplayYear(displayYear + 1);
+    };
+
+    const handleMonthPress = (monthIndex) => {
+        onMonthSelect(monthIndex, displayYear);
+        onClose();
+    };
+
+    const isCurrentMonth = (monthIndex) => {
+        return monthIndex === currentMonth && displayYear === currentYear;
+    };
+
+    const isSelectedMonth = (monthIndex) => {
+        return monthIndex === selectedMonth && displayYear === selectedYear;
+    };
+
+    return (
+        <View style={styles.monthPickerContainer}>
+            <View style={styles.yearPickerNav}>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handlePrevYear}>
+                    <SvgIcons.leftArrowGreyBg />
+                </TouchableOpacity>
+                <Typography
+                    style={styles.decadeTitle}
+                    weight="700"
+                    size={14}
+                    color={color.brown_3C200A}
+                >
+                    {displayYear}
+                </Typography>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handleNextYear}>
+                    <SvgIcons.rightArrowGreyBg />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.monthsGrid}>
+                {monthNames.map((month, index) => (
+                    <TouchableOpacity
+                        key={month}
+                        style={[
+                            styles.monthCell,
+                            isSelectedMonth(index) && styles.monthCellSelected,
+                            isCurrentMonth(index) && !isSelectedMonth(index) && styles.monthCellCurrent,
+                        ]}
+                        onPress={() => handleMonthPress(index)}
+                    >
+                        <Typography
+                            weight={isSelectedMonth(index) || isCurrentMonth(index) ? "600" : "400"}
+                            size={14}
+                            color={
+                                isSelectedMonth(index)
+                                    ? color.btnBrown_AE6F28
+                                    : color.black_2F251D
+                            }
+                        >
+                            {month}
+                        </Typography>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+};
+
+// Quarter Picker Component (for Last Quarter - shows all 4 quarters)
+const QuarterPicker = ({ visible, onClose, onQuarterSelect, selectedQuarter, selectedYear }) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentQuarter = Math.floor(currentDate.getMonth() / 3); // 0-based: 0=Q1, 1=Q2, 2=Q3, 3=Q4
+    const [displayYear, setDisplayYear] = useState(selectedYear || currentYear);
+
+    const quarters = [
+        { label: 'Q1', subtitle: 'Jan - Mar', index: 0 },
+        { label: 'Q2', subtitle: 'Apr - Jun', index: 1 },
+        { label: 'Q3', subtitle: 'Jul - Sep', index: 2 },
+        { label: 'Q4', subtitle: 'Oct - Dec', index: 3 },
+    ];
+
+    const handlePrevYear = () => {
+        setDisplayYear(displayYear - 1);
+    };
+
+    const handleNextYear = () => {
+        setDisplayYear(displayYear + 1);
+    };
+
+    const handleQuarterPress = (quarterIndex) => {
+        onQuarterSelect(quarterIndex, displayYear);
+        onClose();
+    };
+
+    const isCurrentQuarter = (quarterIndex) => {
+        return quarterIndex === currentQuarter && displayYear === currentYear;
+    };
+
+    const isSelectedQuarter = (quarterIndex) => {
+        return quarterIndex === selectedQuarter && displayYear === selectedYear;
+    };
+
+    return (
+        <View style={styles.quarterPickerContainer}>
+            <View style={styles.yearPickerNav}>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handlePrevYear}>
+                    <SvgIcons.leftArrowGreyBg />
+                </TouchableOpacity>
+                <Typography
+                    style={styles.decadeTitle}
+                    weight="700"
+                    size={14}
+                    color={color.brown_3C200A}
+                >
+                    {displayYear}
+                </Typography>
+                <TouchableOpacity style={styles.yearNavButton} onPress={handleNextYear}>
+                    <SvgIcons.rightArrowGreyBg />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.quartersGrid}>
+                {quarters.map((quarter) => (
+                    <TouchableOpacity
+                        key={quarter.label}
+                        style={[
+                            styles.quarterCell,
+                            isSelectedQuarter(quarter.index) && styles.quarterCellSelected,
+                            isCurrentQuarter(quarter.index) && !isSelectedQuarter(quarter.index) && styles.quarterCellCurrent,
+                        ]}
+                        onPress={() => handleQuarterPress(quarter.index)}
+                    >
+                        <Typography
+                            weight={isSelectedQuarter(quarter.index) || isCurrentQuarter(quarter.index) ? "600" : "500"}
+                            size={16}
+                            color={
+                                isSelectedQuarter(quarter.index)
+                                    ? color.btnBrown_AE6F28
+                                    : color.black_2F251D
+                            }
+                        >
+                            {quarter.label}
+                        </Typography>
+                        <Typography
+                            weight="400"
+                            size={12}
+                            color={
+                                isSelectedQuarter(quarter.index)
+                                    ? color.btnBrown_AE6F28
+                                    : color.grey_87807C
+                            }
+                            style={{ marginTop: 4 }}
+                        >
+                            {quarter.subtitle}
+                        </Typography>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+};
+
+// Current Quarter Month Picker Component (for This Quarter - shows only months of current quarter)
+const CurrentQuarterMonthPicker = ({ onMonthSelect, selectedMonth }) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentQuarter = Math.floor(currentMonth / 3);
+    const startMonthIndex = currentQuarter * 3;
+
+    const allMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const quarterMonths = [
+        { name: allMonthNames[startMonthIndex], index: startMonthIndex },
+        { name: allMonthNames[startMonthIndex + 1], index: startMonthIndex + 1 },
+        { name: allMonthNames[startMonthIndex + 2], index: startMonthIndex + 2 },
+    ];
+
+    const quarterLabel = `Q${currentQuarter + 1}`;
+
+    const isCurrentMonth = (monthIndex) => {
+        return monthIndex === currentMonth;
+    };
+
+    const isSelectedMonth = (monthIndex) => {
+        return monthIndex === selectedMonth;
+    };
+
+    return (
+        <View style={styles.currentQuarterContainer}>
+            <Typography
+                weight="700"
+                size={14}
+                color={color.brown_3C200A}
+                style={styles.currentQuarterTitle}
+            >
+                {quarterLabel} - {currentYear}
+            </Typography>
+
+            <View style={styles.currentQuarterMonthsRow}>
+                {quarterMonths.map((month) => (
+                    <TouchableOpacity
+                        key={month.name}
+                        style={[
+                            styles.currentQuarterMonthCell,
+                            isSelectedMonth(month.index) && styles.currentQuarterMonthCellSelected,
+                            isCurrentMonth(month.index) && !isSelectedMonth(month.index) && styles.currentQuarterMonthCellCurrent,
+                        ]}
+                        onPress={() => onMonthSelect(month.index, currentYear)}
+                    >
+                        <Typography
+                            weight={isSelectedMonth(month.index) || isCurrentMonth(month.index) ? "600" : "500"}
+                            size={16}
+                            color={
+                                isSelectedMonth(month.index) || isCurrentMonth(month.index)
+                                    ? color.btnBrown_AE6F28
+                                    : color.black_2F251D
+                            }
+                        >
+                            {month.name}
+                        </Typography>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+};
+
 // Date Range Picker Component
 const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
     const today = new Date();
@@ -607,6 +1034,17 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
     const [activeFilter, setActiveFilter] = useState('Today');
     const [showYearPicker, setShowYearPicker] = useState(false);
     const [selectedYear, setSelectedYear] = useState(null);
+    const [showMonthPicker, setShowMonthPicker] = useState(false);
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [selectedMonthYear, setSelectedMonthYear] = useState(null);
+    const [showQuarterPicker, setShowQuarterPicker] = useState(false);
+    const [selectedQuarter, setSelectedQuarter] = useState(null);
+    const [selectedQuarterYear, setSelectedQuarterYear] = useState(null);
+    const [showCurrentQuarterPicker, setShowCurrentQuarterPicker] = useState(false);
+    const [selectedCurrentQuarterMonth, setSelectedCurrentQuarterMonth] = useState(null);
+
+    const filtersScrollRef = useRef(null);
+    const translateY = useRef(new Animated.Value(0)).current;
 
     const filters = ['Today', 'Yesterday', 'Last Week', 'This Week', 'Last Month', 'This Month', 'Last Quarter', 'This Quarter', 'Last Year', 'This Year'];
 
@@ -616,8 +1054,40 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => false,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+            },
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    translateY.setValue(gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 100) {
+                    Animated.timing(translateY, {
+                        toValue: 600,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start(() => {
+                        translateY.setValue(0);
+                        onClose();
+                    });
+                } else {
+                    Animated.spring(translateY, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                    }).start();
+                }
+            },
+        })
+    ).current;
+
     useEffect(() => {
         if (visible) {
+            translateY.setValue(0);
             const todayDate = new Date();
             const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
             setStartDate(todayStart);
@@ -625,9 +1095,30 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
             setCurrentDate(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
             setActiveFilter('Today');
             setShowYearPicker(false);
+            setShowMonthPicker(false);
+            setShowQuarterPicker(false);
+            setShowCurrentQuarterPicker(false);
             setSelectedYear(null);
+            setSelectedMonth(null);
+            setSelectedMonthYear(null);
+            setSelectedQuarter(null);
+            setSelectedQuarterYear(null);
+            setSelectedCurrentQuarterMonth(null);
         }
     }, [visible]);
+
+    // Auto-scroll to active filter
+    useEffect(() => {
+        if (activeFilter && filtersScrollRef.current) {
+            const index = filters.indexOf(activeFilter);
+            if (index >= 0) {
+                const scrollX = Math.max(0, index * 110 - 40);
+                setTimeout(() => {
+                    filtersScrollRef.current?.scrollTo({ x: scrollX, animated: true });
+                }, 100);
+            }
+        }
+    }, [activeFilter]);
 
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -712,6 +1203,9 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         const selectedDate = new Date(dayObj.date.getFullYear(), dayObj.date.getMonth(), dayObj.date.getDate());
         setActiveFilter(null);
         setShowYearPicker(false);
+        setShowMonthPicker(false);
+        setShowQuarterPicker(false);
+        setShowCurrentQuarterPicker(false);
 
         if (!startDate || (startDate && endDate)) {
             setStartDate(selectedDate);
@@ -734,18 +1228,91 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
         setShowYearPicker(false);
     };
 
+    const handleMonthSelect = (monthIndex, year) => {
+        setSelectedMonth(monthIndex);
+        setSelectedMonthYear(year);
+        const start = new Date(year, monthIndex, 1);
+        const end = new Date(year, monthIndex + 1, 0);
+        setStartDate(start);
+        setEndDate(end);
+        setCurrentDate(new Date(year, monthIndex, 1));
+        setShowMonthPicker(false);
+    };
+
+    const handleQuarterSelect = (quarterIndex, year) => {
+        setSelectedQuarter(quarterIndex);
+        setSelectedQuarterYear(year);
+        const startMonth = quarterIndex * 3;
+        const start = new Date(year, startMonth, 1);
+        const end = new Date(year, startMonth + 3, 0);
+        setStartDate(start);
+        setEndDate(end);
+        setCurrentDate(new Date(year, startMonth, 1));
+        setShowQuarterPicker(false);
+    };
+
+    const handleCurrentQuarterMonthSelect = (monthIndex, year) => {
+        setSelectedCurrentQuarterMonth(monthIndex);
+        const start = new Date(year, monthIndex, 1);
+        const end = new Date(year, monthIndex + 1, 0);
+        setStartDate(start);
+        setEndDate(end);
+        setCurrentDate(new Date(year, monthIndex, 1));
+        setShowCurrentQuarterPicker(false);
+    };
+
+    const hideAllPickers = () => {
+        setShowYearPicker(false);
+        setShowMonthPicker(false);
+        setShowQuarterPicker(false);
+        setShowCurrentQuarterPicker(false);
+    };
+
     const handleFilterPress = (filter) => {
         setActiveFilter(filter);
         const todayDate = new Date();
         let start, end;
 
         if (filter === 'Last Year') {
+            hideAllPickers();
             setShowYearPicker(true);
             setSelectedYear(todayDate.getFullYear());
             return;
         }
 
-        setShowYearPicker(false);
+        if (filter === 'Last Month') {
+            hideAllPickers();
+            setShowMonthPicker(true);
+            setSelectedMonth(todayDate.getMonth());
+            setSelectedMonthYear(todayDate.getFullYear());
+            return;
+        }
+
+        if (filter === 'Last Quarter') {
+            hideAllPickers();
+            setShowQuarterPicker(true);
+            const currentQuarter = Math.floor(todayDate.getMonth() / 3);
+            setSelectedQuarter(currentQuarter);
+            setSelectedQuarterYear(todayDate.getFullYear());
+            return;
+        }
+
+        if (filter === 'This Quarter') {
+            hideAllPickers();
+            setShowCurrentQuarterPicker(true);
+            setSelectedCurrentQuarterMonth(null);
+            // Set date range for the full current quarter
+            const currentQuarter = Math.floor(todayDate.getMonth() / 3);
+            const startMonth = currentQuarter * 3;
+            start = new Date(todayDate.getFullYear(), startMonth, 1);
+            end = new Date(todayDate.getFullYear(), startMonth + 3, 0);
+            setStartDate(start);
+            setEndDate(end);
+            setCurrentDate(new Date(todayDate.getFullYear(), startMonth, 1));
+            return;
+        }
+
+        hideAllPickers();
 
         switch (filter) {
             case 'Today':
@@ -778,27 +1345,6 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                 start = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
                 end = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0);
                 break;
-            case 'Last Month':
-                start = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1);
-                end = new Date(todayDate.getFullYear(), todayDate.getMonth(), 0);
-                break;
-            case 'This Quarter': {
-                const currentQuarter = Math.floor(todayDate.getMonth() / 3);
-                start = new Date(todayDate.getFullYear(), currentQuarter * 3, 1);
-                end = new Date(todayDate.getFullYear(), currentQuarter * 3 + 3, 0);
-                break;
-            }
-            case 'Last Quarter': {
-                const lastQuarter = Math.floor(todayDate.getMonth() / 3) - 1;
-                if (lastQuarter < 0) {
-                    start = new Date(todayDate.getFullYear() - 1, 9, 1);
-                    end = new Date(todayDate.getFullYear() - 1, 12, 0);
-                } else {
-                    start = new Date(todayDate.getFullYear(), lastQuarter * 3, 1);
-                    end = new Date(todayDate.getFullYear(), lastQuarter * 3 + 3, 0);
-                }
-                break;
-            }
             case 'This Year':
                 start = new Date(todayDate.getFullYear(), 0, 1);
                 end = new Date(todayDate.getFullYear(), 11, 31);
@@ -830,7 +1376,10 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-                <TouchableOpacity style={styles.datePickerModal} activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+                <Animated.View
+                    style={[styles.datePickerModal, { transform: [{ translateY }] }]}
+                    {...panResponder.panHandlers}
+                >
                     <View style={styles.modalHandle} />
                     <Typography
                         style={styles.datePickerTitle}
@@ -841,7 +1390,12 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                         Date Range
                     </Typography>
 
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+                    <ScrollView
+                        ref={filtersScrollRef}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.filtersScroll}
+                    >
                         {filters.map((filter) => (
                             <TouchableOpacity
                                 key={filter}
@@ -873,11 +1427,32 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                             onYearSelect={handleYearSelect}
                             selectedYear={selectedYear}
                         />
+                    ) : showMonthPicker ? (
+                        <MonthPicker
+                            visible={showMonthPicker}
+                            onClose={() => setShowMonthPicker(false)}
+                            onMonthSelect={handleMonthSelect}
+                            selectedMonth={selectedMonth}
+                            selectedYear={selectedMonthYear}
+                        />
+                    ) : showQuarterPicker ? (
+                        <QuarterPicker
+                            visible={showQuarterPicker}
+                            onClose={() => setShowQuarterPicker(false)}
+                            onQuarterSelect={handleQuarterSelect}
+                            selectedQuarter={selectedQuarter}
+                            selectedYear={selectedQuarterYear}
+                        />
+                    ) : showCurrentQuarterPicker ? (
+                        <CurrentQuarterMonthPicker
+                            onMonthSelect={handleCurrentQuarterMonthSelect}
+                            selectedMonth={selectedCurrentQuarterMonth}
+                        />
                     ) : (
                         <>
                             <View style={styles.calendarNav}>
-                                <TouchableOpacity style={styles.navButton} onPress={handlePrevMonth}>
-                                    <SvgIcons.leftArrow width={10} height={10} fill="transparent" />
+                                <TouchableOpacity onPress={handlePrevMonth}>
+                                    <SvgIcons.leftArrowGreyBg />
                                 </TouchableOpacity>
                                 <Typography
                                     style={styles.monthTitle}
@@ -888,7 +1463,7 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                                 </Typography>
                                 <TouchableOpacity style={styles.navButton} onPress={handleNextMonth}>
-                                    <SvgIcons.rightArrow width={5} height={5} fill="transparent" />
+                                    <SvgIcons.rightArrowGreyBg />
                                 </TouchableOpacity>
                             </View>
 
@@ -970,7 +1545,7 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
                             </Typography>
                         </TouchableOpacity>
                     )}
-                </TouchableOpacity>
+                </Animated.View>
             </TouchableOpacity>
         </Modal>
     );
@@ -980,6 +1555,57 @@ const DateRangePicker = ({ visible, onClose, onDateRangeSelect }) => {
 const AdminAllEventsDashboard = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedDate, setSelectedDate] = useState('Jan 23, 2026');
+
+    // Bottom Sheet Picker States
+    const [showEventTypePicker, setShowEventTypePicker] = useState(false);
+    const [showTicketingTypePicker, setShowTicketingTypePicker] = useState(false);
+
+    // Popover Dropdown States
+    const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+    const [showFilterByEventDropdown, setShowFilterByEventDropdown] = useState(false);
+
+    // Selected Values
+    const [selectedEventType, setSelectedEventType] = useState('Standard');
+    const [selectedTicketingType, setSelectedTicketingType] = useState('Standard');
+    const [selectedCurrency, setSelectedCurrency] = useState('GHS');
+    const [selectedFilterByEvent, setSelectedFilterByEvent] = useState('All');
+
+    // Refs for popover positioning
+    const currencyRef = useRef(null);
+    const filterByEventRef = useRef(null);
+
+    // Dynamic Options (replace with API data in future)
+    const eventTypeOptions = [
+        { label: 'Standard', value: 'Standard' },
+        { label: 'Recurring', value: 'Recurring' },
+        { label: 'Multi Day Same Venue', value: 'Multi Day Same Venue' },
+        { label: 'Multi Day Multi Venue', value: 'Multi Day Multi Venue' },
+    ];
+
+    const ticketingTypeOptions = [
+        { label: 'Standard', value: 'Standard' },
+        { label: 'Members', value: 'Members' },
+        { label: 'Early Bird', value: 'Early Bird' },
+        { label: 'Packages', value: 'Packages' },
+    ];
+
+    const currencyOptions = [
+        { label: 'USD', value: 'USD' },
+        { label: 'Pounds', value: 'Pounds' },
+        { label: 'EUR', value: 'EUR' },
+        { label: 'AED', value: 'AED' },
+        { label: 'QAR', value: 'QAR' },
+        { label: 'GHS', value: 'GHS' },
+        { label: 'PKR', value: 'PKR' },
+    ];
+
+    const filterByEventOptions = [
+        { label: 'All', value: 'All' },
+        { label: 'Standard', value: 'Standard' },
+        { label: 'Recurring', value: 'Recurring' },
+        { label: 'Multi Day Same Venue', value: 'Multi Day Same Venue' },
+        { label: 'Multi Day Multi Venue', value: 'Multi Day Multi Venue' },
+    ];
 
     const eventData = [
         { label: 'Today', value: 12, color: color.btnBrown_AE6F28 },
@@ -1036,10 +1662,16 @@ const AdminAllEventsDashboard = () => {
 
                 <View style={styles.filters}>
                     <View style={styles.dropdownWrapper}>
-                        <Dropdown value="Event Type" />
+                        <Dropdown
+                            value={selectedEventType}
+                            onPress={() => setShowEventTypePicker(true)}
+                        />
                     </View>
                     <View style={styles.dropdownWrapper}>
-                        <Dropdown value="Ticketing Type" />
+                        <Dropdown
+                            value={selectedTicketingType}
+                            onPress={() => setShowTicketingTypePicker(true)}
+                        />
                     </View>
                 </View>
 
@@ -1100,7 +1732,12 @@ const AdminAllEventsDashboard = () => {
                             >
                                 Currency:
                             </Typography>
-                            <DropdownEarningAttendeesFilter value="GHS" />
+                            <View ref={currencyRef} collapsable={false}>
+                                <DropdownEarningAttendeesFilter
+                                    value={selectedCurrency}
+                                    onPress={() => setShowCurrencyDropdown(true)}
+                                />
+                            </View>
                         </View>
                     </View>
                     <EarningsChart />
@@ -1149,7 +1786,12 @@ const AdminAllEventsDashboard = () => {
                             >
                                 Filter by Event:
                             </Typography>
-                            <DropdownEarningAttendeesFilter value="All" />
+                            <View ref={filterByEventRef} collapsable={false}>
+                                <DropdownEarningAttendeesFilter
+                                    value={selectedFilterByEvent}
+                                    onPress={() => setShowFilterByEventDropdown(true)}
+                                />
+                            </View>
                         </View>
                     </View>
                     <AttendeesChart />
@@ -1284,6 +1926,46 @@ const AdminAllEventsDashboard = () => {
                 onClose={() => setShowDatePicker(false)}
                 onDateRangeSelect={handleDateRangeSelect}
             />
+
+            {/* Event Type Bottom Sheet */}
+            <BottomSheetRadioPicker
+                visible={showEventTypePicker}
+                onClose={() => setShowEventTypePicker(false)}
+                title="Event Type"
+                options={eventTypeOptions}
+                selectedValue={selectedEventType}
+                onSelect={(option) => setSelectedEventType(option.value)}
+            />
+
+            {/* Ticketing Type Bottom Sheet */}
+            <BottomSheetRadioPicker
+                visible={showTicketingTypePicker}
+                onClose={() => setShowTicketingTypePicker(false)}
+                title="Ticketing Type"
+                options={ticketingTypeOptions}
+                selectedValue={selectedTicketingType}
+                onSelect={(option) => setSelectedTicketingType(option.value)}
+            />
+
+            {/* Currency Popover Dropdown */}
+            <PopoverDropdown
+                visible={showCurrencyDropdown}
+                onClose={() => setShowCurrencyDropdown(false)}
+                options={currencyOptions}
+                selectedValue={selectedCurrency}
+                onSelect={(option) => setSelectedCurrency(option.value)}
+                anchorRef={currencyRef}
+            />
+
+            {/* Filter by Event Popover Dropdown */}
+            <PopoverDropdown
+                visible={showFilterByEventDropdown}
+                onClose={() => setShowFilterByEventDropdown(false)}
+                options={filterByEventOptions}
+                selectedValue={selectedFilterByEvent}
+                onSelect={(option) => setSelectedFilterByEvent(option.value)}
+                anchorRef={filterByEventRef}
+            />
         </View>
     );
 };
@@ -1370,6 +2052,7 @@ const styles = StyleSheet.create({
         borderColor: color.grey_DADADA,
         justifyContent: 'space-between',
         minWidth: 75,
+        maxWidth: 120,
     },
     dateSelector: {
         flexDirection: 'row',
@@ -1738,16 +2421,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
-    navButton: {
-        width: 30,
-        height: 30,
-        borderRadius: 22,
-        backgroundColor: '#DDDDDD',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     monthTitle: {
-
     },
     dayHeaders: {
         flexDirection: 'row',
@@ -1837,7 +2511,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     yearCell: {
-        width: '30%',
+        width: '23%',
         paddingVertical: 16,
         marginBottom: 12,
         borderRadius: 12,
@@ -1854,6 +2528,169 @@ const styles = StyleSheet.create({
     },
     yearCellCurrent: {
         backgroundColor: color.lightBrown_FFF6DF,
+    },
+    // Month Picker Styles
+    monthPickerContainer: {
+        paddingVertical: 10,
+    },
+    monthsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    monthCell: {
+        width: '23%',
+        paddingVertical: 16,
+        marginBottom: 12,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    monthCellSelected: {
+        backgroundColor: color.white_FFFFFF,
+        borderWidth: 2,
+        borderColor: color.btnBrown_AE6F28,
+    },
+    monthCellCurrent: {
+        backgroundColor: color.lightBrown_FFF6DF,
+    },
+    // Quarter Picker Styles
+    quarterPickerContainer: {
+        paddingVertical: 10,
+    },
+    quartersGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    quarterCell: {
+        width: '48%',
+        paddingVertical: 20,
+        marginBottom: 12,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+    },
+    quarterCellSelected: {
+        backgroundColor: color.white_FFFFFF,
+        borderWidth: 2,
+        borderColor: color.btnBrown_AE6F28,
+    },
+    quarterCellCurrent: {
+        backgroundColor: color.lightBrown_FFF6DF,
+    },
+    // Current Quarter Month Picker Styles
+    currentQuarterContainer: {
+        paddingVertical: 10,
+        alignItems: 'center',
+    },
+    currentQuarterTitle: {
+        marginBottom: 20,
+    },
+    currentQuarterMonthsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        width: '100%',
+    },
+    currentQuarterMonthCell: {
+        width: '30%',
+        paddingVertical: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+    },
+    currentQuarterMonthCellSelected: {
+        backgroundColor: color.white_FFFFFF,
+        borderWidth: 2,
+        borderColor: color.btnBrown_AE6F28,
+    },
+    currentQuarterMonthCellCurrent: {
+        backgroundColor: color.white_FFFFFF,
+        borderWidth: 2,
+        borderColor: color.btnBrown_AE6F28,
+    },
+    // Bottom Sheet Radio Picker Styles
+    bottomSheetOverlayWrapper: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    bottomSheetOverlayBg: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    bottomSheetPickerModal: {
+        backgroundColor: color.white_FFFFFF,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 20,
+        paddingBottom: 40,
+        maxHeight: '70%',
+    },
+    bottomSheetPickerTitle: {
+        marginBottom: 20,
+    },
+    bottomSheetOptionsList: {
+        maxHeight: 400,
+    },
+    radioOptionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    radioOuter: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: color.borderBrown_CEBCA0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 14,
+    },
+    radioOuterSelected: {
+        borderColor: color.btnBrown_AE6F28,
+        borderWidth: 2.5,
+    },
+    radioInner: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: color.btnBrown_AE6F28,
+    },
+    radioLabel: {
+        flex: 1,
+    },
+    // Popover Dropdown Styles
+    popoverOverlay: {
+        flex: 1,
+    },
+    popoverContainer: {
+        position: 'absolute',
+        backgroundColor: color.white_FFFFFF,
+        borderRadius: 12,
+        paddingVertical: 4,
+        minWidth: 50,
+        maxHeight: 250,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    popoverScroll: {
+        maxHeight: 240,
+    },
+    popoverOption: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    popoverOptionBorder: {
+        borderBottomWidth: 0,
     },
 });
 
