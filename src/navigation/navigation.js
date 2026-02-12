@@ -19,6 +19,7 @@ import ExploreEventScreen from '../screens/eventsTab/Exploreeventscreen';
 import ExploreDetailScreenTicketsTab from '../screens/eventsTicketsTab/ExploreDetailScreenTicketsTab';
 import Tickets from '../screens/Tickets';
 import DashboardScreen from '../screens/dashboard';
+import ManualScan from '../screens/ManualScan'
 
 const Stack = createNativeStackNavigator();
 
@@ -215,10 +216,22 @@ function Navigation({ route }) {
             statusBarTranslucent: true
           }}
         />
-         {/* NEW: DashboardDetail screen for ADMIN event ticket view */}
+        {/* NEW: DashboardDetail screen for ADMIN event ticket view */}
         <Stack.Screen
           name="DashboardDetail"
           component={DashboardScreen}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+        {/* ManualScan for ADMIN (no bottom tab, accessed via Header) */}
+        <Stack.Screen
+          name="ManualScanDetail"
+          component={ManualScan}
           options={{
             headerShown: false,
             unmountOnBlur: true,

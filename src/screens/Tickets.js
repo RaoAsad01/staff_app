@@ -16,16 +16,18 @@ const SettingsScreen = (props) => {
   const routeParams = route?.params || {};
   const { initialTab, eventInfo: routeEventInfo, selectedTab } = routeParams;
   const finalEventInfo = props.eventInfo || routeEventInfo;
-  const { onScanCountUpdate } = props;
+  const { onScanCountUpdate, activeHeaderTab: propActiveHeaderTab, onHeaderTabChange, userRole } = props;
+  const activeHeaderTab = propActiveHeaderTab || routeParams?.activeHeaderTab || 'Sell';
 
   // Only show back button when navigated to via root stack (TicketsDetail)
   const isFromRootStack = route?.name === 'TicketsDetail';
 
-  const [activeView, setActiveView] = useState('TicketsTab');
+  const shouldOpenBoxOffice = routeParams?.openBoxOffice || routeParams?.screen === 'BoxOfficeTab';
+  const [activeView, setActiveView] = useState(shouldOpenBoxOffice ? 'BoxOfficeTab' : 'TicketsTab');
   const [tabKey, setTabKey] = useState(0);
 
   useEffect(() => {
-    if (routeParams?.screen === 'BoxOfficeTab') {
+    if (routeParams?.screen === 'BoxOfficeTab' || routeParams?.openBoxOffice) {
       setActiveView('BoxOfficeTab');
     }
   }, [routeParams]);
@@ -55,6 +57,9 @@ const SettingsScreen = (props) => {
         eventInfo={finalEventInfo}
         showBackButton={isFromRootStack}
         onBackPress={handleBackPress}
+        activeTab={activeHeaderTab}
+        onTabChange={onHeaderTabChange}
+        userRole={userRole}
       />
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>

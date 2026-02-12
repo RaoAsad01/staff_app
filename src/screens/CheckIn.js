@@ -15,7 +15,7 @@ import { userService } from '../api/apiService';
 
 const { width, height } = Dimensions.get('window');
 
-const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
+const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTabChange, userRole }) => {
   const navigation = useNavigation();
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
@@ -34,7 +34,6 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [scanResponse, setScanResponse] = useState(null);
   const { isOnline } = useOfflineSync(false);
-  const [userRole, setUserRole] = useState(null);
   const [isLoadingRole, setIsLoadingRole] = useState(true);
 
   // Fetch user role
@@ -51,10 +50,10 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
           profile?.data?.role ||
           profile?.user?.role;
         logger.log('User role in CheckIn:', role);
-        setUserRole(role || null);
+      
       } catch (error) {
         logger.error('Error fetching user role in CheckIn:', error);
-        setUserRole(null);
+       
       } finally {
         setIsLoadingRole(false);
       }
@@ -107,7 +106,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Header activeTab={activeTab} />
+        <Header 
+        eventInfo={eventInfo}
+        activeTab={activeHeaderTab}
+        onTabChange={onHeaderTabChange}
+        userRole={userRole}
+       />
       </View>
     );
   }
@@ -116,7 +120,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
   if (isLoadingRole) {
     return (
       <View style={styles.mainContainer}>
-        <Header eventInfo={eventInfo} />
+        <Header  
+        eventInfo={eventInfo}
+        activeTab={activeHeaderTab}
+        onTabChange={onHeaderTabChange}
+        userRole={userRole}
+       />
         <View style={styles.darkBackgroundLoading}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
@@ -275,7 +284,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate }) => {
           <Text style={styles.offlineText}>Offline Mode - Scans will be queued for sync</Text>
         </View>
       )}
-      <Header eventInfo={eventInfo} />
+      <Header  
+      eventInfo={eventInfo}
+      activeTab={activeHeaderTab}
+      onTabChange={onHeaderTabChange}
+      userRole={userRole}
+     />
       <View style={userRole === 'ADMIN' ? styles.darkBackgroundAdmin : styles.darkBackground}>
         {scanResult && (
           <View style={styles.scanResultContainer}>

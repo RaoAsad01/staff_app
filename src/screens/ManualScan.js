@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import Header from '../components/header';
 import { color } from '../color/color';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
 import SvgIcons from '../components/SvgIcons';
 import { ticketService } from '../api/apiService';
 import NoResults from '../components/NoResults';
@@ -11,9 +11,10 @@ import { useOfflineSync } from '../hooks/useOfflineSync';
 import { syncService } from '../utils/syncService';
 import { offlineStorage } from '../utils/offlineStorage';
 
-const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
+const ManualScan = ({ eventInfo: propEventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTabChange, userRole: propUserRole }) => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
+  const routeHook = useRoute();
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [ticketOrders, setTicketOrders] = useState([]);
@@ -22,6 +23,10 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
   const [isOffline, setIsOffline] = useState(false);
   const { isOnline, queueSize } = useOfflineSync();
 
+  const eventInfo = propEventInfo || routeHook?.params?.eventInfo;
+  const userRole = propUserRole || routeHook?.params?.userRole;
+  const finalActiveTab = activeHeaderTab || routeHook?.params?.activeHeaderTab;
+  const isFromRootStack = !propEventInfo && !!routeHook?.params?.eventInfo;
   // Function to fetch orders
   const fetchOrders = async () => {
     setLoading(true);
@@ -35,7 +40,7 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
 
       const response = await ticketService.fetchUserTicketOrders(eventInfo.eventUuid);
       logger.log('manual scan response', response);
-      
+
       // Check if data is from offline cache
       if (response?.offline) {
         setIsOffline(true);
@@ -43,7 +48,7 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
       } else {
         setIsOffline(false);
       }
-      
+
       if (response?.data) {
         setTicketOrders(response.data);
       } else {
@@ -162,7 +167,12 @@ const ManualScan = ({ eventInfo, onScanCountUpdate }) => {
           <Text style={styles.offlineText}>Offline Mode - Using cached data</Text>
         </View>
       )}
-      <Header eventInfo={eventInfo} />
+      <Header
+        eventInfo={eventInfo}
+        activeTab={finalActiveTab}
+        onTabChange={onHeaderTabChange}
+        userRole={userRole}
+        showBackButton={isFromRootStack} />
       <View style={styles.contentContainer}>
         <View style={[
           styles.searchContainer,

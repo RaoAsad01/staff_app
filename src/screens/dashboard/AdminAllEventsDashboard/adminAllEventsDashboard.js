@@ -2399,10 +2399,10 @@ const styles = StyleSheet.create({
         backgroundColor: color.grey_E5E7EB,
     },
     filterChip: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         paddingVertical: 10,
         borderRadius: 8,
-        marginRight: 8,
+        marginRight: 30,
     },
     filterChipActive: {
         backgroundColor: color.btnBrown_AE6F28,

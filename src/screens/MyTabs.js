@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,6 +37,28 @@ function MyTabs() {
   const [eventInformation, setEventInformation] = useState(initialEventInfo);
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [activeHeaderTab, setActiveHeaderTab] = useState('Sell');
+  const [sellModeActive, setSellModeActive] = useState(false);
+  const sellModeRef = useRef(false);
+
+  // Sync activeHeaderTab when navigating to a specific bottom tab via route params
+  useEffect(() => {
+    const screenParam = route?.params?.screen;
+    if (screenParam === 'Check In') {
+      setActiveHeaderTab('Auto');
+    } else if (screenParam === 'Manual') {
+      setActiveHeaderTab('Manual');
+    } else if (screenParam === 'Tickets') {
+      setActiveHeaderTab('Sell');
+    }
+  }, [route?.params?.screen, route?.params?.params?.screen]);
+
+  useEffect(() => {
+    if (route?.params?.pendingSellMode) {
+      sellModeRef.current = true;
+      setSellModeActive(true);
+    }
+  }, [route?.params?.pendingSellMode]);
 
   // // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
   // const [showEventDashboard, setShowEventDashboard] = useState(false);
@@ -231,8 +253,8 @@ function MyTabs() {
 
   // ─── Flow 1: Called from EventsScreen ───
   const handleEventChangeFromEvents = async (newEvent) => {
+    setActiveHeaderTab('Sell');
     const eventUuid = newEvent.uuid || newEvent.eventUuid;
-    
     // Fetch full event info BEFORE navigating so route params have all data
     let fullEventInfo = { ...newEvent, eventUuid };
     try {
@@ -255,7 +277,7 @@ function MyTabs() {
       logger.error('Error fetching full event info for DashboardDetail:', error);
       await handleEventChange(newEvent);
     }
-  
+
     rootNavigation.navigate('DashboardDetail', {
       eventInfo: fullEventInfo,
       showEventDashboard: true,
@@ -277,8 +299,9 @@ function MyTabs() {
   // ─── Flow 4: Called from EventsTicketsTab or ExploreDetailScreenTicketsTab ───
   // Navigate to TicketsDetail in root stack instead of state swap
   const handleEventChangeFromTicketsTab = async (newEvent) => {
+    setActiveHeaderTab('Sell');
     const eventUuid = newEvent.uuid || newEvent.eventUuid;
-  
+
     // Fetch full event info BEFORE navigating so route params have all data
     let fullEventInfo = { ...newEvent, eventUuid };
     try {
@@ -301,9 +324,11 @@ function MyTabs() {
       logger.error('Error fetching full event info for TicketsDetail:', error);
       await handleEventChange(newEvent);
     }
-  
+
     rootNavigation.navigate('TicketsDetail', {
       eventInfo: fullEventInfo,
+      activeHeaderTab: 'Sell',
+      openBoxOffice: sellModeRef.current,
     });
   };
 
@@ -470,8 +495,24 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
+            listeners={{
+              tabPress: () => {
+                setActiveHeaderTab('Auto');
+              },
+            }}
           >
-            {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+            {() => <HomeScreen
+              eventInfo={eventInformation}
+              onScanCountUpdate={updateScanCount}
+              activeHeaderTab={activeHeaderTab}
+              onHeaderTabChange={(tab) => {
+                setActiveHeaderTab(tab);
+                setSellModeActive(tab === 'Sell');
+                sellModeRef.current = (tab === 'Sell');
+              }}
+
+              userRole={userRole}
+            />}
           </Tab.Screen>
 
           <Tab.Screen
@@ -496,13 +537,33 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
+            listeners={{
+              tabPress: () => {
+                setActiveHeaderTab('Sell');
+                setSellModeActive(false);
+                sellModeRef.current = false;
+              },
+            }}
           >
             {() => (
               <EventsTicketsTab
                 eventInfo={eventInformation}
                 onEventChange={handleEventChangeFromTicketsTab}
+                activeHeaderTab={activeHeaderTab}
+                onHeaderTabChange={(tab) => {
+                  setActiveHeaderTab(tab);
+                  if (tab === 'Sell') {
+                    setSellModeActive(true);
+                    sellModeRef.current = true;
+                  } else {
+                    setSellModeActive(false);
+                    sellModeRef.current = false;
+                  }
+                }}
+                userRole={userRole}
               />
             )}
+
           </Tab.Screen>
         </>
       ) : (
@@ -531,7 +592,8 @@ function MyTabs() {
               },
             })}
           >
-            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} activeHeaderTab={activeHeaderTab}
+              onHeaderTabChange={setActiveHeaderTab} userRole={userRole} />}
           </Tab.Screen>
 
           <Tab.Screen
@@ -543,8 +605,22 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
+            listeners={{
+              tabPress: () => {
+                setActiveHeaderTab('Auto');
+              },
+            }}
           >
-            {() => <HomeScreen eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+            {() => <HomeScreen
+              eventInfo={eventInformation}
+              onScanCountUpdate={updateScanCount}
+              activeHeaderTab={activeHeaderTab}
+              onHeaderTabChange={(tab) => {
+                setActiveHeaderTab(tab);
+                setSellModeActive(tab === 'Sell');
+              }}
+              userRole={userRole}
+            />}
           </Tab.Screen>
 
           <Tab.Screen
@@ -556,8 +632,14 @@ function MyTabs() {
               statusBarBackgroundColor: 'white',
               statusBarTranslucent: false
             }}
+            listeners={{
+              tabPress: () => {
+                setActiveHeaderTab('Manual');
+              },
+            }}
           >
-            {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} />}
+            {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} activeHeaderTab={activeHeaderTab}
+              onHeaderTabChange={setActiveHeaderTab} userRole={userRole} />}
           </Tab.Screen>
 
           <Tab.Screen

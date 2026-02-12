@@ -11,11 +11,12 @@ import { formatValue } from '../constants/formatValue';
 
 const { width } = Dimensions.get('window');
 
-const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onBackPress }) => {
+const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onBackPress, activeTab: activeTabProp, userRole }) => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState('Manual');
+  const [localActiveTab, setLocalActiveTab] = useState('Manual');
+  const activeTab = activeTabProp !== undefined ? activeTabProp : localActiveTab;
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
 
   const tabs = ['Auto', 'Manual', 'Sell'];
@@ -30,9 +31,64 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
     }
   }, [eventInfo?.scanCount]);
 
+
   const handleTabPress = (tab) => {
-    setActiveTab(tab);
+    if (tab === activeTab) return;
+    setLocalActiveTab(tab);
     onTabChange?.(tab);
+
+    const currentRouteName = route.name;
+
+    // Detail screens in root stack (outside bottom tabs)
+    const detailScreens = [
+      'TicketsDetail', 'DashboardDetail', 'ManualCheckInAllTickets',
+      'CheckInAllTickets', 'TicketScanned', 'ManualScanDetail',
+      'ExploreDetailScreenTicketsTab', 'ExploreEventScreen'
+    ];
+    const isInDetailScreen = detailScreens.includes(currentRouteName);
+
+    if (isInDetailScreen) {
+      // ── From a detail screen ──
+      if (tab === 'Auto') {
+        navigation.navigate('LoggedIn', { screen: 'Check In', eventInfo });
+      } else if (tab === 'Manual') {
+        if (userRole === 'ADMIN') {
+          // ADMIN: navigate to root stack ManualScanDetail
+          navigation.navigate('ManualScanDetail', { eventInfo });
+        } else {
+          navigation.navigate('ManualScanDetail', { eventInfo });
+        }
+      } else if (tab === 'Sell') {
+        if (userRole === 'ADMIN') {
+          if (currentRouteName === 'TicketsDetail') return;
+          navigation.navigate('LoggedIn', { screen: 'Tickets', eventInfo, pendingSellMode: true });
+        } else {
+          navigation.navigate('LoggedIn', {
+            screen: 'Tickets',
+            params: { screen: 'BoxOfficeTab' },
+            eventInfo,
+          });
+        }
+      }
+    } else {
+      // ── Inside bottom tabs ──
+      if (tab === 'Auto') {
+        navigation.navigate('Check In');
+      } else if (tab === 'Manual') {
+        if (userRole === 'ADMIN') {
+          // ADMIN has no Manual bottom tab — use root stack
+          navigation.navigate('ManualScanDetail', { eventInfo });
+        } else {
+          navigation.navigate('ManualScanDetail', { eventInfo });
+        }
+      } else if (tab === 'Sell') {
+        if (userRole === 'ADMIN') {
+          navigation.navigate('Tickets', { eventInfo, pendingSellMode: true });
+        } else {
+          navigation.navigate('Tickets', { screen: 'BoxOfficeTab' });
+        }
+      }
+    }
   };
 
   const handleCountPress = () => {
