@@ -31,7 +31,6 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
     }
   }, [eventInfo?.scanCount]);
 
-
   const handleTabPress = (tab) => {
     if (tab === activeTab) return;
     setLocalActiveTab(tab);
@@ -39,7 +38,6 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
 
     const currentRouteName = route.name;
 
-    // Detail screens in root stack (outside bottom tabs)
     const detailScreens = [
       'TicketsDetail', 'DashboardDetail', 'ManualCheckInAllTickets',
       'CheckInAllTickets', 'TicketScanned', 'ManualScanDetail',
@@ -53,15 +51,15 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
         navigation.navigate('LoggedIn', { screen: 'Check In', eventInfo });
       } else if (tab === 'Manual') {
         if (userRole === 'ADMIN') {
-          // ADMIN: navigate to root stack ManualScanDetail
-          navigation.navigate('ManualScanDetail', { eventInfo });
+          if (currentRouteName === 'ManualScanDetail') return;
+          navigation.navigate('ManualScanDetail', { eventInfo, userRole, activeHeaderTab: 'Manual' });
         } else {
-          navigation.navigate('ManualScanDetail', { eventInfo });
+          navigation.navigate('LoggedIn', { screen: 'Manual', eventInfo });
         }
       } else if (tab === 'Sell') {
         if (userRole === 'ADMIN') {
           if (currentRouteName === 'TicketsDetail') return;
-          navigation.navigate('LoggedIn', { screen: 'Tickets', eventInfo, pendingSellMode: true });
+          navigation.navigate('LoggedIn', { screen: 'Tickets', eventInfo });
         } else {
           navigation.navigate('LoggedIn', {
             screen: 'Tickets',
@@ -76,14 +74,13 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
         navigation.navigate('Check In');
       } else if (tab === 'Manual') {
         if (userRole === 'ADMIN') {
-          // ADMIN has no Manual bottom tab — use root stack
-          navigation.navigate('ManualScanDetail', { eventInfo });
+          navigation.navigate('ManualScanDetail', { eventInfo, userRole, activeHeaderTab: 'Manual' });
         } else {
-          navigation.navigate('ManualScanDetail', { eventInfo });
+          navigation.navigate('Manual');
         }
       } else if (tab === 'Sell') {
         if (userRole === 'ADMIN') {
-          navigation.navigate('Tickets', { eventInfo, pendingSellMode: true });
+          navigation.navigate('Tickets', { eventInfo });
         } else {
           navigation.navigate('Tickets', { screen: 'BoxOfficeTab' });
         }

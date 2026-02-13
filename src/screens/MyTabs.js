@@ -38,8 +38,10 @@ function MyTabs() {
   const [isLoadingEventInfo, setIsLoadingEventInfo] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [activeHeaderTab, setActiveHeaderTab] = useState('Sell');
-  const [sellModeActive, setSellModeActive] = useState(false);
-  const sellModeRef = useRef(false);
+
+  // When true, user tapped bottom tab directly (normal mode = show Tickets tab)
+  // When false, user came via Header Sell tab (sell mode = show BoxOffice tab)
+  const normalTicketMode = useRef(false);
 
   // Sync activeHeaderTab when navigating to a specific bottom tab via route params
   useEffect(() => {
@@ -52,16 +54,6 @@ function MyTabs() {
       setActiveHeaderTab('Sell');
     }
   }, [route?.params?.screen, route?.params?.params?.screen]);
-
-  useEffect(() => {
-    if (route?.params?.pendingSellMode) {
-      sellModeRef.current = true;
-      setSellModeActive(true);
-    }
-  }, [route?.params?.pendingSellMode]);
-
-  // // When true, ADMIN sees event-specific DashboardScreen instead of AdminAllEventsDashboard.
-  // const [showEventDashboard, setShowEventDashboard] = useState(false);
 
   // Calculate dynamic tab bar height with safe area insets
   const tabBarHeight = 66 + (Platform.OS === 'android' ? Math.max(0, insets.bottom) : insets.bottom);
@@ -255,7 +247,6 @@ function MyTabs() {
   const handleEventChangeFromEvents = async (newEvent) => {
     setActiveHeaderTab('Sell');
     const eventUuid = newEvent.uuid || newEvent.eventUuid;
-    // Fetch full event info BEFORE navigating so route params have all data
     let fullEventInfo = { ...newEvent, eventUuid };
     try {
       if (eventUuid) {
@@ -289,20 +280,15 @@ function MyTabs() {
     await handleEventChange(newEvent);
   };
 
-  // // ─── Flow 3: ADMIN taps Dashboard tab ───
-  // const handleDashboardTabPress = () => {
-  //   if (userRole === 'ADMIN') {
-  //     setShowEventDashboard(false);
-  //   }
-  // };
-
-  // ─── Flow 4: Called from EventsTicketsTab or ExploreDetailScreenTicketsTab ───
-  // Navigate to TicketsDetail in root stack instead of state swap
+  // ─── Flow 3: Called from EventsTicketsTab or ExploreDetailScreenTicketsTab ───
   const handleEventChangeFromTicketsTab = async (newEvent) => {
+    // Check if user came via normal bottom tab tap or via Header Sell
+    const shouldOpenBoxOffice = !normalTicketMode.current;
+    normalTicketMode.current = false; // Reset after use
+
     setActiveHeaderTab('Sell');
     const eventUuid = newEvent.uuid || newEvent.eventUuid;
 
-    // Fetch full event info BEFORE navigating so route params have all data
     let fullEventInfo = { ...newEvent, eventUuid };
     try {
       if (eventUuid) {
@@ -328,7 +314,7 @@ function MyTabs() {
     rootNavigation.navigate('TicketsDetail', {
       eventInfo: fullEventInfo,
       activeHeaderTab: 'Sell',
-      openBoxOffice: sellModeRef.current,
+      openBoxOffice: shouldOpenBoxOffice,
     });
   };
 
@@ -507,10 +493,7 @@ function MyTabs() {
               activeHeaderTab={activeHeaderTab}
               onHeaderTabChange={(tab) => {
                 setActiveHeaderTab(tab);
-                setSellModeActive(tab === 'Sell');
-                sellModeRef.current = (tab === 'Sell');
               }}
-
               userRole={userRole}
             />}
           </Tab.Screen>
@@ -540,8 +523,8 @@ function MyTabs() {
             listeners={{
               tabPress: () => {
                 setActiveHeaderTab('Sell');
-                setSellModeActive(false);
-                sellModeRef.current = false;
+                // User physically tapped the bottom tab = normal mode (show Tickets tab)
+                normalTicketMode.current = true;
               },
             }}
           >
@@ -552,18 +535,10 @@ function MyTabs() {
                 activeHeaderTab={activeHeaderTab}
                 onHeaderTabChange={(tab) => {
                   setActiveHeaderTab(tab);
-                  if (tab === 'Sell') {
-                    setSellModeActive(true);
-                    sellModeRef.current = true;
-                  } else {
-                    setSellModeActive(false);
-                    sellModeRef.current = false;
-                  }
                 }}
                 userRole={userRole}
               />
             )}
-
           </Tab.Screen>
         </>
       ) : (
@@ -617,7 +592,6 @@ function MyTabs() {
               activeHeaderTab={activeHeaderTab}
               onHeaderTabChange={(tab) => {
                 setActiveHeaderTab(tab);
-                setSellModeActive(tab === 'Sell');
               }}
               userRole={userRole}
             />}
