@@ -27,6 +27,12 @@ const SettingsScreen = (props) => {
   const [tabKey, setTabKey] = useState(0);
 
   useEffect(() => {
+    if (routeParams?.initialTab === 'Scanned') {
+      setActiveView('TicketsTab');
+    }
+  }, [routeParams?.initialTab]);
+
+  useEffect(() => {
     if (routeParams?.screen === 'BoxOfficeTab' || routeParams?.openBoxOffice) {
       setActiveView('BoxOfficeTab');
     }

@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ActivityIndicator
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { color } from '../color/color';
 import SvgIcons from '../components/SvgIcons';
 import * as SecureStore from 'expo-secure-store';
@@ -24,6 +24,8 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const route = useRoute();
+  const userRole = route?.params?.userRole;
 
   useEffect(() => {
     fetchProfile();
@@ -93,7 +95,15 @@ const ProfileScreen = () => {
         await fetchProfile();
         setProfileImage(null);
         setHasChanges(false);
-      } else {
+
+        // 🔥 Tell Header to refresh
+        navigation.navigate({
+          name: 'Profile',
+          params: { refreshProfile: Date.now() },
+          merge: true,
+        });
+      }
+      else {
         Alert.alert('Error', response.message || 'Failed to update profile image.');
       }
     } catch (error) {
@@ -134,6 +144,13 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {userRole === 'ADMIN' && (
+          <View style={styles.backRow}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <SvgIcons.backArrow />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
             <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
@@ -287,6 +304,17 @@ const styles = StyleSheet.create({
     color: color.btnTxt_FFF6DF,
     fontSize: 16,
     fontWeight: '700',
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 30,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

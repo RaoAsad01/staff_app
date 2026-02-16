@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, TouchableOpacity, SafeAreaView, Platform, StatusBar, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { color } from '../color/color';
 import SvgIcons from './SvgIcons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { truncateCityName } from '../utils/stringUtils';
 import { truncateEventName } from '../utils/stringUtils';
 import { formatDateWithMonthName } from '../constants/dateAndTime';
 import { formatValue } from '../constants/formatValue';
+import { userService } from '../api/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +18,8 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
   const insets = useSafeAreaInsets();
   const [localActiveTab, setLocalActiveTab] = useState('Manual');
   const activeTab = activeTabProp !== undefined ? activeTabProp : localActiveTab;
+  const [userData, setUserData] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [currentScanCount, setCurrentScanCount] = useState(eventInfo?.scanCount || '0');
 
   const tabs = ['Auto', 'Manual', 'Sell'];
@@ -24,6 +27,29 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
   const topPadding = Platform.OS === 'android'
     ? (StatusBar.currentHeight || 0)
     : insets.top;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchProfile();
+    }, [route.params?.refreshProfile])
+  );
+
+
+  const fetchProfile = async () => {
+    try {
+      const response = await userService.getProfile();
+      if (response.success) {
+        setUserData(response.data);
+      } else {
+        Alert.alert('Error', 'Failed to fetch profile data');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (eventInfo?.scanCount !== undefined) {
@@ -41,7 +67,7 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
     const detailScreens = [
       'TicketsDetail', 'DashboardDetail', 'ManualCheckInAllTickets',
       'CheckInAllTickets', 'TicketScanned', 'ManualScanDetail',
-      'ExploreDetailScreenTicketsTab', 'ExploreEventScreen'
+      'ExploreDetailScreenTicketsTab', 'ExploreEventScreen','Profile',
     ];
     const isInDetailScreen = detailScreens.includes(currentRouteName);
 
@@ -54,7 +80,7 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
           if (currentRouteName === 'ManualScanDetail') return;
           navigation.navigate('ManualScanDetail', { eventInfo, userRole, activeHeaderTab: 'Manual' });
         } else {
-          navigation.navigate('LoggedIn', { screen: 'Manual', eventInfo });
+          navigation.navigate('ManualScanDetail', { eventInfo, userRole, activeHeaderTab: 'Manual' });
         }
       } else if (tab === 'Sell') {
         if (userRole === 'ADMIN') {
@@ -89,14 +115,31 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
   };
 
   const handleCountPress = () => {
-    navigation.navigate('LoggedIn', {
-      eventInfo: eventInfo,
-      screen: 'Tickets',
-      params: {
-        initialTab: 'Scanned',
-        fromHeader: true,
-      },
-    });
+    if (userRole === 'ADMIN') {
+      const currentRouteName = route.name;
+      if (currentRouteName === 'TicketsDetail') {
+        navigation.setParams({
+          initialTab: 'Scanned',
+          openBoxOffice: false,
+        });
+      } else {
+        navigation.navigate('TicketsDetail', {
+          eventInfo: eventInfo,
+          activeHeaderTab: 'Sell',
+          initialTab: 'Scanned',
+          openBoxOffice: false,
+        });
+      }
+    } else {
+      navigation.navigate('LoggedIn', {
+        eventInfo: eventInfo,
+        screen: 'Tickets',
+        params: {
+          initialTab: 'Scanned',
+          fromHeader: true,
+        },
+      });
+    }
   };
 
   const handleBackPress = () => {
@@ -111,7 +154,7 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
   const shouldShowBackButton = () => {
     if (showBackButton) return true;
     const currentRouteName = route.name;
-    const detailScreens = ['ManualCheckInAllTickets', 'CheckInAllTickets', 'TicketScanned'];
+    const detailScreens = ['ManualCheckInAllTickets', 'CheckInAllTickets', 'TicketScanned','Profile'];
     return detailScreens.includes(currentRouteName);
   };
 
@@ -147,7 +190,19 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
           <View style={styles.profileRow}>
             {/* Left: Avatar + Name */}
             <View style={styles.leftSection}>
-              <SvgIcons.profileImage />
+            <TouchableOpacity style={styles.avatarContainer} onPress={() => navigation.navigate('Profile', { userRole, eventInfo })}>
+                {profileImage ? (
+                  <Image source={profileImage} style={styles.avatar} resizeMode="cover" />
+                ) : userData?.profile_image ? (
+                  <Image
+                    source={{ uri: userData.profile_image }}
+                    style={styles.avatar}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <SvgIcons.placeholderImage width={22} height={22} />
+                )}
+              </TouchableOpacity>
               <Text style={styles.staffName} numberOfLines={1}>
                 {eventInfo?.staff_name || 'John Doe'}
               </Text>
@@ -312,6 +367,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: color.brown_3C200A,
+  },
+  avatarContainer: {
+    width: 22,
+    height: 22,
+    borderRadius: 22,
+    borderColor: color.btnBrown_AE6F28,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  avatar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 22,
   },
 });
 

@@ -508,7 +508,7 @@ function MyTabs() {
               statusBarTranslucent: false
             }}
           >
-            {() => <ProfileScreen />}
+            {() => <ServicesScreen />}
           </Tab.Screen>
 
           <Tab.Screen

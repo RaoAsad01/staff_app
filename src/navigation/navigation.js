@@ -19,7 +19,8 @@ import ExploreEventScreen from '../screens/eventsTab/Exploreeventscreen';
 import ExploreDetailScreenTicketsTab from '../screens/eventsTicketsTab/ExploreDetailScreenTicketsTab';
 import Tickets from '../screens/Tickets';
 import DashboardScreen from '../screens/dashboard';
-import ManualScan from '../screens/ManualScan'
+import ManualScan from '../screens/ManualScan';
+import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -232,6 +233,17 @@ function Navigation({ route }) {
         <Stack.Screen
           name="ManualScanDetail"
           component={ManualScan}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+         <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
           options={{
             headerShown: false,
             unmountOnBlur: true,
