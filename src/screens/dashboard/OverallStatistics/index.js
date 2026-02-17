@@ -1,9 +1,54 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Image as ExpoImage } from 'expo-image';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { color } from '../../../color/color';
 import SvgIcons from '../../../components/SvgIcons';
 import { logger } from '../../../utils/logger';
+
+const CircularProgress = ({ value, total, size = 40 }) => {
+    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+    const radius = (size / 2) - 3;
+    const strokeWidth = 3;
+    const circumference = 2 * Math.PI * radius;
+    const progress = (percentage / 100) * circumference;
+    const viewBox = `0 0 ${size} ${size}`;
+    const center = size / 2;
+    const fontSize = size <= 40 ? 9 : 11;
+
+    return (
+        <Svg width={size} height={size} viewBox={viewBox}>
+            <Circle
+                cx={center}
+                cy={center}
+                r={radius}
+                stroke="#E0E0E0"
+                strokeWidth={strokeWidth}
+                fill="none"
+            />
+            <Circle
+                cx={center}
+                cy={center}
+                r={radius}
+                stroke={color.btnBrown_AE6F28}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={`${circumference}`}
+                strokeDashoffset={`${circumference - progress}`}
+                strokeLinecap="round"
+            />
+            <SvgText
+                x={center}
+                y={center + fontSize / 3}
+                textAnchor="middle"
+                fontSize={fontSize}
+                fill={color.placeholderTxt_24282C}
+                fontWeight="500"
+            >
+                {`${percentage}%`}
+            </SvgText>
+        </Svg>
+    );
+};
 
 const OverallStatistics = ({ stats,
     onTotalTicketsPress,
@@ -12,91 +57,46 @@ const OverallStatistics = ({ stats,
     onAvailableTicketsPress,
     showHeading = true
 }) => {
-    // Extract data from stats with default values
-    // Try both possible paths for terminal statistics
     const terminalStatsFromTerminal = stats?.data?.terminal_statistics || {};
     const terminalStatsFromOverall = stats?.data?.overall_statistics || {};
     const terminalStats = Object.keys(terminalStatsFromTerminal).length > 0 ? terminalStatsFromTerminal : terminalStatsFromOverall;
-    const scanAnalytics = stats?.data?.scan_analytics || {};
-    
-    logger.log('OverallStatistics - Terminal Stats from terminal_statistics:', JSON.stringify(terminalStatsFromTerminal, null, 2));
-    logger.log('OverallStatistics - Terminal Stats from overall_statistics:', JSON.stringify(terminalStatsFromOverall, null, 2));
-    logger.log('OverallStatistics - Final terminalStats:', JSON.stringify(terminalStats, null, 2));
 
-    // Debug: Check if data exists at different paths
-    logger.log('OverallStatistics - Stats Data Keys:', Object.keys(stats?.data || {}));
-    logger.log('OverallStatistics - Direct terminal_statistics access:', stats?.data?.terminal_statistics);
-    logger.log('OverallStatistics - Direct overall_statistics access:', stats?.data?.overall_statistics);
-
-    // Extract values with multiple fallback paths
     const totalTicketsRaw = terminalStats?.total_tickets || 0;
     const totalScannedRaw = terminalStats?.total_scanned || 0;
     const totalUnscannedRaw = terminalStats?.total_unscanned || 0;
     const availableTicketsRaw = terminalStats?.available_tickets || 0;
 
-    logger.log('OverallStatistics - Raw Values:');
-    logger.log('  - totalTicketsRaw:', totalTicketsRaw);
-    logger.log('  - totalScannedRaw:', totalScannedRaw);
-    logger.log('  - availableTicketsRaw:', availableTicketsRaw);
-
-    // Handle cases where values might be objects or null/undefined
     const totalTickets = typeof totalTicketsRaw === 'object' && totalTicketsRaw !== null ? (totalTicketsRaw.total || totalTicketsRaw.count || 0) : (totalTicketsRaw || 0);
     const totalScanned = typeof totalScannedRaw === 'object' && totalScannedRaw !== null ? (totalScannedRaw.total || totalScannedRaw.count || 0) : (totalScannedRaw || 0);
     const totalUnscanned = typeof totalUnscannedRaw === 'object' && totalUnscannedRaw !== null ? (totalUnscannedRaw.total || totalUnscannedRaw.count || 0) : (totalUnscannedRaw || 0);
     const availableTickets = typeof availableTicketsRaw === 'object' && availableTicketsRaw !== null ? (availableTicketsRaw.total || availableTicketsRaw.count || 0) : (availableTicketsRaw || 0);
-
-    logger.log('OverallStatistics - Final Processed Values:');
-    logger.log('  - totalTickets:', totalTickets);
-    logger.log('  - totalScanned:', totalScanned);
-    logger.log('  - availableTickets:', availableTickets);
+    console.log('totalTickets :', totalTickets, 'totalTicketsRaw:', totalTicketsRaw, 'terminalStats:', JSON.stringify(terminalStats));
 
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
                 {showHeading && <Text style={styles.heading}>Terminal Statistics</Text>}
                 <View style={styles.row}>
-
                     <View style={styles.statContainer}>
-                        <TouchableOpacity onPress={onAvailableTicketsPress}>
-                            <View style={styles.statRow}>
-                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                                <Text style={styles.statTitle}>Available Tickets</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onAvailableTicketsPress}>
+                            <CircularProgress value={availableTickets} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1} >Available Tickets</Text>
+                                <Text style={styles.statValue}>{availableTickets}</Text>
                             </View>
-                            <Text style={styles.statValue}>{availableTickets}</Text>
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.statContainer}>
-                        <TouchableOpacity style={styles.statCard} onPress={onTotalScannedPress}>
-                            <View style={styles.statRow}>
-                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                                <Text style={styles.statTitle}>Total Scanned</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onTotalScannedPress}>
+                            <CircularProgress value={totalScanned} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1}>Total Scanned</Text>
+                                <Text style={styles.statValue}>{totalScanned}</Text>
                             </View>
-                            <Text style={styles.statValue}>{totalScanned}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
-                {/* <View style={styles.row}>
-                    <View style={styles.statContainer}>
-                    <TouchableOpacity style={styles.statCard} onPress={onTotalUnscannedPress}>
-                        <View style={styles.statRow}>
-                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                            <Text style={styles.statTitle}>Total Unscanned</Text>
-                        </View>
-                        <Text style={styles.statValue}>{totalUnscanned}</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.statContainer}>
-                    <TouchableOpacity style={styles.statCard} onPress={onAvailableTicketsPress}>
-                        <View style={styles.statRow}>
-                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                            <Text style={styles.statTitle}>Total Tickets</Text>
-                        </View>
-                        <Text style={styles.statValue}>{totalTickets}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View> */}
             </View>
         </View>
     );
@@ -128,10 +128,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         gap: 12,
         marginBottom: 6,
-
     },
     statContainer: {
-        height: 76,
         flex: 1,
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -141,29 +139,25 @@ const styles = StyleSheet.create({
         backgroundColor: color.white_FFFFFF,
         borderColor: color.brown_CEBCA04D,
         borderWidth: 1,
-
     },
-    statRow: {
+    statContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5
+        gap: 10,
     },
-    icon: {
-        width: 16,
-        height: 16,
-        marginRight: 6,
+    statTextContainer: {
+        flex: 1,
     },
     statTitle: {
         fontSize: 12,
         color: color.placeholderTxt_24282C,
-        fontWeight: 400
+        fontWeight: '400',
     },
     statValue: {
         fontSize: 14,
         fontWeight: '500',
-        marginTop: 6,
+        marginTop: 4,
         color: color.brown_3C200A,
-        marginLeft: 22
     },
 });
 

@@ -1,8 +1,52 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Image as ExpoImage } from 'expo-image';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { color } from '../../../color/color';
-import SvgIcons from '../../../components/SvgIcons';
+
+const CircularProgress = ({ value, total, size = 40 }) => {
+    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+    const radius = (size / 2) - 3;
+    const strokeWidth = 3;
+    const circumference = 2 * Math.PI * radius;
+    const progress = (percentage / 100) * circumference;
+    const viewBox = `0 0 ${size} ${size}`;
+    const center = size / 2;
+    const fontSize = size <= 40 ? 9 : 11;
+
+    return (
+        <Svg width={size} height={size} viewBox={viewBox}>
+            <Circle
+                cx={center}
+                cy={center}
+                r={radius}
+                stroke="#E0E0E0"
+                strokeWidth={strokeWidth}
+                fill="none"
+            />
+            <Circle
+                cx={center}
+                cy={center}
+                r={radius}
+                stroke={color.btnBrown_AE6F28}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={`${circumference}`}
+                strokeDashoffset={`${circumference - progress}`}
+                strokeLinecap="round"
+            />
+            <SvgText
+                x={center}
+                y={center + fontSize / 3}
+                textAnchor="middle"
+                fontSize={fontSize}
+                fill={color.placeholderTxt_24282C}
+                fontWeight="500"
+            >
+                {`${percentage}%`}
+            </SvgText>
+        </Svg>
+    );
+};
 
 const AdminOverallStatistics = ({ stats,
     onTotalTicketsPress,
@@ -10,16 +54,13 @@ const AdminOverallStatistics = ({ stats,
     onTotalUnscannedPress,
     onAvailableTicketsPress
 }) => {
-    // Extract data from stats with default values
     const terminalStats = stats?.data?.overall_statistics || {};
-    const scanAnalytics = stats?.data?.scan_analytics || {};
 
     const totalTicketsRaw = terminalStats?.total_tickets || 0;
     const totalScannedRaw = terminalStats?.total_scanned || 0;
     const totalUnscannedRaw = terminalStats?.total_unscanned || 0;
     const availableTicketsRaw = terminalStats?.available_tickets || 0;
 
-    // Handle cases where values might be objects
     const totalTickets = typeof totalTicketsRaw === 'object' ? (totalTicketsRaw.total || totalTicketsRaw.count || 0) : totalTicketsRaw;
     const totalScanned = typeof totalScannedRaw === 'object' ? (totalScannedRaw.total || totalScannedRaw.count || 0) : totalScannedRaw;
     const totalUnscanned = typeof totalUnscannedRaw === 'object' ? (totalUnscannedRaw.total || totalUnscannedRaw.count || 0) : totalUnscannedRaw;
@@ -30,46 +71,44 @@ const AdminOverallStatistics = ({ stats,
             <View style={styles.wrapper}>
                 <Text style={styles.heading}>Tickets Statistics</Text>
                 <View style={styles.row}>
-
                     <View style={styles.statContainer}>
-                    <TouchableOpacity style={styles.statCard} onPress={onTotalTicketsPress}>
-                        <View style={styles.statRow}>
-                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                            <Text style={styles.statTitle}>Total Tickets</Text>
-                        </View>
-                        <Text style={styles.statValue}>{totalTickets}</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onTotalTicketsPress}>
+                            <CircularProgress value={totalTickets} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1}>Total Tickets</Text>
+                                <Text style={styles.statValue}>{totalTickets}</Text>
+                            </View>
                         </TouchableOpacity>
-                      
                     </View>
 
                     <View style={styles.statContainer}>
-                        <TouchableOpacity style={styles.statCard} onPress={onTotalScannedPress}>
-                            <View style={styles.statRow}>
-                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                                <Text style={styles.statTitle}>Total Scanned</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onTotalScannedPress}>
+                            <CircularProgress value={totalScanned} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1}>Total Scanned</Text>
+                                <Text style={styles.statValue}>{totalScanned}</Text>
                             </View>
-                            <Text style={styles.statValue}>{totalScanned}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
                 <View style={styles.row}>
                     <View style={styles.statContainer}>
-                    <TouchableOpacity style={styles.statCard} onPress={onTotalUnscannedPress}>
-                        <View style={styles.statRow}>
-                            <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                            <Text style={styles.statTitle}>Total Unscanned</Text>
-                        </View>
-                        <Text style={styles.statValue}>{totalUnscanned}</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onTotalUnscannedPress}>
+                            <CircularProgress value={totalUnscanned} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1}>Total Unscanned</Text>
+                                <Text style={styles.statValue}>{totalUnscanned}</Text>
+                            </View>
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.statContainer}>
-                    <TouchableOpacity onPress={onAvailableTicketsPress}>
-                            <View style={styles.statRow}>
-                                <SvgIcons.totalTickets width={18} height={16} fill="white" />
-                                <Text style={styles.statTitle}>Available Tickets</Text>
+                        <TouchableOpacity style={styles.statContent} onPress={onAvailableTicketsPress}>
+                            <CircularProgress value={availableTickets} total={totalTickets} size={40} />
+                            <View style={styles.statTextContainer}>
+                                <Text style={styles.statTitle} numberOfLines={1}>Available Tickets</Text>
+                                <Text style={styles.statValue}>{availableTickets}</Text>
                             </View>
-                            <Text style={styles.statValue}>{availableTickets}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -105,7 +144,6 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     statContainer: {
-        height: 76,
         flex: 1,
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -116,29 +154,25 @@ const styles = StyleSheet.create({
         borderColor: color.brown_CEBCA04D,
         borderWidth: 1,
         marginBottom: 5,
-
     },
-    statRow: {
+    statContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5
+        gap: 10,
     },
-    icon: {
-        width: 16,
-        height: 16,
-        marginRight: 6,
+    statTextContainer: {
+        flex: 1,
     },
     statTitle: {
-        fontSize: 12,
+        fontSize: 11,
         color: color.placeholderTxt_24282C,
-        fontWeight: 400
+        fontWeight: '400',
     },
     statValue: {
         fontSize: 14,
         fontWeight: '500',
-        marginTop: 6,
+        marginTop: 4,
         color: color.brown_3C200A,
-        marginLeft: 22
     },
 });
 
