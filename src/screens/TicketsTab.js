@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { color } from '../color/color';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import SvgIcons from '../components/SvgIcons';
@@ -15,8 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import OfflineIndicator from '../components/OfflineIndicator';
 
 const TicketsTab = ({ eventInfo, initialTab }) => {
-    const navigation = useNavigation()
-    const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
     const [searchText, setSearchText] = useState('');
     const [selectedTab, setSelectedTab] = useState(initialTab || 'All');
     const [stats, setStats] = useState({ total: 0, scanned: 0, unscanned: 0 });
@@ -27,20 +25,11 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
     const flatListRef = useRef(null);
     const { isOnline, triggerSync, queueSize } = useOfflineSync();
 
-    // Calculate dynamic marginTop based on safe area insets
-    // Samsung devices typically have larger top insets (25+), so we adjust accordingly
-    // For other devices with smaller insets, we use a smaller base value to reduce top space
-    const dynamicMarginTop = Platform.OS === 'ios' 
-        ? -35 + (insets.top > 20 ? (insets.top - 20) * 0.3 : 0)
-        : insets.top > 25 
-            ? -47 + (insets.top - 25) * 0.5  // Samsung devices with larger insets
-            : -35;  // Other Android devices with smaller insets
-
     useEffect(() => {
         if (isFocused && eventInfo?.eventUuid) {
             fetchTicketStats(eventInfo.eventUuid);
             fetchTicketList(eventInfo.eventUuid);
-            
+
             // Auto-sync when online and there are queued actions
             if (isOnline && queueSize > 0) {
                 triggerSync();
@@ -54,10 +43,9 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
             if (syncResult.success && syncResult.synced > 0 && isFocused && eventInfo?.eventUuid) {
                 logger.log('Sync completed - refreshing tickets list');
                 // Clear tickets cache to force fresh fetch after sync
-                // This ensures we get the latest data from server
                 try {
                     const allKeys = await AsyncStorage.getAllKeys();
-                    const ticketKeys = allKeys.filter(key => 
+                    const ticketKeys = allKeys.filter(key =>
                         key.includes(`offline_tickets_${eventInfo.eventUuid}`)
                     );
                     if (ticketKeys.length > 0) {
@@ -72,7 +60,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     fetchTicketStats(eventInfo.eventUuid);
                     fetchTicketList(eventInfo.eventUuid);
                 }, 1000);
-        }
+            }
         });
 
         return () => {
@@ -80,20 +68,26 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
         };
     }, [isFocused, eventInfo?.eventUuid]);
 
-    // Separate useEffect to handle initialTab changes
+    // Handle initialTab changes
     useEffect(() => {
         if (initialTab) {
             setSelectedTab(initialTab);
         }
     }, [initialTab]);
 
+    // Scroll to top on tab change
+    useEffect(() => {
+        if (flatListRef.current) {
+            flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+        }
+    }, [selectedTab]);
+
     const fetchTicketList = async (eventUuid) => {
         try {
             setIsLoading(true);
             const res = await ticketService.ticketStatsListing(eventUuid, 'PAID');
             const list = res?.data || [];
-            
-            // Check if data is from offline cache
+
             if (res?.offline) {
                 logger.log('Using offline cached tickets');
             }
@@ -122,10 +116,8 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     scannedBy: ticket.scanned_by?.name || 'No Record',
                     staffId: ticket.scanned_by?.staff_id || 'No Record',
                     scannedOn: ticket.scanned_by?.scanned_on || 'No Record',
-
                 };
             });
-
 
             setFetchedTickets(mappedTickets);
         } catch (err) {
@@ -143,14 +135,13 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
             setIsLoading(false);
         }
     };
+
     const fetchTicketStats = async (eventUuid) => {
         try {
             const res = await ticketService.ticketStatsInfo(eventUuid);
             const statsData = res?.data?.data || {};
-            
-            // Check if data is from offline cache
+
             if (res?.offline) {
-                setIsOffline(true);
                 logger.log('Using offline cached stats');
             }
 
@@ -177,13 +168,14 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
         let filteredTickets = fetchedTickets;
 
         if (searchText) {
+            const query = searchText.toLowerCase();
             filteredTickets = filteredTickets.filter(
                 (ticket) =>
-                    ticket.id.includes(searchText) ||
-                    ticket.type.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.date.includes(searchText) ||
-                    ticket.category.toLowerCase().includes(searchText.toLowerCase()) ||
-                    ticket.ticketClass.toLowerCase().includes(searchText.toLowerCase())
+                    ticket.id.toLowerCase().includes(query) ||
+                    ticket.type.toLowerCase().includes(query) ||
+                    ticket.date.toLowerCase().includes(query) ||
+                    ticket.category.toLowerCase().includes(query) ||
+                    ticket.ticketClass.toLowerCase().includes(query)
             );
         }
 
@@ -193,25 +185,10 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
 
         return filteredTickets;
     };
+
     const handleSearchChange = (text) => {
         setSearchText(text);
     };
-
-    const handleTabPress = (tab) => {
-        setSelectedTab(tab);
-        requestAnimationFrame(() => {
-            if (flatListRef.current) {
-                flatListRef.current.scrollToOffset({ offset: 0, animated: false });
-            }
-        });
-    };
-
-    useEffect(() => {
-        const offset = 0; // Always scroll to top
-        if (flatListRef.current) {
-            flatListRef.current.scrollToOffset({ offset, animated: false });
-        }
-    }, [selectedTab]);
 
     const handleTicketPress = (ticket) => {
         const scanResponse = {
@@ -248,16 +225,11 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                 <Text style={styles.value}>{item.name}</Text>
                 <Text style={styles.label}>Category</Text>
                 <Text style={styles.value}>{item.category}</Text>
-                {/* <Text style={styles.ticketType}>{item.type}</Text> */}
-                {/* <View style={styles.priceContainer}>
-                    <Text style={styles.priceCurrency}>GHS</Text>
-                    <Text style={styles.ticketPrice}>{item.price}</Text>
-                </View> */}
                 <Text style={styles.label}>Class</Text>
                 <Text style={styles.value}>{item.ticketClass}</Text>
             </View>
-            <View style={styles.statusBtn} >
-                <TouchableOpacity
+            <View style={styles.statusBtn}>
+                <View
                     style={[
                         styles.statusButton,
                         item.status === 'Scanned' && styles.scannedButton,
@@ -273,15 +245,14 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     >
                         {item.status}
                     </Text>
-                </TouchableOpacity>
+                </View>
                 <Text style={styles.valueID}>Tix ID: {item.id}</Text>
             </View>
             <View style={styles.imageContainer}>
-                {item.qrCodeUrl && ( // Display QR code if URL is available
+                {item.qrCodeUrl && (
                     <QRCode
                         value={item.qrCodeUrl}
                         size={100}
-                        style={{ width: '100%', height: '100%' }}
                         logoSize={30}
                         logoBackgroundColor="transparent"
                         quietZone={5}
@@ -291,38 +262,15 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
         </TouchableOpacity>
     );
 
-    const getNoResultsMessage = () => {
-        if (searchText) {
-            return "No Matching Results";
-        }
-
-        switch (selectedTab) {
-            case 'All':
-                return "No Matching Results";
-            case 'Scanned':
-                return "No Matching Results";
-            case 'Unscanned':
-                return "No Matching Results";
-            default:
-                return "No Matching Results";
-        }
-    };
-
     const filteredTickets = filterTickets();
 
-    const totalTickets = stats.total;
-    const scannedTicketsCount = stats.scanned;
-    const unscannedTicketsCount = stats.unscanned;
-
-
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <OfflineIndicator />
 
             <View style={[
                 styles.searchContainer,
                 isSearchFocused && styles.searchContainerFocused,
-                { marginTop: dynamicMarginTop }
             ]}>
                 <View style={styles.searchBarContainer}>
                     <TextInput
@@ -352,7 +300,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     <Text style={[styles.tabButtonText, selectedTab === 'All' && styles.activeTabText]}>All</Text>
                     <View style={[styles.countBadge, selectedTab === 'All' ? styles.activeBadge : styles.inactiveBadge]}>
                         <Text style={[styles.countText, selectedTab === 'All' ? styles.activeCountText : styles.inactiveCountText]}>
-                            {totalTickets}
+                            {stats.total}
                         </Text>
                     </View>
                 </TouchableOpacity>
@@ -363,7 +311,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     <Text style={[styles.tabButtonText, selectedTab === 'Scanned' && styles.activeTabText]}>Scanned</Text>
                     <View style={[styles.countBadge, selectedTab === 'Scanned' ? styles.activeBadge : styles.inactiveBadge]}>
                         <Text style={[styles.countText, selectedTab === 'Scanned' ? styles.activeCountText : styles.inactiveCountText]}>
-                            {scannedTicketsCount}
+                            {stats.scanned}
                         </Text>
                     </View>
                 </TouchableOpacity>
@@ -374,7 +322,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     <Text style={[styles.tabButtonText, selectedTab === 'Unscanned' && styles.activeTabText]}>Unscanned</Text>
                     <View style={[styles.countBadge, selectedTab === 'Unscanned' ? styles.activeBadge : styles.inactiveBadge]}>
                         <Text style={[styles.countText, selectedTab === 'Unscanned' ? styles.activeCountText : styles.inactiveCountText]}>
-                            {unscannedTicketsCount}
+                            {stats.unscanned}
                         </Text>
                     </View>
                 </TouchableOpacity>
@@ -389,7 +337,7 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     contentContainerStyle={styles.flatListContent}
                     ListEmptyComponent={() =>
                         !isLoading ? (
-                            <NoResults message={getNoResultsMessage()} />
+                            <NoResults message="No Matching Results" />
                         ) : (
                             <View style={styles.loadingContainer}>
                                 <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
@@ -405,14 +353,47 @@ const TicketsTab = ({ eventInfo, initialTab }) => {
                     }
                 />
             </View>
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
+        paddingHorizontal: 10,
+    },
+    searchContainer: {
+        backgroundColor: color.white_FFFFFF,
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+        borderColor: color.borderBrown_CEBCA0,
+        borderWidth: 1,
+        height: 45,
+    },
+    searchContainerFocused: {
+        borderColor: '#24282C',
+    },
+    searchBarContainer: {
+        flex: 1,
+    },
+    searchBar: {
+        flex: 1,
+        paddingVertical: 10,
+        fontWeight: '400',
+        fontSize: 13,
+    },
+    searchInputPlaceholder: {
+        color: color.brown_766F6A,
+        fontWeight: '200',
+        fontSize: 13,
+    },
+    searchInputWithText: {
+        color: color.black_544B45,
+        fontWeight: '400',
+        fontSize: 13,
     },
     ticketContainer: {
         flexDirection: 'row',
@@ -421,45 +402,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: color.white_FFFFFF,
         borderRadius: 10,
-        marginBottom: 10,
         backgroundColor: color.white_FFFFFF,
         paddingHorizontal: 16,
         paddingVertical: 10,
-        marginVertical: 4
-        // margin: 2,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 4 },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 6,
-        // elevation: 5,
-
-    },
-    ticketId: {
-        fontWeight: '400',
-        marginTop: 10,
-        fontSize: 14,
-        color: color.black_544B45
-    },
-    ticketType: {
-        fontSize: 14,
-        fontWeight: 500,
-        color: color.black_2F251D,
-        marginTop: 10
-    },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 10
-    },
-    priceCurrency: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: color.black_544B45,
-    },
-    ticketPrice: {
-        color: color.brown_5A2F0E,
-        fontSize: 14,
-        fontWeight: '700',
+        marginVertical: 4,
     },
     label: {
         fontSize: 14,
@@ -478,23 +424,6 @@ const styles = StyleSheet.create({
         fontWeight: '400',
         color: color.black_544B45,
         marginTop: 14,
-    },
-    ticketDate: {
-        fontSize: 14,
-        color: color.black_544B45,
-        fontWeight: '400',
-        marginTop: 10
-    },
-    ticketheading: {
-        fontSize: 14,
-        fontWeight: 500,
-        color: color.black_2F251D,
-    },
-    ticketDateheading: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: color.black_2F251D,
-        marginTop: 10
     },
     statusButton: {
         paddingHorizontal: 15,
@@ -517,57 +446,22 @@ const styles = StyleSheet.create({
     scannedButtonText: {
         color: color.brown_D58E00,
         fontSize: 10,
-        fontWeight: 500
+        fontWeight: '500',
     },
     unscannedButtonText: {
         color: color.black_544B45,
         fontSize: 10,
-        fontWeight: 500
+        fontWeight: '500',
     },
     statusBtn: {
         position: 'absolute',
         right: 18,
         top: 12,
-
-    },
-    searchContainer: {
-        backgroundColor: color.white_FFFFFF,
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 5,
-        // marginTop is now set dynamically based on safe area insets
-        borderColor: color.borderBrown_CEBCA0,
-        borderWidth: 1,
-        height: 45,
-    },
-    searchBarContainer: {
-        flex: 1,
-    },
-    searchBar: {
-        flex: 1,
-        paddingVertical: 10,
-        fontWeight: '400',
-        fontSize: 13,
-    },
-    searchContainerFocused: {
-        borderColor: '#24282C',
-    },
-    searchInputPlaceholder: {
-        color: color.brown_766F6A,
-        fontWeight: '200',
-        fontSize: 13,
-    },
-    searchInputWithText: {
-        color: color.black_544B45,
-        fontWeight: '400',
-        fontSize: 13,
     },
     imageContainer: {
         width: 100,
         height: 100,
-        paddingTop: 30
+        paddingTop: 30,
     },
     tabContainer: {
         flexDirection: 'row',
@@ -575,7 +469,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 8,
     },
-
     tabButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -583,23 +476,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 7,
     },
-
     activeTab: {
         backgroundColor: '#FFFFFF',
     },
-
     tabButtonText: {
         fontSize: 16,
         fontWeight: '400',
         color: color.brown_766F6A,
     },
-
     activeTabText: {
         fontSize: 16,
         color: color.brown_3C200A,
         fontWeight: '500',
     },
-
     countBadge: {
         borderRadius: 2,
         marginLeft: 5,
@@ -607,29 +496,30 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 1,
-        paddingHorizontal: 3
-
+        paddingHorizontal: 3,
     },
-
     activeBadge: {
         backgroundColor: color.brown_F7E4B6,
     },
-
     inactiveBadge: {
         backgroundColor: '#87807CB2',
     },
-
     countText: {
         fontSize: 10,
         fontWeight: '500',
         color: color.white_FFFFFF,
         textAlign: 'center',
     },
-
     activeCountText: {
         fontSize: 10,
         fontWeight: '500',
         color: color.black_544B45,
+        textAlign: 'center',
+    },
+    inactiveCountText: {
+        fontSize: 10,
+        fontWeight: '500',
+        color: color.white_FFFFFF,
         textAlign: 'center',
     },
     loadingContainer: {
@@ -637,38 +527,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     flatListContainer: {
-        top: 6,
-        paddingBottom: 50,
+        flex: 1,
+        marginTop: 6,
     },
     flatListContent: {
         paddingBottom: 50,
     },
-    offlineBanner: {
-        backgroundColor: '#FFA500',
-        padding: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginHorizontal: 10,
-        marginTop: 5,
-        borderRadius: 5,
-    },
-    offlineText: {
-        color: '#000',
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    syncButton: {
-        backgroundColor: '#000',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 4,
-    },
-    syncButtonText: {
-        color: '#FFF',
-        fontSize: 12,
-        fontWeight: '600',
-    }
 });
 
 export default TicketsTab;

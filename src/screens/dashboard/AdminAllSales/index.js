@@ -64,9 +64,9 @@ const AdminAllSales = ({ stats }) => {
                   r="70%"
                 >
                   {/* Using a light, slightly warm color for the center glow */}
-                  <Stop offset="0%" stopColor="#FAEBD7" stopOpacity="0.8" />
+                  <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
                   {/* Fading to white/off-white towards the edge */}
-                  <Stop offset="100%" stopColor="#F5F5DC" stopOpacity="0.9" />
+                  <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.9" />
                 </RadialGradient>
 
                 {/* 2. ClipPath logic removed (was for multi-colored inner glows) */}

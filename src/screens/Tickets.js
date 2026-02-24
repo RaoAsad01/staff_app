@@ -17,14 +17,18 @@ const SettingsScreen = (props) => {
   const { initialTab, eventInfo: routeEventInfo, selectedTab } = routeParams;
   const finalEventInfo = props.eventInfo || routeEventInfo;
   const { onScanCountUpdate, activeHeaderTab: propActiveHeaderTab, onHeaderTabChange, userRole } = props;
-  const activeHeaderTab = propActiveHeaderTab || routeParams?.activeHeaderTab || 'Sell';
+  const defaultHeaderTab = propActiveHeaderTab || routeParams?.activeHeaderTab || 'Sell';
 
-  // Only show back button when navigated to via root stack (TicketsDetail)
   const isFromRootStack = route?.name === 'TicketsDetail';
-
   const shouldOpenBoxOffice = routeParams?.openBoxOffice || routeParams?.screen === 'BoxOfficeTab';
+
   const [activeView, setActiveView] = useState(shouldOpenBoxOffice ? 'BoxOfficeTab' : 'TicketsTab');
   const [tabKey, setTabKey] = useState(0);
+
+  // FIX: Make activeHeaderTab a state so it updates when switching Tickets/Box Office
+  const [activeHeaderTab, setActiveHeaderTab] = useState(
+    shouldOpenBoxOffice ? 'Sell' : defaultHeaderTab
+  );
 
   useEffect(() => {
     if (routeParams?.initialTab === 'Scanned') {
@@ -35,26 +39,28 @@ const SettingsScreen = (props) => {
   useEffect(() => {
     if (routeParams?.screen === 'BoxOfficeTab' || routeParams?.openBoxOffice) {
       setActiveView('BoxOfficeTab');
+      setActiveHeaderTab('Sell');
     }
   }, [routeParams]);
 
-  const tickets = [
-    { id: '#12389651342', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Scanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651343', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Unscanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651344', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Scanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651345', type: 'Standard Ticket', price: 30, date: 'Sun, 02 2025', status: 'Unscanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651346', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Scanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651347', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Unscanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651348', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Scanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651349', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Unscanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651350', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Scanned', imageUrl: SvgIcons.qRIcon },
-    { id: '#12389651351', type: 'Standard Ticket', price: 30, date: 'Sat, 02 2025', status: 'Unscanned', imageUrl: SvgIcons.qRIcon },
-  ];
-
   const handleBackPress = () => {
-    if (navigation && navigation.canGoBack && navigation.canGoBack()) {
+    if (navigation?.canGoBack?.()) {
       navigation.goBack();
     }
+  };
+
+  // FIX: Switch header toggle to 'Sell' when Box Office is selected
+  const handleViewChange = (view) => {
+    setActiveView(view);
+    if (view === 'BoxOfficeTab') {
+      setActiveHeaderTab('Sell');
+    }
+  };
+
+  // FIX: Sync when Header's own tab toggle is pressed
+  const handleHeaderTabChange = (tab) => {
+    setActiveHeaderTab(tab);
+    onHeaderTabChange?.(tab);
   };
 
   return (
@@ -64,30 +70,34 @@ const SettingsScreen = (props) => {
         showBackButton={isFromRootStack}
         onBackPress={handleBackPress}
         activeTab={activeHeaderTab}
-        onTabChange={onHeaderTabChange}
+        onTabChange={handleHeaderTabChange}
         userRole={userRole}
       />
       <View style={styles.contentContainer}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            onPress={() => setActiveView('TicketsTab')}
+            onPress={() => handleViewChange('TicketsTab')}
             style={[styles.button, activeView === 'TicketsTab' && styles.activeButton]}
           >
-            <Text style={activeView === 'TicketsTab' ? [styles.buttonText, styles.activeButtonText] : styles.buttonText}>
+            <Text style={[styles.buttonText, activeView === 'TicketsTab' && styles.activeButtonText]}>
               Tickets
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setActiveView('BoxOfficeTab')}
+            onPress={() => handleViewChange('BoxOfficeTab')}
             style={[styles.button, activeView === 'BoxOfficeTab' && styles.activeButton]}
           >
-            <Text style={activeView === 'BoxOfficeTab' ? [styles.buttonText, styles.activeButtonText] : styles.buttonText}>
+            <Text style={[styles.buttonText, activeView === 'BoxOfficeTab' && styles.activeButtonText]}>
               Box Office
             </Text>
           </TouchableOpacity>
         </View>
-        {activeView === 'TicketsTab' && <TicketsTab tickets={tickets} key={tabKey} eventInfo={finalEventInfo} initialTab={initialTab} />}
-        {activeView === 'BoxOfficeTab' && <BoxOfficeTab eventInfo={finalEventInfo} onScanCountUpdate={onScanCountUpdate} selectedTab={selectedTab} />}
+        {activeView === 'TicketsTab' && (
+          <TicketsTab key={tabKey} eventInfo={finalEventInfo} initialTab={initialTab} />
+        )}
+        {activeView === 'BoxOfficeTab' && (
+          <BoxOfficeTab eventInfo={finalEventInfo} onScanCountUpdate={onScanCountUpdate} selectedTab={selectedTab} />
+        )}
       </View>
     </View>
   );

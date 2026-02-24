@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: color.borderBrown_CEBCA0,
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 16,
     color: color.white_FFFFFF,
   },
   otpInputError: {

@@ -797,9 +797,9 @@ const BoxOfficeTab = ({ eventInfo, onScanCountUpdate, selectedTab }) => {
           </Formik>
           <View style={styles.lineView3}></View>
           <View style={styles.whitebgPayment}>
-            <View style={styles.Paylabel}>
+            {/* <View style={styles.Paylabel}>
               <Text>Pay With</Text>
-            </View>
+            </View> */}
 
             <View style={styles.paymentOptions}>
               {/* Cash Button */}

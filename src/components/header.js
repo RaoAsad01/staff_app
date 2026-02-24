@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 15,
+    padding: 10,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
