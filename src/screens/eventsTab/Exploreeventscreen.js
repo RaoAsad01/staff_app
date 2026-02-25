@@ -193,7 +193,7 @@ const ExploreEventsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F5',
+    backgroundColor: color.white_FFFFFF,
   },
   header: {
     flexDirection: 'row',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#F8F7F5',
+    backgroundColor: color.white_FFFFFF,
   },
   headerButton: {
     width: 40,

@@ -423,7 +423,7 @@ function MyTabs() {
             shadowOffset: { width: 0, height: -2 },
             shadowOpacity: 0.1,
             shadowRadius: 4,
-            paddingHorizontal: 10,
+           
           },
           tabBarShowLabel: false,
           tabBarButton: (props) => (
@@ -638,6 +638,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: color.white_FFFFFF
   },
   iconLabelWrapper: {
     alignItems: 'center',
@@ -648,9 +649,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   focusedTabWrapper: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 6,
-    marginVertical: -10
+    marginVertical: -10,
+    backgroundColor: color.white_FFFFFF,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    // Android Shadow
+    elevation: 1,
   },
   tabBarLabel: {
     fontSize: 10,
