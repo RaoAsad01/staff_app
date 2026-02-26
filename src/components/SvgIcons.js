@@ -72,10 +72,12 @@ import TotalUsedCoupon from '../../assets/svgs/total_used_coupon.svg';
 import TotalUnusedCoupon from '../../assets/svgs/total_unused_coupon.svg';
 import LeftArrow from '../../assets/svgs/left_arrow.svg';
 import RightArrow from '../../assets/svgs/right_arrow.svg';
-import SearchIconDark from '../../assets/svgs/search_icon_dark_brown';
-import BookmarkedIcon from '../../assets/svgs/bookmarked_icon';
-import LeftArrowGreyBg from '../../assets/svgs/left_arrow_grey_bg';
-import RightArrowGreyBg from '../../assets/svgs/right_arrow_grey_bg';
+import SearchIconDark from '../../assets/svgs/search_icon_dark_brown.svg';
+import BookmarkedIcon from '../../assets/svgs/bookmarked_icon.svg';
+import LeftArrowGreyBg from '../../assets/svgs/left_arrow_grey_bg.svg';
+import RightArrowGreyBg from '../../assets/svgs/right_arrow_grey_bg.svg';
+import WhiteArrow from '../../assets/svgs/white_arrow.svg';
+import FilterMenuIcon from '../../assets/svgs/filter-menu_icon.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -156,5 +158,7 @@ export default {
     bookmarkedIcon: BookmarkedIcon,
     leftArrowGreyBg: LeftArrowGreyBg,
     rightArrowGreyBg: RightArrowGreyBg,
+    whiteArrow: WhiteArrow,
+    filterMenuIcon: FilterMenuIcon,
 };
 

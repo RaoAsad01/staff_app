@@ -162,26 +162,21 @@ const Header = ({ eventInfo, onScanCountUpdate, onTabChange, showBackButton, onB
     <View style={styles.mainContainer}>
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.headerColumn}>
-          {/* Back button - compact row, only when needed */}
-          {shouldShowBackButton() && (
-            <View style={styles.backRow}>
-              <TouchableOpacity onPress={handleBackPress} style={styles.backButtonTouchable}>
-                <SvgIcons.backArrow />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Brown event info bar */}
+          {/* Brown event info bar with back button inside */}
           <View style={styles.header}>
-            <View style={styles.headerContent}>
+            {shouldShowBackButton() && (
+              <TouchableOpacity onPress={handleBackPress} style={styles.headerBackButton}>
+                <SvgIcons.whiteArrow />
+              </TouchableOpacity>
+            )}
+            <View style={[
+              styles.headerContent,
+              shouldShowBackButton() && styles.headerContentWithBack,
+            ]}>
               <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
-              <Text style={styles.separator}>   </Text>
-              <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
-              <Text style={styles.separator}>   </Text>
+              <View style={styles.headerSpacer} />
               <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
-              <Text style={styles.separator}></Text>
               <Text style={styles.separator}>at</Text>
-              <Text style={styles.separator}></Text>
               <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
             </View>
           </View>
@@ -252,38 +247,40 @@ const styles = StyleSheet.create({
   headerColumn: {
     flexDirection: 'column',
   },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2
-  },
-  backButtonTouchable: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
   },
+  headerBackButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
   headerContent: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     flexWrap: 'nowrap',
   },
+  headerContentWithBack: {
+    justifyContent: 'space-between',
+  },
+  headerSpacer: {
+    flex: 1,
+  },
   separator: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '400',
     color: color.white_FFFFFF,
-    marginHorizontal: 8,
+    marginHorizontal: 6,
   },
   eventName: {
     color: color.white_FFFFFF,
@@ -297,12 +294,12 @@ const styles = StyleSheet.create({
   },
   date: {
     color: color.white_FFFFFF,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '400',
   },
   time: {
     color: color.white_FFFFFF,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '400',
   },
   profileRow: {
@@ -323,9 +320,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: color.drak_black_000000,
     marginLeft: 10,
-  },
-  backButtonContainer: {
-    marginRight: 10,
   },
   tabContainer: {
     flexDirection: 'row',

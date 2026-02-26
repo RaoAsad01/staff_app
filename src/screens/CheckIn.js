@@ -50,10 +50,10 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTab
           profile?.data?.role ||
           profile?.user?.role;
         logger.log('User role in CheckIn:', role);
-      
+
       } catch (error) {
         logger.error('Error fetching user role in CheckIn:', error);
-       
+
       } finally {
         setIsLoadingRole(false);
       }
@@ -66,7 +66,13 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTab
       setScanning(false);
     }, [])
   );
-
+  useFocusEffect(
+    useCallback(() => {
+      if (onHeaderTabChange) {
+        onHeaderTabChange('Auto');
+      }
+    }, [onHeaderTabChange])
+  );
   useEffect(() => {
     requestPermission();
   }, []);
@@ -106,12 +112,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTab
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Header 
-        eventInfo={eventInfo}
-        activeTab={activeHeaderTab}
-        onTabChange={onHeaderTabChange}
-        userRole={userRole}
-       />
+        <Header
+          eventInfo={eventInfo}
+          activeTab={activeHeaderTab}
+          onTabChange={onHeaderTabChange}
+          userRole={userRole}
+        />
       </View>
     );
   }
@@ -120,12 +126,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTab
   if (isLoadingRole) {
     return (
       <View style={styles.mainContainer}>
-        <Header  
-        eventInfo={eventInfo}
-        activeTab={activeHeaderTab}
-        onTabChange={onHeaderTabChange}
-        userRole={userRole}
-       />
+        <Header
+          eventInfo={eventInfo}
+          activeTab={activeHeaderTab}
+          onTabChange={onHeaderTabChange}
+          userRole={userRole}
+        />
         <View style={styles.darkBackgroundLoading}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
@@ -284,12 +290,12 @@ const HomeScreen = ({ eventInfo, onScanCountUpdate, activeHeaderTab, onHeaderTab
           <Text style={styles.offlineText}>Offline Mode - Scans will be queued for sync</Text>
         </View>
       )}
-      <Header  
-      eventInfo={eventInfo}
-      activeTab={activeHeaderTab}
-      onTabChange={onHeaderTabChange}
-      userRole={userRole}
-     />
+      <Header
+        eventInfo={eventInfo}
+        activeTab={activeHeaderTab}
+        onTabChange={onHeaderTabChange}
+        userRole={userRole}
+      />
       <View style={userRole === 'ADMIN' ? styles.darkBackgroundAdmin : styles.darkBackground}>
         {scanResult && (
           <View style={styles.scanResultContainer}>

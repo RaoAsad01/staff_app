@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  FlatList,
   Platform,
   StatusBar,
   ActivityIndicator,
+  Modal,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,69 +21,17 @@ import { logger } from '../../utils/logger';
 import SvgIcons from '../../components/SvgIcons';
 import Typography from '../../components/Typography';
 
-const { width } = Dimensions.get('window');
+const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Countdown Timer Component
-const CountdownTimer = ({ days, hours, mins }) => (
-  <View style={styles.countdownContainer}>
-    <View style={styles.countdownBox}>
-      <Typography
-        style={styles.countdownNumber}
-        weight="700"
-        size={16}
-        color={color.brown_3C200A}
-      >
-        {days.toString().padStart(2, '0')}
-      </Typography>
-      <Typography
-        style={styles.countdownLabel}
-        weight="400"
-        size={11}
-        color={color.brown_3C200A}
-      >
-        Days
-      </Typography>
-    </View>
-    <View style={styles.countdownBox}>
-      <Typography
-        style={styles.countdownNumber}
-        weight="700"
-        size={16}
-        color={color.brown_3C200A}
-      >
-        {hours.toString().padStart(2, '0')}
-      </Typography>
-      <Typography
-        style={styles.countdownLabel}
-        weight="400"
-        size={11}
-        color={color.brown_3C200A}
-      >
-        Hours
-      </Typography>
-    </View>
-    <View style={styles.countdownBox}>
-      <Typography
-        style={styles.countdownNumber}
-        weight="700"
-        size={16}
-        color={color.brown_3C200A}
-      >
-        {mins.toString().padStart(2, '0')}
-      </Typography>
-      <Typography
-        style={styles.countdownLabel}
-        weight="400"
-        size={11}
-        color={color.brown_3C200A}
-      >
-        Min
-      </Typography>
-    </View>
-  </View>
-);
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
 
-// Single Large Event Card (for single event in section)
+// ─────────────────────────────────────────────
+// Large Event Card
+// ─────────────────────────────────────────────
 const LargeEventCard = ({ event, onPress }) => (
   <TouchableOpacity style={styles.largeCard} onPress={onPress} activeOpacity={0.8}>
     <View style={styles.largeImageContainer}>
@@ -91,211 +41,237 @@ const LargeEventCard = ({ event, onPress }) => (
       </TouchableOpacity>
     </View>
     <View style={styles.cardContent}>
-      <Typography
-        style={styles.eventTitle}
-        weight="700"
-        size={13}
-        color={color.brown_3C200A}
-      >
+      <Typography style={styles.eventTitle} weight="700" size={13} color={color.brown_3C200A}>
         {event.title || event.event_title}
       </Typography>
-      <Typography
-        style={styles.eventDate}
-        weight="400"
-        size={10}
-        color={color.grey_87807C}
-      >
+      <Typography style={styles.eventDate} weight="400" size={10} color={color.grey_87807C}>
         {event.date}
       </Typography>
-      <Typography
-        style={styles.eventTime}
-        weight="400"
-        size={10}
-        color={color.grey_87807C}
-      >
+      <Typography style={styles.eventTime} weight="400" size={10} color={color.grey_87807C}>
         {event.time}
       </Typography>
-      <Typography
-        style={styles.eventLocation}
-        weight="400"
-        size={10}
-        color={color.brown_766F6A}
-        numberOfLines={1}
-      >
+      <Typography style={styles.eventLocation} weight="400" size={10} color={color.brown_766F6A} numberOfLines={1}>
         {event.location || event.cityName}
       </Typography>
     </View>
   </TouchableOpacity>
 );
 
-// Small Event Card (for multiple events - horizontal scroll)
-const SmallEventCard = ({ event, isFirst, onPress }) => (
-  <TouchableOpacity
-    style={[styles.smallCard, isFirst && { marginLeft: 20 }]}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <View style={styles.smallImageContainer}>
-      <Image source={{ uri: event.image }} style={styles.smallImage} />
-      <TouchableOpacity style={styles.bookmarkButtonSmall}>
-        <SvgIcons.bookmarkedIcon />
-      </TouchableOpacity>
-    </View>
-    <View style={styles.smallCardContent}>
-      <Typography
-        style={styles.smallEventTitle}
-        weight="700"
-        size={13}
-        color={color.brown_3C200A}
-        numberOfLines={1}
-      >
-        {event.title || event.event_title}
-      </Typography>
-      <Typography
-        style={styles.smallEventDate}
-        weight="400"
-        size={10}
-        color={color.grey_87807C}
-      >
-        {event.date}
-      </Typography>
-      <Typography
-        style={styles.smallEventTime}
-        weight="400"
-        size={10}
-        color={color.grey_87807C}
-      >
-        {event.time}
-      </Typography>
-      <Typography
-        style={styles.smallEventLocation}
-        weight="400"
-        size={10}
-        color={color.brown_766F6A}
-        numberOfLines={1}
-      >
-        {event.location || event.cityName}
-      </Typography>
-    </View>
-  </TouchableOpacity>
-);
+// ─────────────────────────────────────────────
+// Month Picker Grid (from AdminAllEventsDashboard)
+// ─────────────────────────────────────────────
+const MonthPickerGrid = ({ onMonthSelect, selectedMonth, selectedYear }) => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const [displayYear, setDisplayYear] = useState(selectedYear || currentYear);
 
-// Upcoming Event List Item
-const UpcomingEventItem = ({ event, onPress }) => (
-  <TouchableOpacity style={styles.upcomingItem} onPress={onPress} activeOpacity={0.8}>
-    <Image source={{ uri: event.image }} style={styles.upcomingImage} />
-    <View style={styles.upcomingContent}>
-      <Typography
-        style={styles.upcomingTitle}
-        weight="600"
-        size={13}
-        color={color.brown_3C200A}
-      >
-        {event.title || event.event_title}
-      </Typography>
-      <View style={styles.upcomingMeta}>
-        <Typography
-          style={styles.upcomingDate}
-          weight="400"
-          size={10}
-          color={color.grey_87807C}
-        >
-          {event.date}
-        </Typography>
-        {event.time ? (
-          <>
-            <View style={styles.upcomingDot} />
-            <Typography
-              style={styles.upcomingTime}
-              weight="400"
-              size={10}
-              color={color.grey_87807C}
-            >
-              {event.time}
-            </Typography>
-          </>
-        ) : null}
-      </View>
-      <Typography
-        style={styles.upcomingLocation}
-        weight="400"
-        size={10}
-        color={color.brown_766F6A}
-      >
-        {event.location || event.cityName}
-      </Typography>
-    </View>
-    <TouchableOpacity style={styles.upcomingBookmark}>
-      <SvgIcons.bookmarkedIcon />
-    </TouchableOpacity>
-  </TouchableOpacity>
-);
+  useEffect(() => {
+    if (selectedYear !== null && selectedYear !== undefined) {
+      setDisplayYear(selectedYear);
+    }
+  }, [selectedYear]);
 
-// Event Section Component
-const EventSection = ({ section, onEventPress, onSectionPress }) => {
-  const isSingleEvent = section.events.length === 1;
-  const isHappeningToday = section.title === 'Happening Today';
+  const isCurrentMonth = (idx) => idx === currentMonth && displayYear === currentYear;
+  const isSelectedMonth = (idx) => idx === selectedMonth && displayYear === selectedYear;
 
   return (
-    <View style={[styles.section, isHappeningToday && styles.happeningTodaySection]}>
-      <View style={styles.sectionHeaderRow}>
-        <View>
-          <TouchableOpacity
-            style={styles.sectionTitleContainer}
-            onPress={() => onSectionPress && onSectionPress(section)}
-          >
-            <Typography
-              style={styles.sectionTitle}
-              weight="700"
-              size={14}
-              color={color.placeholderTxt_24282C}
-            >
-              {section.title}
-            </Typography>
-            <SvgIcons.rightArrow width={10} height={10} />
-          </TouchableOpacity>
-          {section.subtitle && (
-            <Typography
-              style={styles.sectionSubtitle}
-              weight="400"
-              size={12}
-              color={color.red_BA1C11}
-            >
-              {section.subtitle}
-            </Typography>
-          )}
-        </View>
-        {section.countdown && <CountdownTimer {...section.countdown} />}
+    <View style={styles.monthPickerGridContainer}>
+      {/* Year navigation */}
+      <View style={styles.pickerNav}>
+        <TouchableOpacity style={styles.navButton} onPress={() => setDisplayYear(displayYear - 1)}>
+          <SvgIcons.leftArrowGreyBg />
+        </TouchableOpacity>
+        <Typography weight="700" size={14} color={color.brown_3C200A}>
+          {displayYear}
+        </Typography>
+        <TouchableOpacity style={styles.navButton} onPress={() => setDisplayYear(displayYear + 1)}>
+          <SvgIcons.rightArrowGreyBg />
+        </TouchableOpacity>
       </View>
 
-      {isSingleEvent ? (
-        <View style={styles.singleEventContainer}>
-          <LargeEventCard
-            event={section.events[0]}
-            onPress={() => onEventPress && onEventPress(section.events[0])}
-          />
-        </View>
-      ) : (
-        <FlatList
-          data={section.events}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.uuid || item.eventUuid}
-          renderItem={({ item, index }) => (
-            <SmallEventCard
-              event={item}
-              isFirst={index === 0}
-              onPress={() => onEventPress && onEventPress(item)}
-            />
-          )}
-          contentContainerStyle={styles.horizontalList}
-        />
-      )}
+      {/* Months grid */}
+      <View style={styles.monthsGrid}>
+        {MONTHS_SHORT.map((month, index) => (
+          <TouchableOpacity
+            key={month}
+            style={[
+              styles.monthCell,
+              isSelectedMonth(index) && styles.monthCellSelected,
+              isCurrentMonth(index) && !isSelectedMonth(index) && styles.monthCellCurrent,
+            ]}
+            onPress={() => onMonthSelect(index, displayYear)}
+          >
+            <Typography
+              weight={isSelectedMonth(index) || isCurrentMonth(index) ? '600' : '400'}
+              size={14}
+              color={isSelectedMonth(index) ? color.btnBrown_AE6F28 : color.black_2F251D}
+            >
+              {month}
+            </Typography>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 };
 
-// Main Events Tickets Tab Screen Component
+// ─────────────────────────────────────────────
+// When Filter Bottom Sheet
+// ─────────────────────────────────────────────
+const WhenFilterBottomSheet = ({
+  visible,
+  onClose,
+  selectedFilter,
+  onFilterChange,
+  selectedMonthIndex,
+  selectedMonthYear,
+  onMonthSelect,
+}) => {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gs) => gs.dy > 10 && Math.abs(gs.dy) > Math.abs(gs.dx),
+      onPanResponderMove: (_, gs) => {
+        if (gs.dy > 0) translateY.setValue(gs.dy);
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dy > 100) {
+          Animated.timing(translateY, { toValue: 600, duration: 200, useNativeDriver: true }).start(() => {
+            translateY.setValue(0);
+            handleClose();
+          });
+        } else {
+          Animated.spring(translateY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
+
+  useEffect(() => {
+    if (visible) {
+      translateY.setValue(0);
+      setShowMonthPicker(false);
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    setShowMonthPicker(false);
+    onClose();
+  };
+
+  const handleFilterSelect = (filter) => {
+    onFilterChange(filter);
+    // Auto-close for non-Month filters
+    if (filter !== 'Month') {
+      handleClose();
+    }
+  };
+
+  const handleMonthFieldPress = () => {
+    setShowMonthPicker(true);
+  };
+
+  const handleMonthGridSelect = (monthIndex, year) => {
+    onMonthSelect(monthIndex, year);
+    setShowMonthPicker(false);
+    // Auto-close the entire bottom sheet after month selection
+    handleClose();
+  };
+
+  const filterOptions = ['Today', 'Tomorrow', 'This Week', 'Month'];
+
+  if (!visible) return null;
+
+  // Show month picker grid view
+  if (showMonthPicker) {
+    return (
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={handleClose}>
+          <Animated.View
+            style={[styles.bottomSheetModal, { transform: [{ translateY }] }]}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.modalHandle} />
+            <MonthPickerGrid
+              onMonthSelect={handleMonthGridSelect}
+              selectedMonth={selectedMonthIndex}
+              selectedYear={selectedMonthYear}
+            />
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+    );
+  }
+
+  // Show "When" radio options
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={handleClose}>
+        <Animated.View
+          style={[styles.bottomSheetModal, { transform: [{ translateY }] }]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.modalHandle} />
+
+          {/* Title */}
+          <Typography weight="700" size={18} color={color.brown_3C200A} style={styles.filterTitle}>
+            When
+          </Typography>
+
+          {/* Radio options */}
+          {filterOptions.map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.filterOption}
+              onPress={() => handleFilterSelect(option)}
+              activeOpacity={0.7}
+            >
+              <View style={[
+                styles.radioOuter,
+                selectedFilter === option && styles.radioOuterSelected,
+              ]}>
+                {selectedFilter === option && <View style={styles.radioInner} />}
+              </View>
+              <Typography weight="400" size={16} color={color.brown_3C200A}>
+                {option}
+              </Typography>
+            </TouchableOpacity>
+          ))}
+
+          {/* Month dropdown field - shown when "Month" is selected */}
+          {selectedFilter === 'Month' && (
+            <TouchableOpacity
+              style={styles.monthDropdownField}
+              onPress={handleMonthFieldPress}
+              activeOpacity={0.7}
+            >
+              <SvgIcons.calendarIcon width={18} height={18} />
+              <Typography
+                weight="400"
+                size={14}
+                color={color.brown_3C200A}
+                style={styles.monthDropdownText}
+              >
+                {MONTHS_FULL[selectedMonthIndex]}
+              </Typography>
+              <SvgIcons.downArrow width={14} height={14} />
+            </TouchableOpacity>
+          )}
+
+          <View style={{ height: 40 }} />
+        </Animated.View>
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
+// ─────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────
 const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -305,11 +281,14 @@ const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
     : insets.top;
 
   const [loading, setLoading] = useState(true);
-  const [eventSections, setEventSections] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
 
-  // Toggle between single and multiple events display mode (for demo)
-  const [isMultipleMode, setIsMultipleMode] = useState(false);
+  // Filter state
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState(null);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(new Date().getMonth());
+  const [selectedMonthYear, setSelectedMonthYear] = useState(new Date().getFullYear());
 
   // Fetch events from API
   useEffect(() => {
@@ -319,22 +298,18 @@ const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
         const staffEventsData = await eventService.fetchStaffEvents();
         const eventsList = staffEventsData?.data || [];
 
-        logger.log('Fetched events for Tickets tab:', eventsList);
-
-        // Process events - handle both direct events array and nested structure
-        let allEvents = [];
-        eventsList.forEach(item => {
+        let events = [];
+        eventsList.forEach((item) => {
           if (item.events && Array.isArray(item.events)) {
-            allEvents = [...allEvents, ...item.events];
+            events = [...events, ...item.events];
           } else if (item.uuid) {
-            allEvents.push(item);
+            events.push(item);
           }
         });
 
-        // Transform all events with proper UUIDs
-        const transformedEvents = allEvents
-          .filter(event => event.uuid || event.eventUuid) // Only include events with valid UUIDs
-          .map(event => {
+        const transformedEvents = events
+          .filter((event) => event.uuid || event.eventUuid)
+          .map((event) => {
             const eventUuid = event.uuid || event.eventUuid;
             return {
               uuid: eventUuid,
@@ -346,79 +321,103 @@ const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
               time: event.start_time || event.time || 'TBD',
               location: event.location?.city || event.cityName || event.venue || 'TBD',
               cityName: event.location?.city || event.cityName,
+              rawDate: event.start_date || event.date || null,
               isBookmarked: false,
             };
           });
 
-        // Organize events into sections based on mode
-        const happeningToday = [];
-        const comingUpThisWeek = [];
-        const upcoming = [];
-
-        if (isMultipleMode) {
-          // Multiple mode: show multiple events in each section (horizontal scroll)
-          transformedEvents.forEach((event, index) => {
-            if (index < 2) {
-              happeningToday.push(event);
-            } else if (index < 4) {
-              comingUpThisWeek.push(event);
-            } else {
-              upcoming.push(event);
-            }
-          });
-        } else {
-          // Single mode: show one event per section (large card)
-          transformedEvents.forEach((event, index) => {
-            if (index === 0) {
-              happeningToday.push(event);
-            } else if (index === 1) {
-              comingUpThisWeek.push(event);
-            } else {
-              upcoming.push(event);
-            }
-          });
-        }
-
-        const sections = [];
-        if (happeningToday.length > 0) {
-          sections.push({
-            title: 'Happening Today',
-            // Change subtitle based on mode: "Starting in:" for single, "Ending in:" for multiple
-            subtitle: isMultipleMode ? 'Ending in:' : 'Starting in:',
-            countdown: { days: 0, hours: 12, mins: 5 },
-            events: happeningToday,
-          });
-        }
-        if (comingUpThisWeek.length > 0) {
-          sections.push({
-            title: 'Coming Up This Week',
-            events: comingUpThisWeek,
-          });
-        }
-
-        setEventSections(sections);
-        setUpcomingEvents(upcoming);
-
+        setAllEvents(transformedEvents);
+        setFilteredEvents(transformedEvents);
       } catch (error) {
         logger.error('Error fetching events for Tickets tab:', error);
-        // Show empty state instead of sample data to avoid using fake IDs
-        setEventSections([]);
-        setUpcomingEvents([]);
+        setAllEvents([]);
+        setFilteredEvents([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvents();
-  }, [isMultipleMode]); // Re-fetch when mode changes
+  }, []);
 
-  // Handle event press - ONLY use real UUIDs from API
+  // Parse date helper
+  const parseDate = (dateStr) => {
+    if (!dateStr || dateStr === 'TBD' || dateStr === 'N/A') return null;
+    const now = new Date();
+    let parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 2020) return parsed;
+    const withYear = dateStr + ', ' + now.getFullYear();
+    parsed = new Date(withYear);
+    if (!isNaN(parsed.getTime())) return parsed;
+    const dashParts = dateStr.split(' - ');
+    if (dashParts.length > 0) {
+      const first = dashParts[0].trim() + ', ' + now.getFullYear();
+      parsed = new Date(first);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return null;
+  };
+
+  // Apply filter
+  useEffect(() => {
+    if (!selectedFilter) {
+      setFilteredEvents(allEvents);
+      return;
+    }
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const filtered = allEvents.filter((event) => {
+      const eventDate = parseDate(event.rawDate || event.date);
+      if (!eventDate) return true;
+
+      const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+      switch (selectedFilter) {
+        case 'Today':
+          return eventDay.getTime() === todayStart.getTime();
+        case 'Tomorrow': {
+          const tomorrow = new Date(todayStart);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return eventDay.getTime() === tomorrow.getTime();
+        }
+        case 'This Week': {
+          const weekEnd = new Date(todayStart);
+          weekEnd.setDate(weekEnd.getDate() + (7 - weekEnd.getDay()));
+          return eventDay >= todayStart && eventDay < weekEnd;
+        }
+        case 'Month':
+          return (
+            eventDate.getMonth() === selectedMonthIndex &&
+            eventDate.getFullYear() === selectedMonthYear
+          );
+        default:
+          return true;
+      }
+    });
+
+    setFilteredEvents(filtered);
+  }, [selectedFilter, selectedMonthIndex, selectedMonthYear, allEvents]);
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter);
+  };
+
+  const handleMonthSelect = (monthIndex, year) => {
+    setSelectedMonthIndex(monthIndex);
+    setSelectedMonthYear(year);
+    setSelectedFilter('Month');
+  };
+
+  const handleClearFilter = () => {
+    setSelectedFilter(null);
+  };
+
   const handleEventPress = (event) => {
-    // Validate that we have a real UUID
     const eventUuid = event.uuid || event.eventUuid;
-
     if (!eventUuid || eventUuid.length < 10) {
-      logger.error('Invalid event UUID, cannot navigate:', eventUuid);
+      logger.error('Invalid event UUID:', eventUuid);
       return;
     }
 
@@ -432,43 +431,25 @@ const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
       time: event.time,
     };
 
-    logger.log('Event selected in EventsTicketsTab:', eventForChange);
+    if (onEventChange) onEventChange(eventForChange);
+  };
 
-    if (onEventChange) {
-      onEventChange(eventForChange);
+  // Active filter display text
+  const getFilterText = () => {
+    if (!selectedFilter) return null;
+    if (selectedFilter === 'Month') {
+      return `${MONTHS_SHORT[selectedMonthIndex]} ${selectedMonthYear}`;
     }
+    return selectedFilter;
   };
 
-  // Handle section title press
-  const handleSectionPress = (section) => {
-    navigation.navigate('ExploreDetailScreenTicketsTab', {
-      sectionTitle: section.title === 'Happening Today' ? 'Explore Events' : section.title,
-      events: section.events,
-      onEventChange: onEventChange,
-    });
-  };
-
-  // Handle upcoming section press
-  const handleUpcomingSectionPress = () => {
-    if (upcomingEvents.length > 0) {
-      navigation.navigate('ExploreDetailScreenTicketsTab', {
-        sectionTitle: 'Upcoming Events',
-        events: upcomingEvents,
-        onEventChange: onEventChange,
-      });
-    }
-  };
+  const activeFilterText = getFilterText();
 
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={color.btnBrown_AE6F28} />
-        <Typography
-          style={styles.loadingText}
-          weight="400"
-          size={14}
-          color={color.grey_87807C}
-        >
+        <Typography style={styles.loadingText} weight="400" size={14} color={color.grey_87807C}>
           Loading events...
         </Typography>
       </View>
@@ -479,297 +460,219 @@ const EventsTicketsTab = ({ eventInfo, onEventChange }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
-        <View style={styles.headerButton} />
-        <Typography
-          style={styles.headerTitle}
-          weight="700"
-          size={18}
-          color={color.brown_3C200A}
-        >
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+          {/* <SvgIcons.backArrow /> */}
+        </TouchableOpacity>
+        <Typography style={styles.headerTitle} weight="700" size={18} color={color.brown_3C200A}>
           Tickets
         </Typography>
-        <TouchableOpacity style={styles.headerButton}>
-          <SvgIcons.searchIconDark />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => setFilterVisible(true)}>
+            <SvgIcons.filterMenuIcon />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton}>
+            <SvgIcons.searchIconDark />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Demo Toggle - Remove in production */}
-      <TouchableOpacity
-        style={styles.demoToggle}
-        onPress={() => setIsMultipleMode(!isMultipleMode)}
-      >
-        <Typography
-          style={styles.demoToggleText}
-          weight="500"
-          size={12}
-          color={color.btnBrown_AE6F28}
-        >
-          Mode: {isMultipleMode ? 'Multiple Events' : 'Single Event'} (Tap to switch)
-        </Typography>
-      </TouchableOpacity>
+      {/* Header divider line */}
+      <View style={styles.headerDivider} />
+
+      {/* Active filter chip */}
+      {activeFilterText && (
+        <View style={styles.activeFilterRow}>
+          <TouchableOpacity style={styles.activeFilterChip} onPress={() => setFilterVisible(true)}>
+            <Typography weight="500" size={12} color={color.btnBrown_AE6F28}>
+              {activeFilterText}
+            </Typography>
+            <TouchableOpacity onPress={handleClearFilter} style={styles.clearFilterButton}>
+              <Typography weight="700" size={12} color={color.btnBrown_AE6F28}>
+                ✕
+              </Typography>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Event Sections */}
-        {eventSections.map((section, index) => (
-          <EventSection
-            key={index}
-            section={section}
-            onEventPress={handleEventPress}
-            onSectionPress={handleSectionPress}
-          />
-        ))}
+        <View style={styles.eventsContainer}>
+          {filteredEvents.map((event, index) => (
+            <LargeEventCard
+              key={`${event.uuid || event.eventUuid}-${index}`}
+              event={event}
+              onPress={() => handleEventPress(event)}
+            />
+          ))}
+        </View>
 
-        {/* Upcoming Section */}
-        {upcomingEvents.length > 0 && (
-          <View style={styles.upcomingSection}>
-            <TouchableOpacity
-              style={styles.sectionTitleContainer}
-              onPress={handleUpcomingSectionPress}
-            >
-              <Typography
-                style={styles.sectionTitle}
-                weight="700"
-                size={14}
-                color={color.placeholderTxt_24282C}
-              >
-                Upcoming
-              </Typography>
-              <SvgIcons.rightArrow width={10} height={10} />
-            </TouchableOpacity>
-
-            {upcomingEvents.map((event) => (
-              <UpcomingEventItem
-                key={event.uuid}
-                event={event}
-                onPress={() => handleEventPress(event)}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Empty state */}
-        {eventSections.length === 0 && upcomingEvents.length === 0 && (
+        {filteredEvents.length === 0 && (
           <View style={styles.emptyState}>
-            <Typography
-              style={styles.emptyStateText}
-              weight="400"
-              size={16}
-              color={color.brown_766F6A}
-            >
-              No events available
+            <Typography weight="400" size={16} color={color.brown_766F6A}>
+              {activeFilterText ? 'No events found for this filter' : 'No events available'}
             </Typography>
+            {activeFilterText && (
+              <TouchableOpacity onPress={handleClearFilter} style={styles.clearAllButton}>
+                <Typography weight="600" size={14} color={color.btnBrown_AE6F28}>
+                  Clear Filter
+                </Typography>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* When Filter Bottom Sheet */}
+      <WhenFilterBottomSheet
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        selectedFilter={selectedFilter}
+        onFilterChange={handleFilterChange}
+        selectedMonthIndex={selectedMonthIndex}
+        selectedMonthYear={selectedMonthYear}
+        onMonthSelect={handleMonthSelect}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-  },
-  demoToggle: {
-    backgroundColor: color.btnTxt_FFF6DF,
-    marginHorizontal: 20,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  demoToggleText: {
-    textAlign: 'center',
-  },
+  // ── Main Layout ──
+  container: { flex: 1, backgroundColor: color.white_FFFFFF },
+  loadingContainer: { justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12 },
+
+  // ── Header ──
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 2,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-  },
-  section: {
+  headerButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { flex: 1, textAlign: 'center' },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  headerDivider: {
+    height: 1.5,
+    backgroundColor: '#E8E8E8',
+    width: '100%',
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  happeningTodaySection: {
+
+  // ── Active Filter Chip ──
+  activeFilterRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 12 },
+  activeFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFF6DF',
-    paddingTop: 16,
-    paddingBottom: 20,
-    marginBottom: 24,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sectionTitle: {
-  },
-  sectionSubtitle: {
-    marginTop: 2,
-  },
-  countdownContainer: {
-    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     gap: 8,
   },
-  countdownBox: {
+  clearFilterButton: { padding: 2 },
+
+  // ── Event Cards ──
+  eventsContainer: { paddingHorizontal: 20 },
+  largeCard: { marginBottom: 24 },
+  largeImageContainer: { height: 200 },
+  largeImage: { width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 },
+  bookmarkButton: { position: 'absolute', top: 12, right: 12, padding: 8 },
+  cardContent: { paddingTop: 10 },
+  eventTitle: { marginBottom: 4 },
+  eventDate: { marginBottom: 2 },
+  eventTime: { marginBottom: 4 },
+  eventLocation: {},
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
+  clearAllButton: { marginTop: 12, paddingVertical: 8, paddingHorizontal: 16 },
+  bottomSpacer: { height: 40 },
+
+  // ── Bottom Sheet Modal ──
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.4)', justifyContent: 'flex-end' },
+  bottomSheetModal: {
     backgroundColor: color.white_FFFFFF,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-    minWidth: 55,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 40,
   },
-  countdownNumber: {
-  },
-  countdownLabel: {
-    marginTop: 2,
-  },
-  singleEventContainer: {
-    paddingHorizontal: 20,
-  },
-  largeCard: {},
-  largeImageContainer: {
-    height: 200,
-  },
-  largeImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-    borderRadius: 8,
-  },
-  bookmarkButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    padding: 8,
-  },
-  cardContent: {
-    paddingTop: 10,
-  },
-  eventTitle: {
-    marginBottom: 8,
-  },
-  eventDate: {
-    marginBottom: 2,
-  },
-  eventTime: {
-    marginBottom: 8,
-  },
-  eventLocation: {
-  },
-  horizontalList: {
-    paddingRight: 20,
-  },
-  smallCard: {
-    width: width * 0.55,
-    marginRight: 12,
-  },
-  smallImageContainer: {
-    height: 140,
-  },
-  smallImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 16,
-  },
-  bookmarkButtonSmall: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 6,
-  },
-  smallCardContent: {
-    paddingTop: 10,
-  },
-  smallEventTitle: {
-    marginBottom: 6,
-  },
-  smallEventDate: {
-    marginBottom: 2,
-  },
-  smallEventTime: {
-    marginBottom: 6,
-  },
-  smallEventLocation: {
-  },
-  upcomingSection: {
-    paddingHorizontal: 20,
-  },
-  upcomingItem: {
-    flexDirection: 'row',
-    borderRadius: 16,
-    padding: 12,
-    marginTop: 12,
-    alignItems: 'center',
-    backgroundColor: color.white_FFFFFF,
-  },
-  upcomingImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 12,
-    resizeMode: 'cover',
-  },
-  upcomingContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  upcomingTitle: {
-    marginBottom: 4,
-  },
-  upcomingMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  upcomingDate: {
-  },
-  upcomingDot: {
-    width: 4,
+  modalHandle: {
+    width: 40,
     height: 4,
+    backgroundColor: color.grey_AFAFAF,
     borderRadius: 2,
-    backgroundColor: color.brown_766F6A,
-    marginHorizontal: 8,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
-  upcomingTime: {
-  },
-  upcomingLocation: {
-  },
-  upcomingBookmark: {
-    padding: 8,
-    paddingBottom: 65,
-  },
-  emptyState: {
-    flex: 1,
+
+  // ── When Filter Options ──
+  filterTitle: { marginBottom: 20 },
+  filterOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
+  radioOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D9D9D9',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    marginRight: 14,
   },
-  emptyStateText: {
+  radioOuterSelected: { borderColor: color.btnBrown_AE6F28 },
+  radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: color.btnBrown_AE6F28 },
+
+  // ── Month Dropdown Field (inside When sheet) ──
+  monthDropdownField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 12,
+    gap: 10,
   },
-  bottomSpacer: {
-    height: 40,
+  monthDropdownText: { flex: 1 },
+
+  // ── Month Picker Grid ──
+  monthPickerGridContainer: { paddingVertical: 10 },
+  pickerNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  navButton: { padding: 10 },
+  monthsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  monthCell: {
+    width: '23%',
+    paddingVertical: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  monthCellSelected: {
+    backgroundColor: color.white_FFFFFF,
+    borderWidth: 2,
+    borderColor: color.btnBrown_AE6F28,
+  },
+  monthCellCurrent: {
+    backgroundColor: '#FFF6DF',
   },
 });
 

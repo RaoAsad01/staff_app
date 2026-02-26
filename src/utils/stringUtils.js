@@ -29,7 +29,7 @@ export const truncateCityName = (cityName) => {
 };
 
 export const truncateEventName = (cityName) => {
-  return truncateString(cityName, 10);
+  return truncateString(cityName, 22);
 };
 
 export const truncateStaffName = (cityName) => {

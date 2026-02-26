@@ -663,6 +663,9 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     navigation.goBack();
   };
 
+  // Determine if back button should show (when navigated from root stack / detail screen)
+  const shouldShowBackButton = isFromRootStack;
+
   const renderContent = () => {
     if (!dashboardStats?.data) return null;
 
@@ -1030,12 +1033,13 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
-        {isFromRootStack && (
-          <TouchableOpacity style={styles.headerButton} onPress={handleBackPress}>
-            <SvgIcons.backArrow />
-          </TouchableOpacity>
-        )}
+        {/* Brown event info bar with back button inside */}
         <View style={styles.header}>
+          {shouldShowBackButton && (
+            <TouchableOpacity onPress={handleBackPress} style={styles.headerBackButton}>
+              <SvgIcons.whiteArrow />
+            </TouchableOpacity>
+          )}
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
               <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
@@ -1048,13 +1052,9 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.separator}></Text>
-            <Text style={styles.cityName} numberOfLines={1} ellipsizeMode="tail">{truncateCityName(eventInfo?.cityName) || 'Accra'}</Text>
-            <Text style={styles.separator}>   </Text>
+            <View style={styles.headerSpacer} />
             <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
-            <Text style={styles.separator}></Text>
             <Text style={styles.separator}>at</Text>
-            <Text style={styles.separator}></Text>
             <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
           </View>
         </View>
@@ -1222,23 +1222,34 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     width: '100%',
     backgroundColor: color.btnBrown_AE6F28,
     height: 48,
   },
+  headerBackButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
   headerContent: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     flexWrap: 'nowrap',
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 8,
+    flexShrink: 1,
+  },
+  headerSpacer: {
+    flex: 1,
   },
   dropdownButton: {
     marginLeft: 8,
@@ -1251,17 +1262,17 @@ const styles = StyleSheet.create({
   },
   cityName: {
     color: color.white_FFFFFF,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '400',
   },
   date: {
     color: color.white_FFFFFF,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '400',
   },
   time: {
     color: color.white_FFFFFF,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '400',
   },
   labelDashboard: {
@@ -1324,6 +1335,8 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   separator: {
+    fontSize: 12,
+    fontWeight: '400',
     color: color.white_FFFFFF,
     marginHorizontal: 4,
   },
