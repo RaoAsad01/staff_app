@@ -182,7 +182,7 @@ const WhenFilterBottomSheet = ({
     handleClose();
   };
 
-  const filterOptions = ['Today', 'Tomorrow', 'This Week', 'Month'];
+  const filterOptions = ['All','Today', 'Tomorrow', 'This Week', 'Month'];
 
   if (!visible) return null;
 
