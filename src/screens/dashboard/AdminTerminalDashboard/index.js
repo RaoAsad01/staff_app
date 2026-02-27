@@ -449,7 +449,7 @@ const AdminTerminalDashboard = () => {
         />
 
         {/* Check-Ins Section */}
-        <CheckInSoldTicketsCard
+        {/* <CheckInSoldTicketsCard
           title="Check-Ins"
           data={getCheckInData()}
           remainingTicketsData={[]}
@@ -463,10 +463,10 @@ const AdminTerminalDashboard = () => {
           <AnalyticsChart title={checkInAnalyticsTitle} data={checkInAnalyticsData} dataType="checked in" />
         ) : (
           <AnalyticsChart title="Check In" data={getCheckinAnalyticsChartData(dashboardStats?.data?.checkin_analytics)} dataType="checked in" />
-        )}
+        )} */}
 
         {/* Scans Section */}
-        <ScanCategories stats={dashboardStats} />
+        {/* <ScanCategories stats={dashboardStats} />
         <ScanCategoriesDetails
           stats={dashboardStats}
           onScanAnalyticsPress={handleScanAnalyticsPress}
@@ -477,13 +477,16 @@ const AdminTerminalDashboard = () => {
         ) : (
           <ScanAnalytics title="Scans" data={getCheckinAnalyticsChartData(dashboardStats?.data?.scan_analytics)} dataType="checked in" />
         )}
-        <ScanListComponent eventInfo={currentEventInfo} staffUuid={staffUuid} />
+        <ScanListComponent eventInfo={currentEventInfo} staffUuid={staffUuid} /> */}
       </>
     );
   };
 
   return (
     <View style={styles.mainContainer}>
+      {Platform.OS === 'android' && (
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      )}
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -553,7 +556,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeAreaContainer: {
-    backgroundColor: color.btnBrown_AE6F28,
+    backgroundColor: 'transparent',
   },
   scrollContainer: {
     flexGrow: 1,

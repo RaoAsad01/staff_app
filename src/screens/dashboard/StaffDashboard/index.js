@@ -621,6 +621,9 @@ const StaffDashboard = () => {
 
   return (
     <View style={styles.mainContainer}>
+       {Platform.OS === 'android' && (
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      )}
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -705,7 +708,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeAreaContainer: {
-    backgroundColor: color.btnBrown_AE6F28,
+    backgroundColor: 'transparent',
   },
   scrollContainer: {
     flexGrow: 1
