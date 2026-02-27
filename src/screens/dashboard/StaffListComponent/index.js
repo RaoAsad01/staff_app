@@ -9,7 +9,7 @@ import NoResults from '../../../components/NoResults';
 import { logger } from '../../../utils/logger';
 import { formatValue } from '../../../constants/formatValue';
 
-const TerminalsComponent = ({ eventInfo, onEventChange }) => {
+const StaffListComponent = ({ eventInfo, onEventChange }) => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -87,7 +87,7 @@ const TerminalsComponent = ({ eventInfo, onEventChange }) => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.ticketCard}
-      onPress={() => navigation.navigate('AdminTerminalDashboard', {
+      onPress={() => navigation.navigate('StaffDashboard', {
         eventInfo: eventInfo,
         staffUuid: item.uuid,
         staffName: item.name,
@@ -108,10 +108,10 @@ const TerminalsComponent = ({ eventInfo, onEventChange }) => {
         </View>
 
         {/* Check-Ins Column */}
-        {/* <View style={styles.column}>
+        <View style={styles.column}>
           <Text style={styles.columnHeader}>Check-Ins</Text>
           <Text style={styles.columnData}>{item.checkins}</Text>
-        </View> */}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -252,4 +252,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default TerminalsComponent;
+export default StaffListComponent;

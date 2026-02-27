@@ -6,85 +6,82 @@ import Typography, { Body1, Heading5 } from '../../../components/Typography';
 import { formatValue } from '../../../constants/formatValue';
 import { logger } from '../../../utils/logger';
 
-const BoxOfficeSales = ({ stats }) => {
-  // Log the raw stats data received from backend
-  logger.log('================================================');
-  logger.log('📊 AdminBoxOfficeSales - Raw Stats Data:', JSON.stringify(stats, null, 2));
-  logger.log('📊 AdminBoxOfficeSales - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
-  logger.log('📊 AdminBoxOfficeSales - By Payment Methods:', JSON.stringify(stats?.data?.box_office_sales?.by_payment_methods, null, 2));
-  logger.log('================================================');
+const BoxOfficeSales = ({ stats, title }) => {
+    // Log the raw stats data received from backend
+    logger.log('================================================');
+    logger.log('📊 AdminBoxOfficeSales - Raw Stats Data:', JSON.stringify(stats, null, 2));
+    logger.log('📊 AdminBoxOfficeSales - Box Office Sales Data:', JSON.stringify(stats?.data?.box_office_sales, null, 2));
+    logger.log('📊 AdminBoxOfficeSales - By Payment Methods:', JSON.stringify(stats?.data?.box_office_sales?.by_payment_methods, null, 2));
+    logger.log('================================================');
 
-  const boxOfficeSalesData = stats?.data?.box_office_sales || {};
-  const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};
-  const total = boxOfficeSalesData?.total || 0;
+    const boxOfficeSalesData = stats?.data?.box_office_sales || {};
+    const byPaymentMethods = boxOfficeSalesData?.by_payment_methods || {};
+    const total = boxOfficeSalesData?.total || 0;
 
-  // Map ticket types to colors (by_payment_methods contains ticket types)
-  const ticketTypeColors = {
-    "VIP": "#87807C",
-    "General": "#CEBCA0",
-    "Early Bird": "#945F22",
-    "VIP Ticket": "#87807C",
-    "Members": "#EDB58A",
-    "Standard": "#AE6F28",
-    "Premium": "#F4A261"
-  };
+    // Map ticket types to colors (by_payment_methods contains ticket types)
+    const ticketTypeColors = {
+        "VIP": "#87807C",
+        "General": "#CEBCA0",
+        "Early Bird": "#945F22",
+        "VIP Ticket": "#87807C",
+        "Members": "#EDB58A",
+        "Standard": "#AE6F28",
+        "Premium": "#F4A261"
+    };
 
-  // Transform the data into the required format for pie chart
-  // by_payment_methods actually contains ticket types and their sales amounts
-  const values = Object.keys(byPaymentMethods).length > 0
-    ? Object.entries(byPaymentMethods)
-      .filter(([key, value]) => parseFloat(value) >= 0) // Only show non-zero values
-      .map(([key, value], index) => {
-        return {
-          label: key,
-          value: parseFloat(value) || 0,
-          color: ticketTypeColors[key] || "#87807C" // Fallback color
-        };
-      })
-    : [
-      {
-        label: "No Data",
-        value: 0,
-        color: "#87807C"
-      }
-    ];
+    // Transform the data into the required format for pie chart
+    // by_payment_methods actually contains ticket types and their sales amounts
+    const values = Object.keys(byPaymentMethods).length > 0
+        ? Object.entries(byPaymentMethods)
+            .filter(([key, value]) => parseFloat(value) >= 0) // Only show non-zero values
+            .map(([key, value], index) => {
+                return {
+                    label: key,
+                    value: parseFloat(value) || 0,
+                    color: ticketTypeColors[key] || "#87807C" // Fallback color
+                };
+            })
+        : [
+            {
+                label: "No Data",
+                value: 0,
+                color: "#87807C"
+            }
+        ];
 
-  // Sort by value (highest first) or keep original order
-  const sortedValues = values.sort((a, b) => b.value - a.value);
+    // Sort by value (highest first) or keep original order
+    const sortedValues = values.sort((a, b) => b.value - a.value);
 
-  const totalValue = values.reduce((sum, item) => sum + item.value, 0);
-  const radius = 50;
-  const strokeWidth = 10;
-  const circumference = 2 * Math.PI * radius;
-  const gapSize = 15;
-  const totalGap = gapSize * sortedValues.length;
+    const totalValue = values.reduce((sum, item) => sum + item.value, 0);
+    const radius = 50;
+    const strokeWidth = 10;
+    const circumference = 2 * Math.PI * radius;
+    const gapSize = 15;
+    const totalGap = gapSize * sortedValues.length;
 
-  // Calculate segments for the circle with visible gaps and no overlap
-  const calculateSegments = () => {
-    let currentOffset = 0;
-    return sortedValues.map((item) => {
-      const percentage = totalValue > 0 ? item.value / totalValue : 0;
-      // Distribute the circumference minus total gap among the arcs
-      const dashLength = (circumference - totalGap) * percentage;
-      const segment = {
-        ...item,
-        dashLength: dashLength > 0 ? dashLength : 0,
-        dashOffset: currentOffset
-      };
-      currentOffset += dashLength + gapSize;
-      return segment;
-    });
-  };
+    // Calculate segments for the circle with visible gaps and no overlap
+    const calculateSegments = () => {
+        let currentOffset = 0;
+        return sortedValues.map((item) => {
+            const percentage = totalValue > 0 ? item.value / totalValue : 0;
+            // Distribute the circumference minus total gap among the arcs
+            const dashLength = (circumference - totalGap) * percentage;
+            const segment = {
+                ...item,
+                dashLength: dashLength > 0 ? dashLength : 0,
+                dashOffset: currentOffset
+            };
+            currentOffset += dashLength + gapSize;
+            return segment;
+        });
+    };
 
-  const segments = calculateSegments();
-
-
+    const segments = calculateSegments();
     // NOTE: polarToCartesian function is no longer needed since ClipPaths are removed
-
     return (
         <View style={styles.container}>
             <View style={styles.wrapper}>
-                <Text style={styles.title}>Box Office Sales</Text>
+                <Text style={styles.title}>{title || 'Box Office Sales'}</Text>
                 <View style={styles.row}>
                     <View style={styles.chartContainer}>
                         <Svg height="140" width="140" viewBox="0 0 120 120">

@@ -21,6 +21,7 @@ import Tickets from '../screens/Tickets';
 import DashboardScreen from '../screens/dashboard';
 import ManualScan from '../screens/ManualScan';
 import ProfileScreen from '../screens/ProfileScreen';
+import AdminTerminalDashboard from '../screens/dashboard/AdminTerminalDashboard';
 
 const Stack = createNativeStackNavigator();
 
@@ -244,6 +245,17 @@ function Navigation({ route }) {
          <Stack.Screen
           name="Profile"
           component={ProfileScreen}
+          options={{
+            headerShown: false,
+            unmountOnBlur: true,
+            statusBarStyle: 'dark',
+            statusBarBackgroundColor: 'white',
+            statusBarTranslucent: true
+          }}
+        />
+         <Stack.Screen
+          name="AdminTerminalDashboard"
+          component={AdminTerminalDashboard}
           options={{
             headerShown: false,
             unmountOnBlur: true,

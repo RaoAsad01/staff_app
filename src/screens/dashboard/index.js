@@ -20,14 +20,18 @@ import ScanCategories from './ScanCategories';
 import ScanCategoriesDetails from './ScanCategoriesDetails';
 import ScanListComponent from './ScanListComponent';
 import EventsModal from '../../components/EventsModal';
-import TerminalsComponent from './TerminalsComponent'
+import TerminalsComponent from './TerminalsComponent';
+import StaffListComponent from './StaffListComponent';
 import AdminAllSales from './AdminAllSales';
 import AdminOnlineSales from './AdminOnlineSales';
 import AdminBoxOfficeSales from './AdminBoxOfficeSales';
 import AdminBoxOfficePaymentChannel from './AdminBoxOfficePaymentChannel';
 import TotalPaymentChannelCard from './TotalPaymentChannelCard';
 import PaymentChannelAnalytics from './PaymentChannelAnalytics';
-import { admindashboardterminaltab } from '../../constants/admindashboardterminaltab';
+import { admindashboardterminaltab as originalAdminTabs } from '../../constants/admindashboardterminaltab';
+
+// Extend admin tabs to include Staff
+const admindashboardterminaltab = [...originalAdminTabs, 'Staff'];
 import { adminonlineboxofficetab } from '../../constants/adminonlineboxofficetab';
 import { truncateCityName } from '../../utils/stringUtils';
 import { truncateEventName } from '../../utils/stringUtils';
@@ -1088,8 +1092,9 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
       )}
 
       {userRole === 'ADMIN' && selectedAdminTab === 'Terminals' ? (
-        // Render TerminalsComponent directly without ScrollView wrapper
         <TerminalsComponent eventInfo={eventInfo} onEventChange={onEventChange} />
+      ) : userRole === 'ADMIN' && selectedAdminTab === 'Staff' ? (
+        <StaffListComponent eventInfo={eventInfo} onEventChange={onEventChange} />
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
           <View style={styles.wrapper}>
@@ -1373,7 +1378,7 @@ const styles = StyleSheet.create({
   },
   adminTabButton: {
     padding: 10,
-    width: '50%',
+    width: '33%',
     justifyContent: 'center',
     alignItems: 'center',
     height: 40,
@@ -1384,7 +1389,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   selectedAdminTabButton: {
-    width: '50%',
+    width: '33%',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
