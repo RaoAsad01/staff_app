@@ -78,6 +78,7 @@ import LeftArrowGreyBg from '../../assets/svgs/left_arrow_grey_bg.svg';
 import RightArrowGreyBg from '../../assets/svgs/right_arrow_grey_bg.svg';
 import WhiteArrow from '../../assets/svgs/white_arrow.svg';
 import FilterMenuIcon from '../../assets/svgs/filter-menu_icon.svg';
+import CycleImg from '../../assets/svgs/cycle_img.svg';
 
 export default {
     totalTickets: TicketSVG,
@@ -160,5 +161,6 @@ export default {
     rightArrowGreyBg: RightArrowGreyBg,
     whiteArrow: WhiteArrow,
     filterMenuIcon: FilterMenuIcon,
+    cycleImg: CycleImg,
 };
 
