@@ -761,7 +761,7 @@ const TerminalDashboard = () => {
                 </TouchableOpacity>
 
                 <TerminalSalesCard />
-                <TerminalCouponsCard />
+                <TerminalCustomersServedCard />
                 <TerminalEventCard />
                 <TerminalStatisticsCard />
                 <TerminalCouponsCard />

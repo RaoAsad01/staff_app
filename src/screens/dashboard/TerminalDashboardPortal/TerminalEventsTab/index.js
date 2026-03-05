@@ -33,8 +33,6 @@ const MONTHS_FULL = [
 // ─────────────────────────────────────────────
 // Category data for CircleItemList
 // ─────────────────────────────────────────────
-// NOTE: Replace require() paths with your actual local asset paths.
-// If using remote URLs, use { uri: 'https://...' } instead.
 const CATEGORY_ITEMS = [
     { id: 'events', label: 'Events', icon: <SvgIcons.cycleImg /> },
     { id: 'activities', label: 'Activities', icon: <SvgIcons.cycleImg /> },
@@ -422,6 +420,7 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
         setSelectedFilter(null);
     };
 
+    // ─── Navigate to DashboardDetail on event press ───
     const handleEventPress = (event) => {
         const eventUuid = event.uuid || event.eventUuid;
         if (!eventUuid || eventUuid.length < 10) {
@@ -439,7 +438,15 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
             time: event.time,
         };
 
+        // Notify parent of event change (updates eventInformation in MyTabs)
         if (onEventChange) onEventChange(eventForChange);
+
+        // Navigate to DashboardDetail so DashboardScreen renders
+        // with the selected event and showEventDashboard = true
+        navigation.navigate('DashboardDetail', {
+            eventInfo: eventForChange,
+            showEventDashboard: true,
+        });
     };
 
     const handleCategoryPress = (item) => {
@@ -492,7 +499,7 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
             {/* Header divider line */}
             <View style={styles.headerDivider} />
 
-            {/* ── Category circle list (below divider, above cards) ── */}
+            {/* ── Category circle list ── */}
             <CircleItemList
                 items={CATEGORY_ITEMS}
                 activeId={activeCategory}

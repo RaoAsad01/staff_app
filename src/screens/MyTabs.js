@@ -17,6 +17,7 @@ import { logger } from '../utils/logger';
 import AdminAllEventsDashboard from './dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
 import EventsScreen from './eventsTab/EventsScreen';
 import EventsTicketsTab from './eventsTicketsTab/EventsTicketsTab';
+import TerminalEventsTab from './dashboard/TerminalDashboardPortal/TerminalEventsTab';
 
 const Tab = createBottomTabNavigator();
 
@@ -345,6 +346,14 @@ function MyTabs() {
       } else if (route.name === 'Tickets') {
         IconComponent = focused ? SvgIcons.ticketActiveTabSvg : SvgIcons.ticketInactiveTabSvg;
       }
+    } else if (userRole === 'AGENT') {
+      if (route.name === 'Dashboard') {
+        IconComponent = focused ? SvgIcons.adminDashboardActiveTab : SvgIcons.adminDashboardInactiveTab;
+      } else if (route.name === 'Events') {
+        IconComponent = focused ? SvgIcons.adminEventsActiveTab : SvgIcons.adminEventsInactiveTab;
+      } else if (route.name === 'Services') {
+        IconComponent = focused ? SvgIcons.adminServicesActiveTab : SvgIcons.adminServicesInactiveTab;
+      }
     } else {
       if (route.name === 'Dashboard') {
         IconComponent = focused ? SvgIcons.dashboardActiveIcon : SvgIcons.dashboardInactiveIcon;
@@ -423,7 +432,6 @@ function MyTabs() {
             shadowOffset: { width: 0, height: -2 },
             shadowOpacity: 0.1,
             shadowRadius: 4,
-           
           },
           tabBarShowLabel: false,
           tabBarButton: (props) => (
@@ -433,6 +441,7 @@ function MyTabs() {
       }}
       initialRouteName="Dashboard"
     >
+      {/* ── Dashboard tab: shared by all roles ── */}
       <Tab.Screen
         name="Dashboard"
         options={{
@@ -452,6 +461,7 @@ function MyTabs() {
         )}
       </Tab.Screen>
 
+      {/* ── ADMIN tabs ── */}
       {userRole === 'ADMIN' ? (
         <>
           <Tab.Screen
@@ -487,15 +497,17 @@ function MyTabs() {
               },
             }}
           >
-            {() => <HomeScreen
-              eventInfo={eventInformation}
-              onScanCountUpdate={updateScanCount}
-              activeHeaderTab={activeHeaderTab}
-              onHeaderTabChange={(tab) => {
-                setActiveHeaderTab(tab);
-              }}
-              userRole={userRole}
-            />}
+            {() => (
+              <HomeScreen
+                eventInfo={eventInformation}
+                onScanCountUpdate={updateScanCount}
+                activeHeaderTab={activeHeaderTab}
+                onHeaderTabChange={(tab) => {
+                  setActiveHeaderTab(tab);
+                }}
+                userRole={userRole}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen
@@ -541,7 +553,44 @@ function MyTabs() {
             )}
           </Tab.Screen>
         </>
+
+      ) : userRole === 'AGENT' ? (
+        // ── AGENT tabs: Dashboard + Events (TerminalEventsTab) + Services ──
+        <>
+          <Tab.Screen
+            name="Events"
+            options={{
+              headerShown: false,
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => (
+              <TerminalEventsTab
+                eventInfo={eventInformation}
+                onEventChange={handleEventChangeFromEvents}
+              />
+            )}
+          </Tab.Screen>
+
+          <Tab.Screen
+            name="Services"
+            options={{
+              headerShown: false,
+              unmountOnBlur: true,
+              statusBarStyle: 'dark',
+              statusBarBackgroundColor: 'white',
+              statusBarTranslucent: false
+            }}
+          >
+            {() => <ServicesScreen />}
+          </Tab.Screen>
+        </>
+
       ) : (
+        // ── Default (STAFF / ORGANIZER / etc.) tabs ──
         <>
           <Tab.Screen
             name="Tickets"
@@ -567,8 +616,16 @@ function MyTabs() {
               },
             })}
           >
-            {(props) => <Tickets {...props} eventInfo={eventInformation} onScanCountUpdate={updateScanCount} activeHeaderTab={activeHeaderTab}
-              onHeaderTabChange={setActiveHeaderTab} userRole={userRole} />}
+            {(props) => (
+              <Tickets
+                {...props}
+                eventInfo={eventInformation}
+                onScanCountUpdate={updateScanCount}
+                activeHeaderTab={activeHeaderTab}
+                onHeaderTabChange={setActiveHeaderTab}
+                userRole={userRole}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen
@@ -586,15 +643,17 @@ function MyTabs() {
               },
             }}
           >
-            {() => <HomeScreen
-              eventInfo={eventInformation}
-              onScanCountUpdate={updateScanCount}
-              activeHeaderTab={activeHeaderTab}
-              onHeaderTabChange={(tab) => {
-                setActiveHeaderTab(tab);
-              }}
-              userRole={userRole}
-            />}
+            {() => (
+              <HomeScreen
+                eventInfo={eventInformation}
+                onScanCountUpdate={updateScanCount}
+                activeHeaderTab={activeHeaderTab}
+                onHeaderTabChange={(tab) => {
+                  setActiveHeaderTab(tab);
+                }}
+                userRole={userRole}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen
@@ -612,8 +671,15 @@ function MyTabs() {
               },
             }}
           >
-            {() => <ManualScan eventInfo={eventInformation} onScanCountUpdate={updateScanCount} activeHeaderTab={activeHeaderTab}
-              onHeaderTabChange={setActiveHeaderTab} userRole={userRole} />}
+            {() => (
+              <ManualScan
+                eventInfo={eventInformation}
+                onScanCountUpdate={updateScanCount}
+                activeHeaderTab={activeHeaderTab}
+                onHeaderTabChange={setActiveHeaderTab}
+                userRole={userRole}
+              />
+            )}
           </Tab.Screen>
 
           <Tab.Screen

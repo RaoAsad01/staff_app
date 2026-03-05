@@ -38,6 +38,10 @@ import { truncateEventName } from '../../utils/stringUtils';
 import { formatDateWithMonthName } from '../../constants/dateAndTime';
 import { logger } from '../../utils/logger';
 import AdminAllEventsDashboard from '../dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
+import TerminalDashboard from './TerminalDashboardPortal/TerminalDashboard';
+
+// ── AGENT tab definitions ──
+const AGENT_TABS = ['Sales', 'Sold Tickets', 'New Tix'];
 
 const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventChange, showEventDashboard }) => {
   const navigation = useNavigation();
@@ -48,7 +52,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   // Get eventInfo from props or route params (route params take precedence for navigation updates)
   const isFromRootStack = route?.name === 'DashboardDetail';
   const initialEventInfo = isFromRootStack ? (route.params?.eventInfo || propEventInfo) : propEventInfo;
-  
+
   // Local state to track event changes from dropdown when in root stack
   const [localEventInfo, setLocalEventInfo] = useState(null);
   const eventInfo = localEventInfo || (isFromRootStack ? initialEventInfo : propEventInfo);
@@ -57,10 +61,15 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const topPadding = Platform.OS === 'android'
     ? (StatusBar.currentHeight || 0)
     : insets.top;
+
   const [selectedTab, setSelectedTab] = useState("Check-Ins");
   const [selectedSaleScanTab, setSelectedSaleScanTab] = useState(dashboardsalesscantab[0]);
   const [selectedAdminTab, setSelectedAdminTab] = useState(admindashboardterminaltab[0]);
   const [selectedAdminOnlineBoxOfficeTab, setSelectedAdminOnlineBoxOfficeTab] = useState(adminonlineboxofficetab[0]);
+
+  // ── AGENT tab state ──
+  const [selectedAgentTab, setSelectedAgentTab] = useState(AGENT_TABS[0]);
+
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,13 +101,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         logger.log('User role:', profile?.role);
         logger.log('User role type:', typeof profile?.role);
 
-        // Check for common role field variations
         logger.log('profile?.user_role :', profile?.user_role);
         logger.log('profile?.type:', profile?.type);
         logger.log('profile?.permission:', profile?.permission);
         logger.log('profile?.user_type:', profile?.user_type);
 
-        // Try to find the role from various possible field names
         const role = profile?.role ||
           profile?.user_role ||
           profile?.type ||
@@ -136,7 +143,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         if (eventInfo?.eventUuid) {
           setLoading(true);
 
-          // Determine sales parameter for ADMIN users
           let salesParam = null;
           if (userRole === 'ADMIN') {
             if (selectedAdminOnlineBoxOfficeTab === 'Online') {
@@ -144,12 +150,10 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             } else if (selectedAdminOnlineBoxOfficeTab === 'Box Office') {
               salesParam = 'box_office';
             }
-            // For 'All' tab, don't pass sales parameter (get all data)
           }
 
           const stats = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam);
 
-          // Log for debugging ORGANIZER payment channels
           if (userRole === 'ORGANIZER') {
             logger.log('📊 Dashboard Stats for ORGANIZER:', JSON.stringify(stats, null, 2));
             logger.log('📊 payment_channels location check:');
@@ -176,14 +180,13 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
   };
-  // Add navigation handlers for statistics
+
   const handleTotalTicketsPress = () => {
     navigation.navigate('Tickets', { initialTab: 'All', eventInfo });
   };
 
   const handlePaymentChannelPress = (paymentChannel) => {
     logger.log('Payment channel pressed:', paymentChannel);
-    // Toggle active payment channel
     if (activePaymentChannel === paymentChannel) {
       setActivePaymentChannel(null);
     } else {
@@ -202,8 +205,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const handleAvailableTicketsPress = () => {
     setSelectedSaleScanTab('Sales');
     setSelectedTab('Available');
-
-    // Add a small delay to ensure the content is rendered before scrolling
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -230,9 +231,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }
   };
 
-  // Function to get tab button width based on user role
   const getTabButtonWidth = () => {
-    // Remove fixed width - use flex instead for better responsiveness
     return null;
   };
 
@@ -241,7 +240,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
     const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
 
-    // If already active, deactivate
     if (activeAnalytics === analyticsKey) {
       setActiveAnalytics(null);
       setAnalyticsData(null);
@@ -250,39 +248,27 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }
 
     try {
-      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
-
       logger.log('handleAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
 
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
-      // Handle sold tickets analytics only
       if (response?.data?.sold_tickets_analytics?.data) {
         const analyticsData = response.data.sold_tickets_analytics.data;
         const analyticsTitle = subitemLabel ? `${subitemLabel} Sales` : `${ticketType} Sales`;
 
-        logger.log('Sold Tickets Analytics Data:', analyticsData);
-        logger.log('Sold Tickets Analytics Response:', response.data.sold_tickets_analytics);
-
         const chartData = Object.entries(analyticsData)
-          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .filter(([hour, value]) => value > 0)
           .map(([hour, value]) => {
-            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
             let formattedTime = hour;
             if (hour.includes(':00 ')) {
               const [time, period] = hour.split(' ');
               const [hours] = time.split(':');
               formattedTime = `${hours}${period.toLowerCase()}`;
             }
-
-            return {
-              time: formattedTime,
-              value: value || 0
-            };
+            return { time: formattedTime, value: value || 0 };
           });
 
-        logger.log('Formatted Sold Tickets Chart Data:', chartData);
         setAnalyticsData(chartData);
         setAnalyticsTitle(analyticsTitle);
         setActiveAnalytics(analyticsKey);
@@ -292,13 +278,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }
   };
 
-  // Separate handler for Check-Ins analytics
   const handleCheckInAnalyticsPress = async (ticketType, title, ticketUuid = null, subitemLabel = null) => {
     if (!eventInfo?.eventUuid || (userRole !== 'ADMIN' && userRole !== 'ORGANIZER' && userRole !== 'STAFF')) return;
 
     const analyticsKey = ticketUuid ? `${title}-${ticketUuid}` : `${title}-${ticketType}`;
 
-    // If already active, deactivate
     if (activeCheckInAnalytics === analyticsKey) {
       setActiveCheckInAnalytics(null);
       setCheckInAnalyticsData(null);
@@ -307,39 +291,27 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }
 
     try {
-      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
-
       logger.log('handleCheckInAnalyticsPress params:', { ticketType, title, ticketUuid, subitemLabel });
 
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, ticketType, ticketUuid);
 
-      // Handle Check-Ins analytics only
       if (response?.data?.checkin_analytics?.data) {
         const analyticsData = response.data.checkin_analytics.data;
         const analyticsTitle = subitemLabel ? `${subitemLabel} Check-Ins` : `${ticketType} Check-Ins`;
 
-        logger.log('Check-In Analytics Data:', analyticsData);
-        logger.log('Check-In Analytics Response:', response.data.checkin_analytics);
-
         const chartData = Object.entries(analyticsData)
-          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .filter(([hour, value]) => value > 0)
           .map(([hour, value]) => {
-            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
             let formattedTime = hour;
             if (hour.includes(':00 ')) {
               const [time, period] = hour.split(' ');
               const [hours] = time.split(':');
               formattedTime = `${hours}${period.toLowerCase()}`;
             }
-
-            return {
-              time: formattedTime,
-              value: value || 0
-            };
+            return { time: formattedTime, value: value || 0 };
           });
 
-        logger.log('Formatted Chart Data:', chartData);
         setCheckInAnalyticsData(chartData);
         setCheckInAnalyticsTitle(analyticsTitle);
         setActiveCheckInAnalytics(analyticsKey);
@@ -354,7 +326,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
     const analyticsKey = ticketUuid ? `Scan-${parentCategory}-${ticketUuid}` : `Scan-${parentCategory}-${scanType}`;
 
-    // If already active, deactivate
     if (activeScanAnalytics === analyticsKey) {
       setActiveScanAnalytics(null);
       setScanAnalyticsData(null);
@@ -363,44 +334,27 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }
 
     try {
-      logger.log('🔍 Fetching scan analytics for:', {
-        scanType,
-        parentCategory,
-        ticketUuid
-      });
+      logger.log('🔍 Fetching scan analytics for:', { scanType, parentCategory, ticketUuid });
 
-      // Don't send sales parameter when filtering by ticket_type or ticket_uuid
       let salesParam = null;
-
-      // Fetch fresh data with ticketType and ticketUuid parameters
       const response = await ticketService.fetchDashboardStats(eventInfo.eventUuid, salesParam, parentCategory, ticketUuid);
 
-      // Handle Scan analytics
       if (response?.data?.scan_analytics?.data) {
         const analyticsData = response.data.scan_analytics.data;
         const analyticsTitle = ticketUuid ? `${scanType} Scans` : `${parentCategory} Scans`;
 
-        logger.log('Scan Analytics Data:', analyticsData);
-        logger.log('Scan Analytics Response:', response.data.scan_analytics);
-
         const chartData = Object.entries(analyticsData)
-          .filter(([hour, value]) => value > 0) // Filter out zero values
+          .filter(([hour, value]) => value > 0)
           .map(([hour, value]) => {
-            // Format time from "12:00 AM" to "12am" or "12:00 PM" to "12pm"
             let formattedTime = hour;
             if (hour.includes(':00 ')) {
               const [time, period] = hour.split(' ');
               const [hours] = time.split(':');
               formattedTime = `${hours}${period.toLowerCase()}`;
             }
-
-            return {
-              time: formattedTime,
-              value: value || 0
-            };
+            return { time: formattedTime, value: value || 0 };
           });
 
-        logger.log('Formatted Scan Chart Data:', chartData);
         setScanAnalyticsData(chartData);
         setScanAnalyticsTitle(analyticsTitle);
         setActiveScanAnalytics(analyticsKey);
@@ -415,9 +369,8 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const handleEventSelect = (event) => {
     setSelectedEvent(event);
     logger.log('Selected event:', event);
-  
+
     if (event.uuid !== eventInfo?.eventUuid) {
-      // Update local event info for immediate UI update
       const eventUuid = event.uuid || event.eventUuid;
       setLocalEventInfo({
         ...eventInfo,
@@ -427,12 +380,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         date: event.start_date || event.date || eventInfo?.date,
         time: event.start_time || event.time || eventInfo?.time,
       });
-  
-      // Also update parent (MyTabs) state
+
       if (onEventChange) {
         onEventChange(event);
       }
-  
+
       setEventsModalVisible(false);
     }
   };
@@ -442,31 +394,24 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
       dashboardStats?.data?.check_ins?.total_checkins === undefined ||
       dashboardStats?.data?.check_ins?.total_tickets === undefined
     ) {
-      return [{
-        label: "Total Checked In",
-        checkedIn: 0,
-        total: 0,
-        percentage: 0
-      }];
+      return [{ label: "Total Checked In", checkedIn: 0, total: 0, percentage: 0 }];
     }
 
     const totalCheckedIn = dashboardStats?.data?.check_ins?.total_checkins;
     const totalTickets = dashboardStats?.data?.check_ins?.total_tickets;
-
     const byCategory = dashboardStats?.data?.check_ins?.by_category;
     let typeRows = [];
+
     if (byCategory) {
-      const types = Object.keys(byCategory || {});
-      typeRows = types.map(type => {
+      typeRows = Object.keys(byCategory || {}).map(type => {
         const categoryData = byCategory[type];
         const checkedIn = categoryData?.scanned_tickets || 0;
         const total = categoryData?.total_tickets || 0;
-
         return {
           label: type,
-          checkedIn: checkedIn,
-          total: total,
-          percentage: total ? Math.round((checkedIn / total) * 100) : 0
+          checkedIn,
+          total,
+          percentage: total ? Math.round((checkedIn / total) * 100) : 0,
         };
       });
     }
@@ -476,135 +421,96 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         label: "Total Checked In",
         checkedIn: totalCheckedIn,
         total: totalTickets,
-        percentage: totalTickets ? Math.round((totalCheckedIn / totalTickets) * 100) : 0
+        percentage: totalTickets ? Math.round((totalCheckedIn / totalTickets) * 100) : 0,
       },
-      ...typeRows
+      ...typeRows,
     ];
   };
 
   const getSoldTicketsData = () => {
-    // For ADMIN users, sold tickets data is in sold_tickets
-    // For non-ADMIN users, sold tickets data is in box_office_sales.ticket_wise
     let dataSource;
-
     if (userRole === 'ADMIN') {
-      // Use sold_tickets for ADMIN users
       dataSource = dashboardStats?.data?.sold_tickets;
     } else {
-      // Use box_office_sales.ticket_wise for non-ADMIN users
       dataSource = dashboardStats?.data?.box_office_sales?.ticket_wise;
     }
 
-    if (
-      dataSource?.total_tickets === undefined ||
-      dataSource?.sold_tickets === undefined
-    ) {
-      return [{
-        label: "Total Sold",
-        checkedIn: 0,
-        total: 0,
-        percentage: 0
-      }];
+    if (dataSource?.total_tickets === undefined || dataSource?.sold_tickets === undefined) {
+      return [{ label: "Total Sold", checkedIn: 0, total: 0, percentage: 0 }];
     }
 
     const totalSold = dataSource.sold_tickets || 0;
     const totalTickets = dataSource.total_tickets || 0;
-
     const byCategory = dataSource.by_category;
     let typeRows = [];
-    if (byCategory) {
-      const types = Object.keys(byCategory || {});
-      typeRows = types.map(type => {
-        const categoryData = byCategory[type];
-        // Handle different data structures for ADMIN vs non-ADMIN
-        let sold, total;
 
+    if (byCategory) {
+      typeRows = Object.keys(byCategory || {}).map(type => {
+        const categoryData = byCategory[type];
+        let sold, total;
         if (userRole === 'ADMIN') {
-          // ADMIN structure: sold_tickets and total_tickets
           sold = categoryData?.sold_tickets || 0;
           total = categoryData?.total_tickets || 0;
         } else {
-          // Non-ADMIN structure: sold and total
           sold = categoryData?.sold || 0;
           total = categoryData?.total || 0;
         }
-
         return {
           label: type,
           checkedIn: sold,
-          total: total,
-          percentage: total ? Math.round((sold / total) * 100) : 0
+          total,
+          percentage: total ? Math.round((sold / total) * 100) : 0,
         };
       });
     }
 
     return [
-      {
-        label: "Total Sold",
-        checkedIn: totalSold,
-        total: totalTickets,
-        percentage: totalTickets ? Math.round((totalSold / totalTickets) * 100) : 0
-      },
-      ...typeRows
+      { label: "Total Sold", checkedIn: totalSold, total: totalTickets, percentage: totalTickets ? Math.round((totalSold / totalTickets) * 100) : 0 },
+      ...typeRows,
     ];
   };
 
-  // Add function to get available tickets data
   const getAvailableTicketsData = () => {
     if (!dashboardStats?.data?.available_tickets) {
-      return [{
-        label: "Available",
-        checkedIn: 0,
-        total: 0,
-        percentage: 0
-      }];
+      return [{ label: "Available", checkedIn: 0, total: 0, percentage: 0 }];
     }
 
-    const availableTickets = dashboardStats?.data?.available_tickets;
-    const byCategory = availableTickets;
-    let typeRows = [];
+    const byCategory = dashboardStats?.data?.available_tickets;
+    const typeRows = Object.keys(byCategory || {}).map(type => {
+      const categoryData = byCategory[type];
+      const available = categoryData?.available_tickets || 0;
+      const total = categoryData?.total_tickets || 0;
 
-    if (byCategory) {
-      const types = Object.keys(byCategory || {});
-      typeRows = types.map(type => {
-        const categoryData = byCategory[type];
-        const available = categoryData?.available_tickets || 0;
-        const total = categoryData?.total_tickets || 0;
+      const subItems = [];
+      const ticketWise = categoryData;
+      if (ticketWise) {
+        Object.keys(ticketWise).forEach(ticketName => {
+          if (ticketName !== 'total_tickets' && ticketName !== 'available_tickets') {
+            const ticketInfo = ticketWise[ticketName];
+            const ticketAvailable = ticketInfo.available || 0;
+            const ticketTotal = ticketInfo.total || 0;
+            subItems.push({
+              label: ticketName,
+              checkedIn: ticketAvailable,
+              total: ticketTotal,
+              percentage: ticketTotal > 0 ? Math.round((ticketAvailable / ticketTotal) * 100) : 0,
+              ticketUuid: ticketInfo.ticket_uuid,
+              subItems: [],
+            });
+          }
+        });
+      }
 
-        // Create subItems from the ticket_wise data
-        const subItems = [];
-        const ticketWise = categoryData;
-        if (ticketWise) {
-          Object.keys(ticketWise).forEach(ticketName => {
-            if (ticketName !== 'total_tickets' && ticketName !== 'available_tickets') {
-              const ticketInfo = ticketWise[ticketName];
-              const ticketAvailable = ticketInfo.available || 0;
-              const ticketTotal = ticketInfo.total || 0;
-              subItems.push({
-                label: ticketName,
-                checkedIn: ticketAvailable,
-                total: ticketTotal,
-                percentage: ticketTotal > 0 ? Math.round((ticketAvailable / ticketTotal) * 100) : 0,
-                ticketUuid: ticketInfo.ticket_uuid,
-                subItems: []
-              });
-            }
-          });
-        }
+      return {
+        label: type,
+        checkedIn: available,
+        total,
+        percentage: total > 0 ? Math.round((available / total) * 100) : 0,
+        subItems,
+      };
+    });
 
-        return {
-          label: type,
-          checkedIn: available,
-          total: total,
-          percentage: total > 0 ? Math.round((available / total) * 100) : 0,
-          subItems: subItems
-        };
-      });
-    }
-
-    return [
-      ...typeRows
-    ];
+    return [...typeRows];
   };
 
   function formatHourLabel(hourStr) {
@@ -612,22 +518,14 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
       logger.warn('formatHourLabel: Invalid input', hourStr);
       return '';
     }
-
     const parts = hourStr.split(":");
-    if (parts.length < 2) {
-      return hourStr; // Return as-is if format is unexpected
-    }
-
+    if (parts.length < 2) return hourStr;
     const [hour, minutePart] = parts;
-    if (!minutePart) {
-      return hour; // Return just the hour if no minute part
-    }
-
+    if (!minutePart) return hour;
     const minuteAndPeriod = minutePart.split(" ");
     if (minuteAndPeriod.length < 2) {
-      return `${parseInt(hour, 10)}${hourStr.includes('PM') ? 'pm' : 'am'}`; // Default based on PM/AM
+      return `${parseInt(hour, 10)}${hourStr.includes('PM') ? 'pm' : 'am'}`;
     }
-
     const [minute, period] = minuteAndPeriod;
     return `${parseInt(hour, 10)}${period.toLowerCase()}`;
   }
@@ -636,9 +534,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     if (!checkinAnalytics?.data) return null;
     const entries = Object.entries(checkinAnalytics.data);
     for (let i = entries.length - 1; i >= 0; i--) {
-      if (entries[i][1] > 0) {
-        return formatHourLabel(entries[i][0]);
-      }
+      if (entries[i][1] > 0) return formatHourLabel(entries[i][0]);
     }
     return formatHourLabel(entries[entries.length - 1][0]);
   }
@@ -648,9 +544,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     return Object.entries(checkinAnalytics.data).map(([hour, value]) => ({
       time: formatHourLabel(hour),
       value,
-      isHighlighted: highlightHour
-        ? formatHourLabel(hour) === highlightHour
-        : false,
+      isHighlighted: highlightHour ? formatHourLabel(hour) === highlightHour : false,
     }));
   }
 
@@ -662,12 +556,10 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     }));
   }
 
-  // Handle back press
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  // Determine if back button should show (when navigated from root stack / detail screen)
   const shouldShowBackButton = isFromRootStack;
 
   const renderContent = () => {
@@ -675,17 +567,12 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
     if (selectedSaleScanTab === "Sales") {
       const soldTicketsData = getSoldTicketsData();
-      const remainingTicketsData = soldTicketsData.filter(
-        (item) => item.label !== "Total Sold"
-      );
-      const soldTicketsChartData = mapSoldTicketsAnalytics(
-        dashboardStats?.data?.sold_tickets_analytics?.data
-      );
+      const remainingTicketsData = soldTicketsData.filter((item) => item.label !== "Total Sold");
+      const soldTicketsChartData = mapSoldTicketsAnalytics(dashboardStats?.data?.sold_tickets_analytics?.data);
 
       return (
         <>
-
-          {/* Admin Online Box Office Tab - Only for ADMIN users in Sales tab */}
+          {/* Admin Online Box Office Tab */}
           {userRole === 'ADMIN' && (
             <View style={styles.adminOnlineBoxOfficeTabContainer}>
               <View style={styles.adminOnlineBoxOfficeTabRow}>
@@ -712,15 +599,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             </View>
           )}
 
-          {/* Admin Sales Components - Only for ADMIN users in Sales tab */}
+          {/* Admin Sales Components */}
           {userRole === 'ADMIN' && (
             <>
-              {selectedAdminOnlineBoxOfficeTab === 'All' && (
-                <AdminAllSales stats={dashboardStats} />
-              )}
-              {selectedAdminOnlineBoxOfficeTab === 'Online' && (
-                <AdminOnlineSales stats={dashboardStats} />
-              )}
+              {selectedAdminOnlineBoxOfficeTab === 'All' && <AdminAllSales stats={dashboardStats} />}
+              {selectedAdminOnlineBoxOfficeTab === 'Online' && <AdminOnlineSales stats={dashboardStats} />}
               {selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
                 <>
                   <AdminBoxOfficeSales stats={dashboardStats} />
@@ -739,9 +622,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             </>
           )}
 
-          {/* Show regular BoxOfficeSales for non-admin users or when admin is not in Sales tab */}
           {userRole !== 'ADMIN' && <BoxOfficeSales stats={dashboardStats} />}
-          {/* Show CheckInSoldTicketsCard for non-admin users or when admin is not in Box Office tab */}
           {(userRole !== 'ADMIN' || (userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab !== 'Box Office')) && (
             <CheckInSoldTicketsCard
               title="Sold Tickets"
@@ -755,37 +636,20 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             />
           )}
           {analyticsData && activeAnalytics ? (
-            <AnalyticsChart
-              title={analyticsTitle}
-              data={analyticsData}
-              dataType="sold"
-            />
+            <AnalyticsChart title={analyticsTitle} data={analyticsData} dataType="sold" />
           ) : (
-            <AnalyticsChart
-              title="Sold Tickets"
-              data={soldTicketsChartData}
-              dataType="sold"
-            />
+            <AnalyticsChart title="Sold Tickets" data={soldTicketsChartData} dataType="sold" />
           )}
 
-          {/* Show AdminBoxOfficePaymentChannel for ADMIN users in Box Office tab after Analytics */}
           {userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office' && (
             <AdminBoxOfficePaymentChannel stats={dashboardStats} />
           )}
           {userRole === 'ORGANIZER' && (() => {
             logger.log('🔍 ORGANIZER Payment Channels Debug:');
-            logger.log('dashboardStats?.data?.payment_channels:', dashboardStats?.data?.payment_channels);
-            logger.log('dashboardStats?.data?.payment_channel:', dashboardStats?.data?.payment_channel);
-            logger.log('dashboardStats?.data?.box_office_sales:', dashboardStats?.data?.box_office_sales);
-            logger.log('Full dashboardStats.data keys:', Object.keys(dashboardStats?.data || {}));
-
-            // Determine the payment channel data from various possible locations
             const paymentChannelData = dashboardStats?.data?.payment_channels
               || dashboardStats?.data?.payment_channel
               || dashboardStats?.data?.box_office_sales?.payment_channels
               || dashboardStats?.data?.box_office_sales?.payment_channel;
-
-            logger.log(' Resolved paymentChannelData:', paymentChannelData);
 
             return (
               <AdminBoxOfficePaymentChannel stats={{
@@ -794,15 +658,13 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                   ...dashboardStats?.data,
                   box_office_sales: {
                     ...dashboardStats?.data?.box_office_sales,
-                    // Map payment_channels (plural) to payment_channel (singular) for compatibility
-                    payment_channel: paymentChannelData
-                  }
-                }
+                    payment_channel: paymentChannelData,
+                  },
+                },
               }} />
             );
           })()}
 
-          {/* Total Payment Channel Card - Show for ADMIN Box Office and ORGANIZER */}
           {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
             <TotalPaymentChannelCard
               stats={dashboardStats}
@@ -811,7 +673,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             />
           )}
 
-          {/* Payment Channel Analytics - Show for ADMIN Box Office and ORGANIZER */}
           {((userRole === 'ADMIN' && selectedAdminOnlineBoxOfficeTab === 'Box Office') || userRole === 'ORGANIZER') && (
             <PaymentChannelAnalytics
               stats={dashboardStats}
@@ -826,17 +687,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
               {getTabList().map((item) => (
                 <TouchableOpacity
                   key={item}
-                  style={[
-                    styles.tabButton,
-                    selectedTab === item && styles.selectedTabButton,
-                  ]}
+                  style={[styles.tabButton, selectedTab === item && styles.selectedTabButton]}
                   onPress={() => handleTabPress(item)}
                 >
                   <Text
-                    style={[
-                      styles.tabButtonText,
-                      selectedTab === item && styles.selectedTabButtonText,
-                    ]}
+                    style={[styles.tabButtonText, selectedTab === item && styles.selectedTabButtonText]}
                     numberOfLines={2}
                   >
                     {item}
@@ -845,6 +700,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
               ))}
             </View>
           </View>
+
           {selectedTab === "Check-Ins" && (
             <>
               <CheckInSoldTicketsCard
@@ -858,18 +714,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                 activeAnalytics={activeCheckInAnalytics}
               />
               {checkInAnalyticsData && activeCheckInAnalytics ? (
-                <AnalyticsChart
-                  title={checkInAnalyticsTitle}
-                  data={checkInAnalyticsData}
-                  dataType="checked in"
-                />
+                <AnalyticsChart title={checkInAnalyticsTitle} data={checkInAnalyticsData} dataType="checked in" />
               ) : (
                 <AnalyticsChart
                   title="Check In"
-                  data={getCheckinAnalyticsChartData(
-                    dashboardStats?.data?.checkin_analytics,
-                    highlightHour
-                  )}
+                  data={getCheckinAnalyticsChartData(dashboardStats?.data?.checkin_analytics, highlightHour)}
                   dataType="checked in"
                 />
               )}
@@ -884,7 +733,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         </>
       );
     } else if (selectedSaleScanTab === "Scans") {
-      // Show ScanAnalytics view in the Scans tab
       return (
         <>
           <ScanCategories stats={dashboardStats} />
@@ -894,11 +742,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             activeScanAnalytics={activeScanAnalytics}
           />
           {scanAnalyticsData && activeScanAnalytics ? (
-            <ScanAnalytics
-              title={scanAnalyticsTitle}
-              data={scanAnalyticsData}
-              dataType="checked in"
-            />
+            <ScanAnalytics title={scanAnalyticsTitle} data={scanAnalyticsData} dataType="checked in" />
           ) : (
             <ScanAnalytics
               title="Scans"
@@ -914,21 +758,16 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     if (selectedTab === "Attendees") {
       return <AttendeesComponent eventInfo={eventInfo} onScanCountUpdate={onScanCountUpdate} />;
     } else if (selectedTab === "Check-Ins" || selectedTab === "Sold Tickets" || selectedTab === "Available") {
-      const data = selectedTab === "Check-Ins" ? getCheckInData() :
-        selectedTab === "Sold Tickets" ? getSoldTicketsData() :
-          getAvailableTicketsData();
+      const data = selectedTab === "Check-Ins" ? getCheckInData()
+        : selectedTab === "Sold Tickets" ? getSoldTicketsData()
+          : getAvailableTicketsData();
 
       const remainingTicketsData = selectedTab === "Sold Tickets"
         ? data.filter(item => item.label !== "Total Sold")
         : [];
 
-      const checkedInChartData = getCheckinAnalyticsChartData(
-        dashboardStats?.data?.checkin_analytics,
-        highlightHour
-      );
-      const soldTicketsChartData = mapSoldTicketsAnalytics(
-        dashboardStats?.data?.sold_tickets_analytics?.data
-      );
+      const checkedInChartData = getCheckinAnalyticsChartData(dashboardStats?.data?.checkin_analytics, highlightHour);
+      const soldTicketsChartData = mapSoldTicketsAnalytics(dashboardStats?.data?.sold_tickets_analytics?.data);
 
       return (
         <>
@@ -946,31 +785,15 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             <>
               {selectedTab === "Check-Ins" ? (
                 checkInAnalyticsData && activeCheckInAnalytics ? (
-                  <AnalyticsChart
-                    title={checkInAnalyticsTitle}
-                    data={checkInAnalyticsData}
-                    dataType="checked in"
-                  />
+                  <AnalyticsChart title={checkInAnalyticsTitle} data={checkInAnalyticsData} dataType="checked in" />
                 ) : (
-                  <AnalyticsChart
-                    title="Check In"
-                    data={checkedInChartData}
-                    dataType="checked in"
-                  />
+                  <AnalyticsChart title="Check In" data={checkedInChartData} dataType="checked in" />
                 )
               ) : (
                 analyticsData && activeAnalytics ? (
-                  <AnalyticsChart
-                    title={analyticsTitle}
-                    data={analyticsData}
-                    dataType="sold"
-                  />
+                  <AnalyticsChart title={analyticsTitle} data={analyticsData} dataType="sold" />
                 ) : (
-                  <AnalyticsChart
-                    title="Sold Tickets"
-                    data={soldTicketsChartData}
-                    dataType="sold"
-                  />
+                  <AnalyticsChart title="Sold Tickets" data={soldTicketsChartData} dataType="sold" />
                 )
               )}
             </>
@@ -981,27 +804,79 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     return null;
   };
 
+  // ── AGENT tab content renderer ──
+  const renderAgentTabContent = () => {
+    // Placeholder content per tab — swap in your real components as needed
+    switch (selectedAgentTab) {
+      case 'Sales':
+        return (
+          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
+            <View style={styles.wrapper}>
+              {loading || userProfileLoading ? (
+                <Text style={styles.loadingText}>Loading...</Text>
+              ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+              ) : (
+                <>
+                  <BoxOfficeSales stats={dashboardStats} />
+                </>
+              )}
+            </View>
+          </ScrollView>
+        );
+      case 'Sold Tickets':
+        return (
+          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
+            <View style={styles.wrapper}>
+              {loading || userProfileLoading ? (
+                <Text style={styles.loadingText}>Loading...</Text>
+              ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+              ) : (
+                <CheckInSoldTicketsCard
+                  title="Sold Tickets"
+                  data={getSoldTicketsData()}
+                  remainingTicketsData={getSoldTicketsData().filter(i => i.label !== 'Total Sold')}
+                  showRemaining={true}
+                  userRole={userRole}
+                  stats={dashboardStats}
+                  onAnalyticsPress={handleAnalyticsPress}
+                  activeAnalytics={activeAnalytics}
+                />
+              )}
+            </View>
+          </ScrollView>
+        );
+      case 'New Tix':
+        return (
+          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
+            <View style={styles.wrapper}>
+              {loading || userProfileLoading ? (
+                <Text style={styles.loadingText}>Loading...</Text>
+              ) : error ? (
+                <Text style={styles.errorText}>{error}</Text>
+              ) : (
+                <AvailableTicketsCard data={getAvailableTicketsData()} stats={dashboardStats} />
+              )}
+            </View>
+          </ScrollView>
+        );
+      default:
+        return null;
+    }
+  };
+
   const highlightHour = getLatestNonZeroHour(dashboardStats?.data?.checkin_analytics);
 
   const soldTicketsData = getSoldTicketsData();
-  const remainingTicketsData = soldTicketsData.filter(
-    (item) => item.label !== "Total Sold"
-  );
+  const remainingTicketsData = soldTicketsData.filter((item) => item.label !== "Total Sold");
 
   const renderTab = ({ item }) => (
     <TouchableOpacity
-      style={[
-        styles.tabButton,
-        selectedTab === item && styles.selectedTabButton,
-      ]}
+      style={[styles.tabButton, selectedTab === item && styles.selectedTabButton]}
       onPress={() => handleTabPress(item)}
     >
-      <Text
-        style={[
-          styles.tabButtonText,
-          selectedTab === item && styles.selectedTabButtonText,
-        ]}
-      >
+      <Text style={[styles.tabButtonText, selectedTab === item && styles.selectedTabButtonText]}>
         {item}
       </Text>
     </TouchableOpacity>
@@ -1009,35 +884,95 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 
   const renderSaleScanTab = ({ item }) => (
     <TouchableOpacity
-      style={[
-        styles.saleScanTabButton,
-        selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
-      ]}
+      style={[styles.saleScanTabButton, selectedSaleScanTab === item && styles.selectedSaleScanTabButton]}
       onPress={() => handleSaleScanTabPress(item)}
     >
-      <Text
-        // variant={selectedSaleScanTab === item ? "tabActive" : "tab"}
-        style={[
-          styles.saleScanTabButtonText,
-          selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
-        ]}
-      >
+      <Text style={[styles.saleScanTabButtonText, selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText]}>
         {item}
       </Text>
     </TouchableOpacity>
   );
 
-  // For ADMIN users, show AdminAllEventsDashboard in Dashboard tab
-  // Check showEventDashboard from props OR route params (for navigation from detail screens)
+  // ── Role-based early returns ──
   const shouldShowEventDashboard = showEventDashboard || isFromRootStack || route.params?.showEventDashboard;
+
+  // ADMIN: show AdminAllEventsDashboard until an event is selected
   if (userRole === 'ADMIN' && !shouldShowEventDashboard) {
     return <AdminAllEventsDashboard />;
   }
 
+  // AGENT: show TerminalDashboard until an event is selected from TerminalEventsTab
+  if (userRole === 'AGENT' && !shouldShowEventDashboard) {
+    return <TerminalDashboard />;
+  }
+
+  // ── AGENT event detail view (after selecting an event) ──
+  if (userRole === 'AGENT' && shouldShowEventDashboard) {
+    return (
+      <View style={styles.mainContainer}>
+        <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
+          {/* Brown event info bar */}
+          <View style={styles.header}>
+            {shouldShowBackButton && (
+              <TouchableOpacity onPress={handleBackPress} style={styles.headerBackButton}>
+                <SvgIcons.whiteArrow />
+              </TouchableOpacity>
+            )}
+            <View style={styles.headerContent}>
+              <View style={styles.headerLeft}>
+                <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">
+                  {truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}
+                </Text>
+              </View>
+              <View style={styles.headerSpacer} />
+              <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">
+                {formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}
+              </Text>
+              <Text style={styles.separator}>at</Text>
+              <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">
+                {eventInfo?.time || '7:00 PM'}
+              </Text>
+            </View>
+          </View>
+        </SafeAreaView>
+
+        {/* ── AGENT three-tab bar: Sales | Sold Tickets | New Tix ── */}
+        <View style={styles.agentTabContainer}>
+          <View style={styles.agentTabRow}>
+            {AGENT_TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.agentTabButton,
+                  selectedAgentTab === tab && styles.selectedAgentTabButton,
+                ]}
+                onPress={() => setSelectedAgentTab(tab)}
+              >
+                <Text
+                  style={[
+                    styles.agentTabButtonText,
+                    selectedAgentTab === tab && styles.selectedAgentTabButtonText,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Tab content */}
+        {renderAgentTabContent()}
+      </View>
+    );
+  }
+
+  // ── Default full dashboard (ADMIN with event selected, ORGANIZER, STAFF, etc.) ──
   return (
     <View style={styles.mainContainer}>
       <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: topPadding }]}>
-        {/* Brown event info bar with back button inside */}
+        {/* Brown event info bar */}
         <View style={styles.header}>
           {shouldShowBackButton && (
             <TouchableOpacity onPress={handleBackPress} style={styles.headerBackButton}>
@@ -1046,43 +981,38 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
           )}
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
-              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">{truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}</Text>
+              <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">
+                {truncateEventName(eventInfo?.event_title) || 'OUTMOSPHERE'}
+              </Text>
               {userRole === 'ADMIN' && (
-                <TouchableOpacity
-                  style={styles.dropdownButton}
-                  onPress={() => setEventsModalVisible(true)}
-                >
+                <TouchableOpacity style={styles.dropdownButton} onPress={() => setEventsModalVisible(true)}>
                   <SvgIcons.downArrowWhite width={12} height={12} fill={color.white_FFFFFF} stroke={color.white_FFFFFF} strokeWidth={0} />
                 </TouchableOpacity>
               )}
             </View>
             <View style={styles.headerSpacer} />
-            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}</Text>
+            <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">
+              {formatDateWithMonthName(eventInfo?.date) || '30 Oct 2025'}
+            </Text>
             <Text style={styles.separator}>at</Text>
-            <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">{eventInfo?.time || '7:00 PM'}</Text>
+            <Text style={styles.time} numberOfLines={1} ellipsizeMode="tail">
+              {eventInfo?.time || '7:00 PM'}
+            </Text>
           </View>
         </View>
       </SafeAreaView>
 
-      {/* Admin Dashboard Terminal Tab - Only for ADMIN users */}
+      {/* Admin Dashboard Terminal Tab */}
       {userRole === 'ADMIN' && (
         <View style={styles.adminTabContainer}>
           <View style={styles.adminTabRow}>
             {admindashboardterminaltab.map((item) => (
               <TouchableOpacity
                 key={item}
-                style={[
-                  styles.adminTabButton,
-                  selectedAdminTab === item && styles.selectedAdminTabButton,
-                ]}
+                style={[styles.adminTabButton, selectedAdminTab === item && styles.selectedAdminTabButton]}
                 onPress={() => handleAdminTabPress(item)}
               >
-                <Text
-                  style={[
-                    styles.adminTabButtonText,
-                    selectedAdminTab === item && styles.selectedAdminTabButtonText,
-                  ]}
-                >
+                <Text style={[styles.adminTabButtonText, selectedAdminTab === item && styles.selectedAdminTabButtonText]}>
                   {item}
                 </Text>
               </TouchableOpacity>
@@ -1098,7 +1028,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
           <View style={styles.wrapper}>
-            {/* <Heading5 style={styles.labelDashboard}>Dashboard</Heading5> */}
             {loading || userProfileLoading ? (
               <Text style={styles.loadingText}>
                 {loading ? 'Loading dashboard stats...' : 'Loading user profile...'}
@@ -1108,7 +1037,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
             ) : (
               <>
                 {userRole === 'ADMIN' ? (
-                  // Admin user - show content based on selected admin tab
                   selectedAdminTab === 'Dashboard' ? (
                     <>
                       {logger.log('Rendering AdminOverallStatistics for role:', userRole)}
@@ -1138,7 +1066,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                   </>
                 )}
 
-                {/* Show sales/scan tabs and other content only for Dashboard tab or non-admin users */}
                 {(userRole !== 'ADMIN' || selectedAdminTab === 'Dashboard') && (
                   <>
                     <View style={styles.saleScanTabContainer}>
@@ -1146,18 +1073,10 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                         {dashboardsalesscantab.map((item) => (
                           <TouchableOpacity
                             key={item}
-                            style={[
-                              styles.saleScanTabButton,
-                              selectedSaleScanTab === item && styles.selectedSaleScanTabButton,
-                            ]}
+                            style={[styles.saleScanTabButton, selectedSaleScanTab === item && styles.selectedSaleScanTabButton]}
                             onPress={() => handleSaleScanTabPress(item)}
                           >
-                            <Text
-                              style={[
-                                styles.saleScanTabButtonText,
-                                selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText,
-                              ]}
-                            >
+                            <Text style={[styles.saleScanTabButtonText, selectedSaleScanTab === item && styles.selectedSaleScanTabButtonText]}>
                               {item}
                             </Text>
                           </TouchableOpacity>
@@ -1173,17 +1092,11 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                             {getTabList().map((item) => (
                               <TouchableOpacity
                                 key={item}
-                                style={[
-                                  styles.tabButton,
-                                  selectedTab === item && styles.selectedTabButton,
-                                ]}
+                                style={[styles.tabButton, selectedTab === item && styles.selectedTabButton]}
                                 onPress={() => handleTabPress(item)}
                               >
                                 <Text
-                                  style={[
-                                    styles.tabButtonText,
-                                    selectedTab === item && styles.selectedTabButtonText,
-                                  ]}
+                                  style={[styles.tabButtonText, selectedTab === item && styles.selectedTabButtonText]}
                                   numberOfLines={2}
                                 >
                                   {item}
@@ -1203,7 +1116,6 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
         </ScrollView>
       )}
 
-      {/* Events Modal for ADMIN users */}
       <EventsModal
         visible={eventsModalVisible}
         onClose={() => setEventsModalVisible(false)}
@@ -1215,16 +1127,9 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
-  scrollContainer: {
-    paddingBottom: 20,
-    flexGrow: 1
-  },
-  wrapper: {
-    flex: 1,
-  },
+  mainContainer: { flex: 1 },
+  scrollContainer: { paddingBottom: 20, flexGrow: 1 },
+  wrapper: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1248,52 +1153,50 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexWrap: 'nowrap',
   },
-  headerLeft: {
+  headerLeft: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
+  headerSpacer: { flex: 1 },
+  dropdownButton: { marginLeft: 8, padding: 4 },
+  eventName: { color: color.white_FFFFFF, fontSize: 14, fontWeight: '500' },
+  cityName: { color: color.white_FFFFFF, fontSize: 12, fontWeight: '400' },
+  date: { color: color.white_FFFFFF, fontSize: 12, fontWeight: '400' },
+  time: { color: color.white_FFFFFF, fontSize: 12, fontWeight: '400' },
+  labelDashboard: { color: color.brown_3C200A, paddingLeft: 10, marginTop: 10 },
+
+  // ── AGENT tab bar ──
+  agentTabContainer: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  agentTabRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 1,
-  },
-  headerSpacer: {
-    flex: 1,
-  },
-  dropdownButton: {
-    marginLeft: 8,
-    padding: 4,
-  },
-  eventName: {
-    color: color.white_FFFFFF,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  cityName: {
-    color: color.white_FFFFFF,
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  date: {
-    color: color.white_FFFFFF,
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  time: {
-    color: color.white_FFFFFF,
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  labelDashboard: {
-    color: color.brown_3C200A,
-    paddingLeft: 10,
-    marginTop: 10,
-  },
-  tabContainer: {
-    marginVertical: 8,
-    marginHorizontal: 16
-  },
-  tabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
   },
+  agentTabButton: {
+    flex: 1,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 3,
+    borderRadius: 7,
+  },
+  selectedAgentTabButton: {
+    backgroundColor: color.white_FFFFFF,
+    borderColor: color.white_FFFFFF,
+  },
+  agentTabButtonText: {
+    color: color.black_544B45,
+    fontSize: 13,
+    fontWeight: '400',
+  },
+  selectedAgentTabButtonText: {
+    color: color.placeholderTxt_24282C,
+    fontWeight: '600',
+  },
+
+  // ── Shared tab styles ──
+  tabContainer: { marginVertical: 8, marginHorizontal: 16 },
+  tabRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   tabButton: {
     padding: 10,
     flex: 1,
@@ -1329,31 +1232,11 @@ const styles = StyleSheet.create({
     numberOfLines: 2,
     fontWeight: '500',
   },
-  loadingText: {
-    textAlign: 'center',
-    padding: 20,
-    color: color.brown_3C200A,
-  },
-  errorText: {
-    textAlign: 'center',
-    padding: 20,
-    color: 'red',
-  },
-  separator: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: color.white_FFFFFF,
-    marginHorizontal: 4,
-  },
-  saleScanTabContainer: {
-    marginHorizontal: 16,
-    marginVertical: 8
-  },
-  saleScanTabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
+  loadingText: { textAlign: 'center', padding: 20, color: color.brown_3C200A },
+  errorText: { textAlign: 'center', padding: 20, color: 'red' },
+  separator: { fontSize: 12, fontWeight: '400', color: color.white_FFFFFF, marginHorizontal: 4 },
+  saleScanTabContainer: { marginHorizontal: 16, marginVertical: 8 },
+  saleScanTabRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   saleScanTabButton: {
     marginTop: 3,
     padding: 10,
@@ -1362,20 +1245,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 40,
   },
-  saleScanTabButtonText: {
-    color: color.black_544B45,
-    fontWeight: '400',
-    fontSize: 14,
-  },
-  adminTabContainer: {
-    marginHorizontal: 16,
-    marginVertical: 12
-  },
-  adminTabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
+  saleScanTabButtonText: { color: color.black_544B45, fontWeight: '400', fontSize: 14 },
+  adminTabContainer: { marginHorizontal: 16, marginVertical: 12 },
+  adminTabRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   adminTabButton: {
     padding: 10,
     width: '33%',
@@ -1383,11 +1255,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 40,
   },
-  adminTabButtonText: {
-    color: color.black_544B45,
-    fontWeight: '400',
-    fontSize: 14,
-  },
+  adminTabButtonText: { color: color.black_544B45, fontWeight: '400', fontSize: 14 },
   selectedAdminTabButton: {
     width: '33%',
     height: 40,
@@ -1398,20 +1266,9 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
   },
-  selectedAdminTabButtonText: {
-    color: color.placeholderTxt_24282C,
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  adminOnlineBoxOfficeTabContainer: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
-  adminOnlineBoxOfficeTabRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
+  selectedAdminTabButtonText: { color: color.placeholderTxt_24282C, fontWeight: '500', fontSize: 14 },
+  adminOnlineBoxOfficeTabContainer: { marginHorizontal: 16, marginVertical: 8 },
+  adminOnlineBoxOfficeTabRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   adminOnlineBoxOfficeTabButton: {
     padding: 10,
     width: '32%',
@@ -1423,11 +1280,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 1,
   },
-  adminOnlineBoxOfficeTabButtonText: {
-    color: color.black_544B45,
-    fontSize: 14,
-    fontWeight: '400'
-  },
+  adminOnlineBoxOfficeTabButtonText: { color: color.black_544B45, fontSize: 14, fontWeight: '400' },
   selectedAdminOnlineBoxOfficeTabButton: {
     width: '32%',
     height: 40,
@@ -1438,11 +1291,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: color.btnBrown_AE6F28,
   },
-  selectedAdminOnlineBoxOfficeTabButtonText: {
-    color: color.white_FFFFFF,
-    fontWeight: '500',
-    fontSize: 14,
-  },
+  selectedAdminOnlineBoxOfficeTabButtonText: { color: color.white_FFFFFF, fontWeight: '500', fontSize: 14 },
   selectedSaleScanTabButton: {
     width: '50%',
     height: 40,
@@ -1453,20 +1302,9 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: color.white_FFFFFF,
   },
-  selectedSaleScanTabButtonText: {
-    color: color.placeholderTxt_24282C,
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  overallStatisticsContainer: {
-    marginTop: 4,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  selectedSaleScanTabButtonText: { color: color.placeholderTxt_24282C, fontWeight: '500', fontSize: 14 },
+  overallStatisticsContainer: { marginTop: 4 },
+  headerButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
 });
 
 export default DashboardScreen;
