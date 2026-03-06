@@ -39,9 +39,44 @@ import { formatDateWithMonthName } from '../../constants/dateAndTime';
 import { logger } from '../../utils/logger';
 import AdminAllEventsDashboard from '../dashboard/AdminAllEventsDashboard/adminAllEventsDashboard';
 import TerminalDashboard from './TerminalDashboardPortal/TerminalDashboard';
+import TicketsTab from '../TicketsTab';
+import BoxOfficeTab from '../BoxOfficeTab';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 
 // ── AGENT tab definitions ──
-const AGENT_TABS = ['Sales', 'Sold Tickets', 'New Tix'];
+const AGENT_TABS = ['Sales', 'Sold Tix', 'New Tix'];
+
+// Circular Progress for Available Tickets
+const CircularProgress = ({ value, total, size = 40 }) => {
+  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+  const radius = (size / 2) - 3;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (percentage / 100) * circumference;
+  const viewBox = `0 0 ${size} ${size}`;
+  const center = size / 2;
+  const fontSize = size <= 40 ? 9 : 11;
+
+  return (
+    <Svg width={size} height={size} viewBox={viewBox}>
+      <Circle cx={center} cy={center} r={radius} stroke="#E0E0E0" strokeWidth={strokeWidth} fill="none" />
+      <Circle
+        cx={center} cy={center} r={radius}
+        stroke={color.btnBrown_AE6F28} strokeWidth={strokeWidth} fill="none"
+        strokeDasharray={`${circumference}`}
+        strokeDashoffset={`${circumference - progress}`}
+        strokeLinecap="round"
+      />
+      <SvgText
+        x={center} y={center + fontSize / 3}
+        textAnchor="middle" fontSize={fontSize}
+        fill={color.placeholderTxt_24282C} fontWeight="500"
+      >
+        {`${percentage}%`}
+      </SvgText>
+    </Svg>
+  );
+};
 
 const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventChange, showEventDashboard }) => {
   const navigation = useNavigation();
@@ -90,6 +125,19 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
   const [scanAnalyticsTitle, setScanAnalyticsTitle] = useState('');
   const [activeScanAnalytics, setActiveScanAnalytics] = useState(null);
   const [activePaymentChannel, setActivePaymentChannel] = useState(null);
+
+  // Get available tickets count for the top card
+  const getAvailableCount = () => {
+    const terminalStats = dashboardStats?.data?.terminal_statistics || dashboardStats?.data?.overall_statistics || {};
+    const raw = terminalStats?.available_tickets || 0;
+    return typeof raw === 'object' && raw !== null ? (raw.total || raw.count || 0) : (raw || 0);
+  };
+
+  const getTotalTicketsCount = () => {
+    const terminalStats = dashboardStats?.data?.terminal_statistics || dashboardStats?.data?.overall_statistics || {};
+    const raw = terminalStats?.total_tickets || 0;
+    return typeof raw === 'object' && raw !== null ? (raw.total || raw.count || 0) : (raw || 0);
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -804,35 +852,43 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
     return null;
   };
 
-  // ── AGENT tab content renderer ──
+  // ── AGENT tab press handler — navigates to dedicated screens ──
+  // ── AGENT tab press: just switch the selected tab ──
+  const handleAgentTabPress = (tab) => {
+    setSelectedAgentTab(tab);
+  };
+
+  // ── AGENT inline tab content renderer ──
   const renderAgentTabContent = () => {
-    // Placeholder content per tab — swap in your real components as needed
     switch (selectedAgentTab) {
       case 'Sales':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
-            <View style={styles.wrapper}>
-              {loading || userProfileLoading ? (
-                <Text style={styles.loadingText}>Loading...</Text>
-              ) : error ? (
-                <Text style={styles.errorText}>{error}</Text>
-              ) : (
-                <>
-                  <BoxOfficeSales stats={dashboardStats} />
-                </>
-              )}
-            </View>
-          </ScrollView>
-        );
-      case 'Sold Tickets':
-        return (
-          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
-            <View style={styles.wrapper}>
-              {loading || userProfileLoading ? (
-                <Text style={styles.loadingText}>Loading...</Text>
-              ) : error ? (
-                <Text style={styles.errorText}>{error}</Text>
-              ) : (
+          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            {loading || userProfileLoading ? (
+              <Text style={styles.loadingText}>Loading...</Text>
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : (
+              <>
+                {/* Available Tickets - Full Width Card */}
+                <View style={styles.availableTicketsContainer}>
+                  <View style={styles.availableTicketsOuterWrapper}>
+                    <View style={styles.availableTicketsCard}>
+                      <CircularProgress value={getAvailableCount()} total={getTotalTicketsCount()} size={40} />
+                      <View style={styles.availableTicketsTextContainer}>
+                        <Text style={styles.availableTicketsTitle}>Available Tickets</Text>
+                        <Text style={styles.availableTicketsValue}>{getAvailableCount()}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+                <BoxOfficeSales
+                  stats={dashboardStats}
+                  title="Sales"
+                  onDebugData={(data) => {
+                    logger.log('BoxOfficeSales - Backend Data:', JSON.stringify(data, null, 2));
+                  }}
+                />
                 <CheckInSoldTicketsCard
                   title="Sold Tickets"
                   data={getSoldTicketsData()}
@@ -843,23 +899,36 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                   onAnalyticsPress={handleAnalyticsPress}
                   activeAnalytics={activeAnalytics}
                 />
-              )}
-            </View>
+                {analyticsData && activeAnalytics ? (
+                  <AnalyticsChart title={analyticsTitle} data={analyticsData} dataType="sold" />
+                ) : (
+                  <AnalyticsChart
+                    title="Sold Tickets"
+                    data={mapSoldTicketsAnalytics(dashboardStats?.data?.sold_tickets_analytics?.data)}
+                    dataType="sold"
+                  />
+                )}
+              </>
+            )}
           </ScrollView>
+        );
+      case 'Sold Tix':
+        return (
+          <View style={{ flex: 1 }}>
+            <TicketsTab
+              eventInfo={eventInfo}
+              initialTab="All"
+            />
+          </View>
         );
       case 'New Tix':
         return (
-          <ScrollView contentContainerStyle={styles.scrollContainer} ref={scrollViewRef}>
-            <View style={styles.wrapper}>
-              {loading || userProfileLoading ? (
-                <Text style={styles.loadingText}>Loading...</Text>
-              ) : error ? (
-                <Text style={styles.errorText}>{error}</Text>
-              ) : (
-                <AvailableTicketsCard data={getAvailableTicketsData()} stats={dashboardStats} />
-              )}
-            </View>
-          </ScrollView>
+          <View style={{ flex: 1 }}>
+            <BoxOfficeTab
+              eventInfo={eventInfo}
+              onScanCountUpdate={onScanCountUpdate}
+            />
+          </View>
         );
       default:
         return null;
@@ -936,7 +1005,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
           </View>
         </SafeAreaView>
 
-        {/* ── AGENT three-tab bar: Sales | Sold Tickets | New Tix ── */}
+        {/* ── AGENT three-tab bar: Sales | Sold Tix | New Tix ── */}
         <View style={styles.agentTabContainer}>
           <View style={styles.agentTabRow}>
             {AGENT_TABS.map((tab) => (
@@ -946,7 +1015,7 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
                   styles.agentTabButton,
                   selectedAgentTab === tab && styles.selectedAgentTabButton,
                 ]}
-                onPress={() => setSelectedAgentTab(tab)}
+                onPress={() => handleAgentTabPress(tab)}
               >
                 <Text
                   style={[
@@ -962,8 +1031,10 @@ const DashboardScreen = ({ eventInfo: propEventInfo, onScanCountUpdate, onEventC
           </View>
         </View>
 
-        {/* Tab content */}
-        {renderAgentTabContent()}
+        {/* ── AGENT tab content rendered inline ── */}
+        <View style={{ flex: 1 }}>
+          {renderAgentTabContent()}
+        </View>
       </View>
     );
   }
@@ -1305,6 +1376,12 @@ const styles = StyleSheet.create({
   selectedSaleScanTabButtonText: { color: color.placeholderTxt_24282C, fontWeight: '500', fontSize: 14 },
   overallStatisticsContainer: { marginTop: 4 },
   headerButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  availableTicketsContainer: { marginHorizontal: 16, marginTop: 12, marginBottom: 4, },
+  availableTicketsOuterWrapper: { backgroundColor: color.white_FFFFFF, borderRadius: 16, borderWidth: 1, borderColor: color.white_FFFFFF, padding: 16, },
+  availableTicketsCard: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: color.white_FFFFFF, borderRadius: 12, borderWidth: 1, borderColor: color.brown_CEBCA04D, gap: 12, },
+  availableTicketsTextContainer: { flex: 1, },
+  availableTicketsTitle: { fontSize: 12, color: color.placeholderTxt_24282C, fontWeight: '400', },
+  availableTicketsValue: { fontSize: 14, fontWeight: '500', marginTop: 4, color: color.brown_3C200A, },
 });
 
 export default DashboardScreen;
