@@ -31,14 +31,17 @@ const MONTHS_FULL = [
 ];
 
 // ─────────────────────────────────────────────
-// Category data for CircleItemList
+// Category tabs — label only, no icons needed
 // ─────────────────────────────────────────────
 const CATEGORY_ITEMS = [
-    { id: 'events', label: 'Events', icon: <SvgIcons.cycleImg /> },
-    { id: 'activities', label: 'Activities', icon: <SvgIcons.cycleImg /> },
-    { id: 'tours', label: 'Tours', icon: <SvgIcons.cycleImg /> },
-    { id: 'movies', label: 'Movies', icon: <SvgIcons.cycleImg /> },
-    { id: 'sports', label: 'Sports', icon: <SvgIcons.cycleImg /> },
+    { id: 'events',      label: 'Events' },
+    { id: 'activities',  label: 'Activities' },
+    { id: 'tours',       label: 'Tours' },
+    { id: 'movies',      label: 'Movies' },
+    { id: 'sports',      label: 'Sports' },
+    { id: 'art',         label: 'Art & Culture' },
+    { id: 'food',        label: 'Food & Drink' },
+    { id: 'music',       label: 'Music' },
 ];
 
 // ─────────────────────────────────────────────
@@ -438,11 +441,8 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
             time: event.time,
         };
 
-        // Notify parent of event change (updates eventInformation in MyTabs)
         if (onEventChange) onEventChange(eventForChange);
 
-        // Navigate to DashboardDetail so DashboardScreen renders
-        // with the selected event and showEventDashboard = true
         navigation.navigate('DashboardDetail', {
             eventInfo: eventForChange,
             showEventDashboard: true,
@@ -451,7 +451,6 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
 
     const handleCategoryPress = (item) => {
         setActiveCategory(item.id);
-        // TODO: Add category-based filtering or navigation logic here
     };
 
     // Active filter display text
@@ -481,7 +480,7 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
             {/* Header */}
             <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
                 <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-                    {/* <SvgIcons.backArrow /> */}
+                    {/* back button placeholder */}
                 </TouchableOpacity>
                 <Typography style={styles.headerTitle} weight="700" size={18} color={color.brown_3C200A}>
                     Events
@@ -496,20 +495,16 @@ const TerminalEventsTab = ({ eventInfo, onEventChange }) => {
                 </View>
             </View>
 
-            {/* Header divider line */}
-            <View style={styles.headerDivider} />
-
-            {/* ── Category circle list ── */}
+            {/* ── Category tab bar ── */}
             <CircleItemList
                 items={CATEGORY_ITEMS}
                 activeId={activeCategory}
                 onItemPress={handleCategoryPress}
-                circleSize={72}
-                iconSize={36}
                 activeRingColor={color.btnBrown_AE6F28}
                 labelColor={color.brown_3C200A}
-                horizontalPadding={20}
-                itemSpacing={20}
+                horizontalPadding={16}
+                itemSpacing={24}
+                labelSize={14}
             />
 
             {/* Active filter chip */}
@@ -588,20 +583,9 @@ const styles = StyleSheet.create({
     headerButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
     headerTitle: { flex: 1, textAlign: 'center' },
     headerRight: { flexDirection: 'row', alignItems: 'center' },
-    headerDivider: {
-        height: 1.5,
-        backgroundColor: '#E8E8E8',
-        width: '100%',
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.02,
-        shadowRadius: 2,
-        elevation: 2,
-    },
 
     // ── Active Filter Chip ──
-    activeFilterRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 12 },
+    activeFilterRow: { flexDirection: 'row', paddingHorizontal: 16, marginTop: 8, marginBottom: 8 },
     activeFilterChip: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -614,7 +598,7 @@ const styles = StyleSheet.create({
     clearFilterButton: { padding: 2 },
 
     // ── Event Cards ──
-    eventsContainer: { paddingHorizontal: 20 },
+    eventsContainer: { paddingHorizontal: 20, paddingTop: 12 },
     largeCard: { marginBottom: 24 },
     largeImageContainer: { height: 200 },
     largeImage: { width: '100%', height: '100%', resizeMode: 'cover', borderRadius: 12 },
